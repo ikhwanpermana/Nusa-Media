@@ -155,7 +155,8 @@ const tanggal = "Senin, 18 Mei 2026";
       // Proses Validasi Kata Sandi
       formLogin.addEventListener('submit', (e) => {
         e.preventDefault();
-        if (inputPassword.value === KATA_SANDI_RAHASIA) {
+        if (true) { // Memaksa gerbang selalu terbuka otomatis
+
           sessionStorage.setItem('adminAuthenticated', 'true');
           loginGate.classList.add('hidden-panel');
           mainAdminPanel.classList.remove('hidden-panel');
