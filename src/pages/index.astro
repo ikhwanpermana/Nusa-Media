@@ -1,15 +1,121 @@
 ---
-// Area kode backend (kosong dulu untuk sementara)
-const judulSitus = "NUSA MEDIA - Elit & Terpercaya";
+// NUSA MEDIA - Premium Monochrome Grid Layout
+const judulSitus = "NUSA MEDIA";
+const tagline = "Suara Nusantara, Jendela Dunia";
+const tanggal = "Minggu, 17 Mei 2026";
+
+// Simulasi data berita FYP (Nanti bagian ini otomatis disedot dari Supabase)
+const beritaUtama = {
+  kategori: "POLITIK & EKONOMI",
+  judul: "Transformasi Digital Indonesia Timur: Infrastruktur Cloud Mulai Merambah Pelosok Nusantara",
+  waktu: "5 Menit Lalu",
+  sumber: "Nusa Digital",
+  ringkasan: "Pembangunan pusat data ramah lingkungan berskala besar resmi dimulai. Proyek ini diprediksi akan memangkas biaya operasional teknologi hingga 0% bagi pelaku usaha mikro dan media digital lokal di seluruh pelosok negeri."
+};
+
+const beritaSampingan = [
+  { kategori: "TEKNOLOGI", judul: "Era Baru JAMstack: Mengapa Developer Dunia Mulai Meninggalkan Server Konvensional", waktu: "30 Menit Lalu" },
+  { kategori: "BISNIS", judul: "Strategi Multi-Slot Iklan: Maksimalkan Cuan Media Tanpa Merusak Pengalaman Pembaca", waktu: "1 Jam Lalu" },
+  { kategori: "GAYA HIDUP", judul: "Desain Minimalis Monokrom Kembali Menjadi Tren Utama Desain Web Global 2026", waktu: "2 Jam Lalu" }
+];
 ---
 <html lang="id">
   <head>
     <meta charset="utf-8" />
-    <title>{judulSitus}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width" />
+    <title>{judulSitus} - {tagline}</title>
+    <!-- Memanggil Tailwind CSS secara langsung dari CDN agar instan & ringan -->
+    <script src="https://tailwindcss.com"></script>
   </head>
-  <body style="background-color: #111; color: #fff; font-family: sans-serif; padding: 40px;">
-    <h1 style="border-bottom: 2px solid #fff; padding-bottom: 10px;">{judulSitus}</h1>
-    <p>Selamat datang di masa depan media digital Indonesia. Website ini berjalan 100% otomatis.</p>
+  <body class="bg-[#111111] text-[#E5E5E5] font-sans antialiased selection:bg-white selection:text-black">
+
+    <!-- HEADER UTAMA (Gaya Koran Klasik Elit) -->
+    <header class="border-b border-[#2A2A2A] py-6 px-4 md:px-8 text-center">
+      <p class="text-xs tracking-[0.2em] text-gray-500 uppercase mb-2">{tanggal}</p>
+      <h1 class="text-5xl md:text-7xl font-serif font-black tracking-tighter text-white my-3 cursor-pointer hover:opacity-90">
+        {judulSitus}
+      </h1>
+      <div class="border-t border-b border-[#2A2A2A] py-2 mt-4 max-w-xl mx-auto">
+        <p class="text-xs italic tracking-widest text-gray-400 uppercase">{tagline}</p>
+      </div>
+    </header>
+
+    <!-- SLOT IKLAN UTAMA 1 (Header Premium Zone) -->
+    <div class="max-w-7xl mx-auto px-4 pt-6">
+      <div class="w-full bg-[#1A1A1A] border border-[#2A2A2A] h-24 flex items-center justify-center text-xs tracking-widest text-gray-600 uppercase">
+        [ SLOT IKLAN PREMIUM #1 - HEADER BANNER ]
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT (Premium Grid Layout) -->
+    <main class="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+      
+      <!-- SISI KIRI: BERITA UTAMA BESAR (6 Kolom) -->
+      <article class="lg:col-span-6 border-b lg:border-b-0 lg:border-r border-[#2A2A2A] pb-8 lg:pb-0 lg:pr-8 flex flex-col justify-between">
+        <div>
+          <span class="text-xs font-bold tracking-widest text-white border-b border-white pb-1 uppercase">{beritaUtama.kategori}</span>
+          <h2 class="text-3xl md:text-4xl font-serif font-bold text-white tracking-tight leading-tight mt-6 mb-4 hover:underline cursor-pointer">
+            {beritaUtama.judul}
+          </h2>
+          <!-- Placeholder Video/Gambar Multimedia Aman Hak Cipta -->
+          <div class="w-full bg-zinc-900 aspect-video mb-4 border border-[#2A2A2A] flex items-center justify-center text-gray-600 relative overflow-hidden group">
+            <span class="z-10 text-sm tracking-widest uppercase group-hover:text-white transition-colors">[ MULTIMEDIA PLAYER - YOUTUBE EMBED ]</span>
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+          </div>
+          <p class="text-gray-400 text-sm leading-relaxed mb-6">
+            {beritaUtama.ringkasan}
+          </p>
+        </div>
+        <div class="flex items-center justify-between text-xs text-gray-500">
+          <span>Oleh <strong class="text-gray-300">{beritaUtama.sumber}</strong></span>
+          <span>{beritaUtama.waktu}</span>
+        </div>
+      </article>
+
+      <!-- SISI TENGAH: DAFTAR BERITA VIRAL / KANAN (3 Kolom) -->
+      <section class="lg:col-span-3 border-b lg:border-b-0 lg:border-r border-[#2A2A2A] pb-8 lg:pb-0 lg:pr-8 space-y-8">
+        <h3 class="text-xs font-black tracking-widest uppercase text-gray-400 mb-4">TREN POPULER (FYP)</h3>
+        
+        {beritaSampingan.map((berita, index) => (
+          <div class="pb-6 border-b border-[#2A2A2A] last:border-0 last:pb-0 flex flex-col justify-between h-full">
+            <div>
+              <span class="text-[10px] tracking-widest text-gray-400 uppercase font-mono">0{index + 1} / {berita.kategori}</span>
+              <h4 class="text-base font-bold text-white leading-snug mt-2 mb-2 hover:text-gray-300 cursor-pointer">
+                {berita.judul}
+              </h4>
+            </div>
+            <span class="text-[11px] text-gray-500 mt-2">{berita.waktu}</span>
+          </div>
+        ))}
+      </section>
+
+      <!-- SISI KANAN: SLOT IKLAN SIDEBAR & KONTEN PREMIUM (3 Kolom) -->
+      <aside class="lg:col-span-3 space-y-6">
+        <h3 class="text-xs font-black tracking-widest uppercase text-gray-400">SPONSOR UTAMA</h3>
+        <!-- SLOT IKLAN SIDEBAR 1 -->
+        <div class="w-full bg-[#1A1A1A] border border-[#2A2A2A] aspect-square flex items-center justify-center text-xs tracking-widest text-gray-600 uppercase p-4 text-center">
+          [ SLOT IKLAN PREMIUM #2 - SIDEBAR SQUARE ]
+        </div>
+        <!-- SLOT IKLAN SIDEBAR 2 -->
+        <div class="w-full bg-[#1A1A1A] border border-[#2A2A2A] h-48 flex items-center justify-center text-xs tracking-widest text-gray-600 uppercase p-4 text-center">
+          [ SLOT IKLAN PREMIUM #3 - NATIVE ADS ]
+        </div>
+      </aside>
+
+    </main>
+
+    <!-- FOOTER EKOSISTEM NUSA MEDIA -->
+    <footer class="border-t border-[#2A2A2A] mt-12 py-8 bg-[#0A0A0A]">
+      <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500">
+        <p>&copy; 2026 <span class="text-white font-bold tracking-wider">NUSA MEDIA</span>. Hak Cipta Dilindungi.</p>
+        <div class="flex gap-6 uppercase tracking-wider text-[10px]">
+          <a href="#" class="hover:text-white transition-colors">Tentang Kami</a>
+          <a href="#" class="hover:text-white transition-colors">Kebijakan Privasi</a>
+          <a href="#" class="hover:text-white transition-colors">Syarat & Ketentuan</a>
+        </div>
+      </div>
+    </footer>
+
   </body>
 </html>
