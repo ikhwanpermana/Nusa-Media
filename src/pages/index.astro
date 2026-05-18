@@ -135,10 +135,32 @@ const { data: beritaUtama } = await supabase
             {kataKunci ? "HASIL ARSIP" : "TREN POPULER (FYP)"}
           </h3>
           <div class="space-y-8">
-            {beritaSampingan && beritaSampingan.length > 0 ? (
-              beritaSampingan.map((berita, index) => (
-                <div class="pb-6 border-b border-[#2A2A2A] last:border-0 last:pb-0">
-                  <span class="text-[10px] tracking-widest text-gray-400 uppercase font-mono">0{index + 1 + indexMulai} / {berita.kategori?.nama || berita.kategori}</span>
+  {beritaSampingan && beritaSampingan.length > 0 ? (
+    beritaSampingan.map((berita, index) => (
+      <div class="pb-6 border-b border-[#2A2A2A] last:border-0 last:pb-0">
+        <span class="text-[10px] tracking-widest text-gray-400 uppercase font-mono">0{index + 1 + indexMulai} / {berita.kategori?.nama || berita.kategori}</span>
+        
+        <!-- TAMBAHKAN KODE GAMBAR INI DI ATAS JUDUL BERITA SAMPINGAN -->
+        {berita.gambar_url && (
+          <img 
+            src={berita.gambar_url} 
+            alt={berita.judul} 
+            class="w-full aspect-video object-cover my-3 border border-[#2A2A2A] grayscale hover:grayscale-0 transition-all duration-300" 
+          />
+        )}
+
+        <h4 class="text-base font-bold text-white leading-snug mt-2 hover:text-gray-300 cursor-pointer">
+          <a href={`/berita/${berita.slug}`}>{berita.judul}</a>
+        </h4>
+        <p class="text-xs text-gray-500 mt-1">Oleh {berita.penulis?.nama || 'Redaksi'} • {berita.sumber}</p>
+      </div>
+    ))
+  ) : (
+    <p class="text-xs font-mono text-gray-600 py-4">Artikel tidak ditemukan.</p>
+  )}
+</div>
+
+                  
                   <h4 class="text-base font-bold text-white leading-snug mt-2 hover:text-gray-300 cursor-pointer">
                     <a href={`/berita/${berita.slug}`}>{berita.judul}</a>
                   </h4>
