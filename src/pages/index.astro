@@ -66,18 +66,20 @@ const { data: beritaUtama } = await supabase
     <meta name="viewport" content="width=device-width" />
     <title>{judulSitus} - {tagline}</title>
   </head>
-  <body class="bg-[#111111] text-[#E5E5E5] font-sans antialiased selection:bg-white selection:text-black">
+    <body class="bg-[#111111] text-[#E5E5E5] font-sans antialiased selection:bg-white selection:text-black">
     
-    <!-- HEADER -->
+    <!-- HEADER (Tanggal otomatis mengikuti hari ini dari server) -->
     <header class="border-b border-[#2A2A2A] py-6 px-4 text-center">
       <p class="text-xs tracking-[0.2em] text-gray-500 uppercase mb-2">{tanggalHariIni}</p>
-      <h1 class="text-5xl md:text-7xl font-serif font-black tracking-tighter text-white my-3">{judulSitus}</h1>
+      <h1 class="text-5xl md:text-7xl font-serif font-black tracking-tighter text-white my-3 cursor-pointer hover:opacity-90">
+        <a href="/">{judulSitus}</a>
+      </h1>
       <div class="border-t border-b border-[#2A2A2A] py-2 mt-4 max-w-xl mx-auto">
         <p class="text-xs italic tracking-widest text-gray-400 uppercase">{tagline}</p>
       </div>
     </header>
 
-    <!-- SEARCH BAR -->
+    <!-- SEARCH BAR (Bisa cari arsip berita jadul) -->
     <div class="max-w-7xl mx-auto px-4 pt-6">
       <form method="GET" action="/" class="flex gap-2 max-w-xl mx-auto">
         <input 
@@ -92,51 +94,59 @@ const { data: beritaUtama } = await supabase
       </form>
     </div>
 
-    <!-- MAIN CONTENT -->
+    <!-- MAIN CONTENT (Premium Grid Layout) -->
     <main class="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
       
-      <!-- SISI KIRI: BERITA UTAMA -->
+      <!-- SISI KIRI: BERITA UTAMA / HEADLINE DARI SUPABASE -->
       <article class="lg:col-span-6 border-b lg:border-b-0 lg:border-r border-[#2A2A2A] pb-8 lg:pb-0 lg:pr-8 flex flex-col justify-between">
         {beritaUtama && !kataKunci ? (
           <div>
-            <span class="text-xs font-bold tracking-widest text-white border-b border-white pb-1 uppercase">{beritaUtama.kategori?.nama || beritaUtama.kategori}</span>
+            <!-- Menampilkan kolom 'kategori' teks bawaan database Anda -->
+            <span class="text-xs font-bold tracking-widest text-white border-b border-white pb-1 uppercase">{beritaUtama.kategori}</span>
+            
             <h2 class="text-3xl md:text-4xl font-serif font-bold text-white tracking-tight leading-tight mt-6 mb-4 hover:underline cursor-pointer">
               <a href={`/berita/${beritaUtama.slug}`}>{beritaUtama.judul}</a>
             </h2>
             
-            <!-- TAMPILKAN GAMBAR HEADLINE JIKA ADA -->
+            <!-- Menampilkan gambar_url asli dari database Anda -->
             {beritaUtama.gambar_url ? (
               <img src={beritaUtama.gambar_url} alt={beritaUtama.judul} class="w-full aspect-video object-cover mb-4 border border-[#2A2A2A] grayscale hover:grayscale-0 transition-all duration-300" />
             ) : (
               <div class="w-full bg-zinc-900 aspect-video mb-4 border border-[#2A2A2A] flex items-center justify-center text-gray-600 relative overflow-hidden">
-                <span class="text-sm tracking-widest uppercase">[ NO IMAGE ]</span>
+                <span class="text-sm tracking-widest uppercase">[ MULTIMEDIA PLAYER - NO IMAGE ]</span>
               </div>
             )}
             
+            <!-- Menampilkan kolom 'ringkasan' dari database Anda -->
             <p class="text-gray-400 text-sm leading-relaxed mb-6">{beritaUtama.ringkasan}</p>
           </div>
           <div class="flex items-center justify-between text-xs text-gray-500">
-            <span>Oleh <strong class="text-gray-300">{beritaUtama.penulis?.nama || 'Redaksi'}</strong></span>
-            <span>{beritaUtama.sumber}</span>
+            <!-- Menampilkan kolom 'sumber' dari database Anda -->
+            <span>Oleh <strong class="text-gray-300">{beritaUtama.sumber || 'Redaksi'}</strong></span>
+            <span>Headline</span>
           </div>
         ) : (
           <div class="h-full flex items-center justify-center border border-dashed border-[#2A2A2A] p-8 text-center text-gray-500 text-sm font-mono">
-            {kataKunci ? "Mode pencarian aktif. Hasil ada di panel kanan." : "Belum ada berita utama."}
+            {kataKunci ? "Mode pencarian aktif. Silakan lihat hasil pencarian di panel sebelah kanan." : "Belum ada berita utama yang diset ke Terbit."}
           </div>
         )}
       </article>
 
-      <!-- SISI TENGAH: DAFTAR BERITA SAMPINGAN -->
+      <!-- SISI TENGAH: DAFTAR BERITA SAMPINGAN / OTOMATISASI GABUNGAN -->
       <section class="lg:col-span-3 border-b lg:border-b-0 lg:border-r border-[#2A2A2A] pb-8 lg:pb-0 lg:pr-8 flex flex-col justify-between">
         <div>
-          <h3 class="text-xs font-black tracking-widest uppercase text-gray-400 mb-4">{kataKunci ? "HASIL ARSIP" : "TREN POPULER (FYP)"}</h3>
+          <h3 class="text-xs font-black tracking-widest uppercase text-gray-400 mb-4">
+            {kataKunci ? "HASIL ARSIP" : "TREN POPULER (FYP)"}
+          </h3>
           <div class="space-y-8">
             {beritaSampingan && beritaSampingan.length > 0 ? (
               beritaSampingan.map((berita, index) => (
                 <div class="pb-6 border-b border-[#2A2A2A] last:border-0 last:pb-0">
-                  <span class="text-[10px] tracking-widest text-gray-400 uppercase font-mono">0{index + 1 + indexMulai} / {berita.kategori?.nama || berita.kategori}</span>
+                  <span class="text-[10px] tracking-widest text-gray-400 uppercase font-mono">
+                    0{index + 1 + indexMulai} / {berita.kategori}
+                  </span>
                   
-                  <!-- TAMPILKAN GAMBAR BERITA SAMPINGAN JIKA ADA -->
+                  <!-- Gambar Berita Otomatis Sampingan Jika Ada -->
                   {berita.gambar_url && (
                     <img src={berita.gambar_url} alt={berita.judul} class="w-full aspect-video object-cover my-3 border border-[#2A2A2A] grayscale hover:grayscale-0 transition-all duration-300" />
                   )}
@@ -144,16 +154,16 @@ const { data: beritaUtama } = await supabase
                   <h4 class="text-base font-bold text-white leading-snug mt-2 hover:text-gray-300 cursor-pointer">
                     <a href={`/berita/${berita.slug}`}>{berita.judul}</a>
                   </h4>
-                  <p class="text-xs text-gray-500 mt-1">Oleh {berita.penulis?.nama || 'Redaksi'}</p>
+                  <p class="text-xs text-gray-500 mt-1">Oleh {berita.sumber || 'Nusa Network'}</p>
                 </div>
               ))
             ) : (
-              <p class="text-xs font-mono text-gray-600 py-4">Artikel tidak ditemukan.</p>
+              <p class="text-xs font-mono text-gray-600 py-4">Artikel tidak ditemukan. Coba kata kunci lain.</p>
             )}
           </div>
         </div>
 
-        <!-- PAGINATION -->
+        <!-- NAVIGATION PAGINATION -->
         {totalHalaman > 1 && (
           <div class="flex items-center justify-between pt-6 border-t border-[#2A2A2A] mt-8">
             <a href={halamanSekarang > 1 ? `?search=${kataKunci}&page=${halamanSekarang - 1}` : '#'} class={`text-xs uppercase tracking-wider ${halamanSekarang <= 1 ? 'text-gray-700 pointer-events-none' : 'text-white hover:underline'}`}>&larr; Prev</a>
@@ -166,9 +176,19 @@ const { data: beritaUtama } = await supabase
       <!-- SISI KANAN: SPONSOR -->
       <aside class="lg:col-span-3 space-y-6">
         <h3 class="text-xs font-black tracking-widest uppercase text-gray-400">SPONSOR UTAMA</h3>
-        <div class="w-full bg-[#1A1A1A] border border-[#2A2A2A] aspect-square flex items-center justify-center text-xs text-gray-600 uppercase">[ IKLAN ]</div>
+        <div class="w-full bg-[#1A1A1A] border border-[#2A2A2A] aspect-square flex items-center justify-center text-xs text-gray-600 uppercase">[ IKLAN #2 ]</div>
+        <div class="w-full bg-[#1A1A1A] border border-[#2A2A2A] h-48 flex items-center justify-center text-xs text-gray-600 uppercase">[ IKLAN #3 ]</div>
       </aside>
       
     </main>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-[#2A2A2A] mt-12 py-8 bg-[#0A0A0A]">
+      <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500">
+        <p>&copy; 2026 <span class="text-white font-bold tracking-wider">NUSA MEDIA</span>. Hak Cipta Dilindungi.</p>
+      </div>
+    </footer>
   </body>
 </html>
+
+    
