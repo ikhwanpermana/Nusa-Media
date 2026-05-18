@@ -1,123 +1,172 @@
 ---
-// NUSA MEDIA - Premium Monochrome Grid Layout
+// NUSA MEDIA - Premium Monochrome Grid Layout dengan Fitur Pencarian & Pagination
+// File: src/pages/index.astro
+
+import { createClient } from '@supabase/supabase-js';
+
 const judulSitus = "NUSA MEDIA";
 const tagline = "Suara Nusantara, Jendela Dunia";
-const tanggal = "Minggu, 17 Mei 2026";
 
-// Simulasi data berita FYP (Nanti bagian ini otomatis disedot dari Supabase)
-const beritaUtama = {
-  kategori: "POLITIK & EKONOMI",
-  judul: "Transformasi Digital Indonesia Timur: Infrastruktur Cloud Mulai Merambah Pelosok Nusantara",
-  waktu: "5 Menit Lalu",
-  sumber: "Nusa Digital",
-  ringkasan: "Pembangunan pusat data ramah lingkungan berskala besar resmi dimulai. Proyek ini diprediksi akan memangkas biaya operasional teknologi hingga 0% bagi pelaku usaha mikro dan media digital lokal di seluruh pelosok negeri."
-};
+const tanggalHariIni = new Date().toLocaleDateString('id-ID', {
+  weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+});
 
-const beritaSampingan = [
-  { kategori: "TEKNOLOGI", judul: "Era Baru JAMstack: Mengapa Developer Dunia Mulai Meninggalkan Server Konvensional", waktu: "30 Menit Lalu" },
-  { kategori: "BISNIS", judul: "Strategi Multi-Slot Iklan: Maksimalkan Cuan Media Tanpa Merusak Pengalaman Pembaca", waktu: "1 Jam Lalu" },
-  { kategori: "GAYA HIDUP", judul: "Desain Minimalis Monokrom Kembali Menjadi Tren Utama Desain Web Global 2026", waktu: "2 Jam Lalu" }
-];
+const supabase = createClient(import.meta.env.SUPABASE_URL, import.meta.env.SUPABASE_ANON_KEY);
+
+// 1. Ambil parameter Pencarian dan Halaman dari URL
+const url = new URL(Astro.request.url);
+const kataKunci = url.searchParams.get('search') || '';
+const halamanSekarang = parseInt(url.searchParams.get('page') || '1');
+const beritaPerHalaman = 4; 
+
+const indexMulai = (halamanSekarang - 1) * beritaPerHalaman;
+const indexSelesai = indexMulai + beritaPerHalaman - 1;
+
+// 2. BANGUN QUERY SUPABASE SECARA DINAMIS
+// Menarik data berita yang sudah diterbitkan (Status: Terbit) dan bukan headline utama
+let querySampingan = supabase
+  .from('berita')
+  .select('*, kategori(nama), penulis(nama)', { count: 'exact' })
+  .eq('is_utama', false)
+  .eq('status', 'Terbit')
+  .order('created_at', { ascending: false })
+  .range(indexMulai, indexSelesai);
+
+// JIKA USER MENGETIK SESUATU, AKTIFKAN FILTER ILIKE (Case-Insensitive Search)
+if (kataKunci) {
+  querySampingan = querySampingan.ilike('judul', `%${kataKunci}%`);
+}
+
+// Eksekusi Query Sampingan
+const { data: beritaSampingan, count } = await querySampingan;
+const totalHalaman = Math.ceil((count || 0) / beritaPerHalaman);
+
+// 3. Tarik Data Berita Utama (Headline tetap muncul utuh di atas jika tidak sedang mencari sesuatu)
+const { data: beritaUtama } = await supabase
+  .from('berita')
+  .select('*, kategori(nama), penulis(nama)')
+  .eq('is_utama', true)
+  .eq('status', 'Terbit')
+  .order('created_at', { ascending: false })
+  .limit(1)
+  .single();
 ---
+
 <html lang="id">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width" />
     <title>{judulSitus} - {tagline}</title>
-    <!-- Memanggil Tailwind CSS secara langsung dari CDN agar instan & ringan -->
-    <script src="https://tailwindcss.com"></script>
   </head>
-  <body class="bg-[#111111] text-[#E5E5E5] font-sans antialiased selection:bg-white selection:text-black">
-
-    <!-- HEADER UTAMA (Gaya Koran Klasik Elit) -->
-    <header class="border-b border-[#2A2A2A] py-6 px-4 md:px-8 text-center">
-      <p class="text-xs tracking-[0.2em] text-gray-500 uppercase mb-2">{tanggal}</p>
-      <h1 class="text-5xl md:text-7xl font-serif font-black tracking-tighter text-white my-3 cursor-pointer hover:opacity-90">
-        {judulSitus}
-      </h1>
+  <body class="bg-[#111111] text-[#E5E5E5] font-sans antialiased">
+    
+    <!-- HEADER -->
+    <header class="border-b border-[#2A2A2A] py-6 px-4 text-center">
+      <p class="text-xs tracking-[0.2em] text-gray-500 uppercase mb-2">{tanggalHariIni}</p>
+      <h1 class="text-5xl md:text-7xl font-serif font-black tracking-tighter text-white my-3">{judulSitus}</h1>
       <div class="border-t border-b border-[#2A2A2A] py-2 mt-4 max-w-xl mx-auto">
         <p class="text-xs italic tracking-widest text-gray-400 uppercase">{tagline}</p>
       </div>
     </header>
 
-    <!-- SLOT IKLAN UTAMA 1 (Header Premium Zone) -->
+    <!-- KOLOM PENCARIAN (SEARCH BAR PREMIUM MONOKROM) -->
     <div class="max-w-7xl mx-auto px-4 pt-6">
-      <div class="w-full bg-[#1A1A1A] border border-[#2A2A2A] h-24 flex items-center justify-center text-xs tracking-widest text-gray-600 uppercase">
-        [ SLOT IKLAN PREMIUM #1 - HEADER BANNER ]
-      </div>
+      <form method="GET" action="/" class="flex gap-2 max-w-xl mx-auto">
+        <input 
+          type="text" 
+          name="search" 
+          value={kataKunci} 
+          placeholder="Cari arsip berita jadul..." 
+          class="w-full bg-[#1A1A1A] border border-[#2A2A2A] px-4 py-2 text-sm text-white focus:outline-none focus:border-white transition-colors placeholder-gray-600 font-mono"
+        />
+        <button 
+          type="submit" 
+          class="bg-white text-black px-5 py-2 text-xs uppercase font-black tracking-widest hover:bg-gray-200 transition-colors"
+        >
+          Cari
+        </button>
+        {kataKunci && (
+          <a 
+            href="/" 
+            class="border border-[#2A2A2A] text-gray-400 px-3 py-2 text-xs uppercase flex items-center hover:text-white transition-colors"
+          >
+            Reset
+          </a>
+        )}
+      </form>
+      {kataKunci && (
+        <p class="text-center text-xs font-mono text-gray-500 mt-3">
+          Menampilkan hasil pencarian untuk: <span class="text-white">"{kataKunci}"</span> ({count || 0} ditemukan)
+        </p>
+      )}
     </div>
 
-    <!-- MAIN CONTENT (Premium Grid Layout) -->
+    <!-- MAIN CONTENT -->
     <main class="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
       
-      <!-- SISI KIRI: BERITA UTAMA BESAR (6 Kolom) -->
+      <!-- SISI KIRI: BERITA UTAMA -->
       <article class="lg:col-span-6 border-b lg:border-b-0 lg:border-r border-[#2A2A2A] pb-8 lg:pb-0 lg:pr-8 flex flex-col justify-between">
-        <div>
-          <span class="text-xs font-bold tracking-widest text-white border-b border-white pb-1 uppercase">{beritaUtama.kategori}</span>
-          <h2 class="text-3xl md:text-4xl font-serif font-bold text-white tracking-tight leading-tight mt-6 mb-4 hover:underline cursor-pointer">
-  <a href={`/berita/${beritaUtama.slug}`}>{beritaUtama.judul}</a>
-</h2>
-
-          <!-- Placeholder Video/Gambar Multimedia Aman Hak Cipta -->
-          <div class="w-full bg-zinc-900 aspect-video mb-4 border border-[#2A2A2A] flex items-center justify-center text-gray-600 relative overflow-hidden group">
-            <span class="z-10 text-sm tracking-widest uppercase group-hover:text-white transition-colors">[ MULTIMEDIA PLAYER - YOUTUBE EMBED ]</span>
-            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+        {beritaUtama && !kataKunci ? (
+          <div>
+            <span class="text-xs font-bold tracking-widest text-white border-b border-white pb-1 uppercase">{beritaUtama.kategori?.nama || beritaUtama.kategori}</span>
+            <h2 class="text-3xl md:text-4xl font-serif font-bold text-white tracking-tight leading-tight mt-6 mb-4 hover:underline cursor-pointer">
+              <a href={`/berita/${beritaUtama.slug}`}>{beritaUtama.judul}</a>
+            </h2>
+            <div class="w-full bg-zinc-900 aspect-video mb-4 border border-[#2A2A2A] flex items-center justify-center text-gray-600 relative overflow-hidden">
+              <span class="text-sm tracking-widest uppercase">[ HEADLINE ]</span>
+            </div>
+            <p class="text-gray-400 text-sm leading-relaxed mb-6">{beritaUtama.ringkasan}</p>
           </div>
-          <p class="text-gray-400 text-sm leading-relaxed mb-6">
-            {beritaUtama.ringkasan}
-          </p>
-        </div>
-        <div class="flex items-center justify-between text-xs text-gray-500">
-          <span>Oleh <strong class="text-gray-300">{beritaUtama.sumber}</strong></span>
-          <span>{beritaUtama.waktu}</span>
-        </div>
+          <div class="flex items-center justify-between text-xs text-gray-500">
+            <span>Oleh <strong class="text-gray-300">{beritaUtama.penulis?.nama || 'Redaksi'}</strong></span>
+            <span>{beritaUtama.sumber}</span>
+          </div>
+        ) : (
+          <div class="h-full flex items-center justify-center border border-dashed border-[#2A2A2A] p-8 text-center text-gray-500 text-sm font-mono">
+            {kataKunci ? "Mode pencarian aktif. Silakan lihat panel hasil di sebelah kanan." : "Belum ada berita utama."}
+          </div>
+        )}
       </article>
 
-      <!-- SISI TENGAH: DAFTAR BERITA VIRAL / KANAN (3 Kolom) -->
-      <section class="lg:col-span-3 border-b lg:border-b-0 lg:border-r border-[#2A2A2A] pb-8 lg:pb-0 lg:pr-8 space-y-8">
-        <h3 class="text-xs font-black tracking-widest uppercase text-gray-400 mb-4">TREN POPULER (FYP)</h3>
-        
-        {beritaSampingan.map((berita, index) => (
-          <div class="pb-6 border-b border-[#2A2A2A] last:border-0 last:pb-0 flex flex-col justify-between h-full">
-            <div>
-              <span class="text-[10px] tracking-widest text-gray-400 uppercase font-mono">0{index + 1} / {berita.kategori}</span>
-              <h4 class="text-base font-bold text-white leading-snug mt-2 hover:text-gray-300 cursor-pointer">
-  <a href={`/berita/${berita.slug}`}>{berita.judul}</a>
-</h4>
-
-            </div>
-            <span class="text-[11px] text-gray-500 mt-2">{berita.waktu}</span>
+      <!-- SISI TENGAH: DAFTAR HASIL PENCARIAN / FYP -->
+      <section class="lg:col-span-3 border-b lg:border-b-0 lg:border-r border-[#2A2A2A] pb-8 lg:pb-0 lg:pr-8 flex flex-col justify-between">
+        <div>
+          <h3 class="text-xs font-black tracking-widest uppercase text-gray-400 mb-4">
+            {kataKunci ? "HASIL ARSIP" : "TREN POPULER (FYP)"}
+          </h3>
+          <div class="space-y-8">
+            {beritaSampingan && beritaSampingan.length > 0 ? (
+              beritaSampingan.map((berita, index) => (
+                <div class="pb-6 border-b border-[#2A2A2A] last:border-0 last:pb-0">
+                  <span class="text-[10px] tracking-widest text-gray-400 uppercase font-mono">0{index + 1 + indexMulai} / {berita.kategori?.nama || berita.kategori}</span>
+                  <h4 class="text-base font-bold text-white leading-snug mt-2 hover:text-gray-300 cursor-pointer">
+                    <a href={`/berita/${berita.slug}`}>{berita.judul}</a>
+                  </h4>
+                  <p class="text-xs text-gray-500 mt-1">Oleh {berita.penulis?.nama || 'Redaksi'} • {berita.sumber}</p>
+                </div>
+              ))
+            ) : (
+              <p class="text-xs font-mono text-gray-600 py-4">Artikel tidak ditemukan. Coba kata kunci lain.</p>
+            )}
           </div>
-        ))}
+        </div>
+
+        <!-- PAGINATION PANEL (Mendukung parameter search agar kata kunci tidak hilang saat ganti halaman) -->
+        {totalHalaman > 1 && (
+          <div class="flex items-center justify-between pt-6 border-t border-[#2A2A2A] mt-8">
+            <a href={halamanSekarang > 1 ? `?search=${kataKunci}&page=${halamanSekarang - 1}` : '#'} class={`text-xs uppercase tracking-wider ${halamanSekarang <= 1 ? 'text-gray-700 pointer-events-none' : 'text-white hover:underline'}`}>&larr; Prev</a>
+            <span class="text-xs font-mono text-gray-500">Halaman {halamanSekarang} dari {totalHalaman}</span>
+            <a href={halamanSekarang < totalHalaman ? `?search=${kataKunci}&page=${halamanSekarang + 1}` : '#'} class={`text-xs uppercase tracking-wider ${halamanSekarang >= totalHalaman ? 'text-gray-700 pointer-events-none' : 'text-white hover:underline'}`}>Next &rarr;</a>
+          </div>
+        )}
       </section>
 
-      <!-- SISI KANAN: SLOT IKLAN SIDEBAR & KONTEN PREMIUM (3 Kolom) -->
+      <!-- SISI KANAN: SPONSOR -->
       <aside class="lg:col-span-3 space-y-6">
         <h3 class="text-xs font-black tracking-widest uppercase text-gray-400">SPONSOR UTAMA</h3>
-        <!-- SLOT IKLAN SIDEBAR 1 -->
-        <div class="w-full bg-[#1A1A1A] border border-[#2A2A2A] aspect-square flex items-center justify-center text-xs tracking-widest text-gray-600 uppercase p-4 text-center">
-          [ SLOT IKLAN PREMIUM #2 - SIDEBAR SQUARE ]
-        </div>
-        <!-- SLOT IKLAN SIDEBAR 2 -->
-        <div class="w-full bg-[#1A1A1A] border border-[#2A2A2A] h-48 flex items-center justify-center text-xs tracking-widest text-gray-600 uppercase p-4 text-center">
-          [ SLOT IKLAN PREMIUM #3 - NATIVE ADS ]
-        </div>
+        <div class="w-full bg-[#1A1A1A] border border-[#2A2A2A] aspect-square flex items-center justify-center text-xs text-gray-600 uppercase">[ IKLAN #2 ]</div>
       </aside>
-
+      
     </main>
-
-    <!-- FOOTER EKOSISTEM NUSA MEDIA -->
-    <footer class="border-t border-[#2A2A2A] mt-12 py-8 bg-[#0A0A0A]">
-      <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500">
-        <p>&copy; 2026 <span class="text-white font-bold tracking-wider">NUSA MEDIA</span>. Hak Cipta Dilindungi.</p>
-        <div class="flex gap-6 uppercase tracking-wider text-[10px]">
-          <a href="#" class="hover:text-white transition-colors">Tentang Kami</a>
-          <a href="#" class="hover:text-white transition-colors">Kebijakan Privasi</a>
-          <a href="#" class="hover:text-white transition-colors">Syarat & Ketentuan</a>
-        </div>
-      </div>
-    </footer>
-
   </body>
 </html>
