@@ -1,11 +1,11 @@
 ---
 // File: src/pages/berita/[slug].astro
+export const prerender = false;
 import { createClient } from '@supabase/supabase-js';
 
 const { slug } = Astro.params;
 const supabase = createClient(import.meta.env.SUPABASE_URL, import.meta.env.SUPABASE_ANON_KEY);
 
-// 1. PROSES SIMPAN KOMENTAR BARU (Jika ada form yang disubmit)
 if (Astro.request.method === "POST") {
   try {
     const formData = await Astro.request.formData();
@@ -15,7 +15,7 @@ if (Astro.request.method === "POST") {
 
     if (nama && isi && beritaId) {
       await supabase.from('komentar').insert([
-        { nama_pembaca: nama, isi_komentar: isi, berita_id: beritaId }
+        { nama_pembaca: nama, isi_komentar: isi, berita_id: parseInt(beritaId.toString()) }
       ]);
     }
   } catch (e) {
@@ -23,51 +23,46 @@ if (Astro.request.method === "POST") {
   }
 }
 
-// 2. TARIK DATA ARTIKEL
 const { data: artikel } = await supabase
   .from('berita')
-  .select('*, kategori(id, nama, slug), penulis(nama)')
+  .select('*')
   .eq('slug', slug)
-  .single();
+  .maybeSingle();
 
 if (!artikel) return Astro.redirect('/404');
 
-// 3. TARIK DAFTAR KOMENTAR UNTUK ARTIKEL INI
 const { data: daftarKomentar } = await supabase
   .from('komentar')
   .select('*')
   .eq('berita_id', artikel.id)
   .order('created_at', { ascending: false });
+
+const judulSitus = "NUSA MEDIA";
 ---
 
 <html lang="id">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
-    <title>{artikel.judul}</title>
+    <title>{artikel.judul} - {judulSitus}</title>
   </head>
   <body class="bg-[#111111] text-[#E5E5E5] font-sans antialiased">
+    <header class="border-b border-[#2A2A2A] py-4 px-4 flex justify-between items-center max-w-7xl mx-auto">
+      <a href="/" class="text-xs uppercase tracking-widest text-gray-400 hover:text-white">&larr; Beranda</a>
+      <span class="font-serif font-black text-white text-xl">{judulSitus}</span>
+    </header>
+
     <main class="max-w-3xl mx-auto px-4 py-12">
-      <!-- Navigasi Kategori Dinamis -->
-      <a href={`/kategori/${artikel.kategori?.slug}`} class="text-xs font-bold text-white border-b border-white pb-1 uppercase hover:opacity-80">
-        {artikel.kategori?.nama || 'Umum'}
-      </a>
-      
-      <h1 class="text-3xl md:text-5xl font-serif font-bold text-white my-6">{artikel.judul}</h1>
+      <article>
+        <div class="text-xs tracking-widest text-gray-400 uppercase mb-4"><span class="text-white font-bold">{artikel.kategori}</span></div>
+        <h1 class="text-3xl md:text-5xl font-serif font-bold text-white mb-6">{artikel.judul}</h1>
+        {artikel.gambar_url && <img src={artikel.gambar_url} alt={artikel.judul} class="w-full aspect-video object-cover mb-8 border border-[#2A2A2A]" />}
+        <p class="text-lg text-white font-medium italic border-l-2 border-white pl-4 mb-8">{artikel.ringkasan}</p>
+        <div class="text-gray-300 text-base md:text-lg leading-relaxed space-y-6 whitespace-pre-line mb-12">{artikel.konten}</div>
+      </article>
 
-      <!-- Tampilkan Gambar Cover Jika Ada URL-nya di Supabase -->
-      {artikel.gambar_url && (
-        <img src={artikel.gambar_url} alt={artikel.judul} class="w-full aspect-video object-cover mb-8 border border-[#2A2A2A]" />
-      )}
-
-      <p class="text-lg text-gray-300 italic mb-8 border-l-2 pl-4">{artikel.ringkasan}</p>
-      <div class="text-gray-300 leading-relaxed whitespace-pre-line border-b border-[#2A2A2A] pb-12">{artikel.konten}</div>
-
-      <!-- KANTONG KOMENTAR -->
-      <section class="mt-12">
+      <section class="mt-12 border-t border-[#2A2A2A] pt-12">
         <h3 class="text-lg font-bold text-white mb-6 font-serif">Komentar Pembaca ({daftarKomentar?.length || 0})</h3>
-        
-        <!-- Form Kirim Komentar -->
         <form method="POST" class="space-y-4 mb-8 bg-[#1A1A1A] p-6 border border-[#2A2A2A]">
           <input type="hidden" name="berita_id" value={artikel.id} />
           <div>
@@ -81,13 +76,11 @@ const { data: daftarKomentar } = await supabase
           <button type="submit" class="bg-white text-black px-4 py-2 text-xs uppercase font-black tracking-widest hover:bg-gray-200">Kirim Komentar</button>
         </form>
 
-        <!-- Daftar Komentar Terkirim -->
         <div class="space-y-4">
-          {daftarKomentar && daftarKomentar.map((kom) => (
+          {daftarKomentar && ordenarKomentar => daftarKomentar.map((kom) => (
             <div class="border-b border-[#2A2A2A] pb-4">
               <div class="flex justify-between text-xs text-gray-500 mb-1">
                 <span class="font-bold text-gray-300">{kom.nama_pembaca}</span>
-                <span>{new Date(kom.created_at).toLocaleDateString('id-ID')}</span>
               </div>
               <p class="text-sm text-gray-400">{kom.isi_komentar}</p>
             </div>
