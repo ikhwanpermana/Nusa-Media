@@ -1,9 +1,18 @@
 import { defineConfig } from 'astro/config';
 import tailwind from '@astrojs/tailwind';
-import vercel from '@astrojs/vercel/serverless'; // Mengimpor adapter resmi Vercel
+import vercel from '@astrojs/vercel/serverless';
 
 export default defineConfig({
-  integrations: [tailwind()],
-  output: 'server', // Mengubah output menjadi Server agar mendukung rute dinamis tanpa getStaticPaths
-  adapter: vercel(), // Memasang adapter Vercel Serverless
+  // Mengaktifkan konfigurasi pencarian class CSS langsung di dalam integrasi Astro
+  integrations: [
+    tailwind({
+      configFile: false, // Beritahu Astro kita tidak pakai file tailwind.config.js terpisah
+      config: {
+        content: ['./src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}'],
+      },
+    }),
+  ],
+  
+  output: 'server',
+  adapter: vercel(),
 });
