@@ -1,3 +1,5 @@
 {
-  "vercelToolbar": false
+  "features": {
+    "vercelToolbar": false
+  }
 }
