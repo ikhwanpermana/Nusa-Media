@@ -2,41 +2,45 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "jsr:@supabase/server@^1";
 
-console.info("Robot Penyedot Berita GNews Nusa Media dimulai");
+console.info("Robot NewsAPI Nusa Media dengan Jalur Proksi dimulai");
 
 export default {
-  // Hanya menerima otentikasi 'secret' (Service Role Key) agar aman dari pihak luar
   fetch: withSupabase({ auth: ["secret"] }, async (req, ctx) => {
     try {
-      // 1. Ambil API Key GNews dari Environment Variables cloud Supabase
-      const GNEWS_API_KEY = Deno.env.get('GNEWS_API_KEY') ?? '';
+      // 1. Ambil API Key NewsAPI Anda dari rahasia cloud Supabase
+      const NEWS_API_KEY = Deno.env.get('NEWS_API_KEY') ?? '';
       const supabase = ctx.supabase;
 
-      // 2. Ambil top 5 berita berbahasa Indonesia (max=5 agar hemat memori)
-      const responNews = await fetch(
-        `https://gnews.io{GNEWS_API_KEY}`
-      );
-      const dataNews = await responNews.json();
+      // Alamat asli NewsAPI yang ingin kita tuju
+      const urlAsli = `https://newsapi.org{NEWS_API_KEY}`;
 
-      if (dataNews.errors) {
-        return Response.json({ error: dataNews.errors }, { status: 400 });
+      // 2. Tembak melalui proksi "allorigins" untuk mengelabui deteksi cloud NewsAPI
+      const responProxy = await fetch(
+        `https://allorigins.win{encodeURIComponent(urlAsli)}`
+      );
+      const dataProxy = await responProxy.json();
+      
+      // Mengubah string teks hasil proksi kembali menjadi format JSON data berita
+      const dataNews = JSON.parse(dataProxy.contents);
+
+      if (!dataNews || dataNews.status === "error") {
+        return Response.json({ error: dataNews?.message || "Gagal menembus proksi." }, { status: 400 });
       }
 
       if (!dataNews.articles || dataNews.articles.length === 0) {
         return Response.json({ pesan: "Tidak ada berita baru disedot." }, { status: 200 });
       }
 
-      // 3. Tarik semua judul berita yang sudah ada di database agar tidak ganda
+      // 3. Tarik semua judul lama di database agar tidak duplikat
       const { data: listBeritaAda } = await supabase.from('berita').select('judul');
       const setJudulAda = new Set(listBeritaAda?.map(b => b.judul) || []);
       const dataAkanDimasukkan = [];
 
-      // 4. Olah data artikel yang didapat dari internet
+      // 4. Olah data struktur artikel NewsAPI ke format tabel Anda
       for (const artikel of dataNews.articles) {
         if (!artikel.title || !artikel.description) continue;
-        if (setJudulAda.has(artikel.title)) continue; // Lewati jika sudah ada di DB
+        if (setJudulAda.has(artikel.title)) continue; 
 
-        // Membuat slug URL otomatis dari judul berita
         const slug = artikel.title
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, '-')
@@ -49,14 +53,14 @@ export default {
           ringkasan: artikel.description,
           sumber: artikel.source.name || "Nusa Media Regional",
           url_sumber: artikel.url,
-          gambar_url: artikel.image || "https://unsplash.com",
+          gambar_url: artikel.urlToImage || "https://unsplash.com",
           id_video_youtube: "dQw4w9WgXcQ", 
-          status: "Terbit", // Otomatis terbit agar terbaca oleh aplikasi Astro Anda
+          status: "Terbit", 
           is_utama: false
         });
       }
 
-      // 5. Masukkan semua data baru sekaligus menggunakan teknik Bulk Insert
+      // 5. Masukkan data sekaligus jika ada artikel baru
       if (dataAkanDimasukkan.length > 0) {
         const { error: insertError } = await supabase.from('berita').insert(dataAkanDimasukkan);
         if (insertError) throw new Error(insertError.message);
@@ -64,7 +68,7 @@ export default {
 
       return Response.json({
         sukses: true,
-        pesan: `Robot berhasil berjalan! Menambahkan ${dataAkanDimasukkan.length} berita baru ke database.`
+        pesan: `Robot NewsAPI berhasil! Menambahkan ${dataAkanDimasukkan.length} berita baru lewat proksi.`
       });
 
     } catch (error: any) {
