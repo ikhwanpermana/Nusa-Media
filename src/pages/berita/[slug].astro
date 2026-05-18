@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 const { slug } = Astro.params;
 const supabase = createClient(import.meta.env.SUPABASE_URL, import.meta.env.SUPABASE_ANON_KEY);
 
+// 1. PROSES FORM KOMENTAR BARU
 if (Astro.request.method === "POST") {
   try {
     const formData = await Astro.request.formData();
@@ -23,6 +24,7 @@ if (Astro.request.method === "POST") {
   }
 }
 
+// 2. AMBIL DATA ARTIKEL
 const { data: artikel } = await supabase
   .from('berita')
   .select('*')
@@ -31,6 +33,7 @@ const { data: artikel } = await supabase
 
 if (!artikel) return Astro.redirect('/404');
 
+// 3. AMBIL DAFTAR KOMENTAR
 const { data: daftarKomentar } = await supabase
   .from('komentar')
   .select('*')
@@ -54,15 +57,23 @@ const judulSitus = "NUSA MEDIA";
 
     <main class="max-w-3xl mx-auto px-4 py-12">
       <article>
-        <div class="text-xs tracking-widest text-gray-400 uppercase mb-4"><span class="text-white font-bold">{artikel.kategori}</span></div>
+        <div class="text-xs tracking-widest text-gray-400 uppercase mb-4">
+          <span class="text-white font-bold">{artikel.kategori}</span>
+        </div>
         <h1 class="text-3xl md:text-5xl font-serif font-bold text-white mb-6">{artikel.judul}</h1>
-        {artikel.gambar_url && <img src={artikel.gambar_url} alt={artikel.judul} class="w-full aspect-video object-cover mb-8 border border-[#2A2A2A]" />}
+        
+        {artikel.gambar_url && (
+          <img src={artikel.gambar_url} alt={artikel.judul} class="w-full aspect-video object-cover mb-8 border border-[#2A2A2A]" />
+        )}
+        
         <p class="text-lg text-white font-medium italic border-l-2 border-white pl-4 mb-8">{artikel.ringkasan}</p>
         <div class="text-gray-300 text-base md:text-lg leading-relaxed space-y-6 whitespace-pre-line mb-12">{artikel.konten}</div>
       </article>
 
+      <!-- SEKSI KOMENTAR -->
       <section class="mt-12 border-t border-[#2A2A2A] pt-12">
         <h3 class="text-lg font-bold text-white mb-6 font-serif">Komentar Pembaca ({daftarKomentar?.length || 0})</h3>
+        
         <form method="POST" class="space-y-4 mb-8 bg-[#1A1A1A] p-6 border border-[#2A2A2A]">
           <input type="hidden" name="berita_id" value={artikel.id} />
           <div>
@@ -77,7 +88,7 @@ const judulSitus = "NUSA MEDIA";
         </form>
 
         <div class="space-y-4">
-          {daftarKomentar && ordenarKomentar => daftarKomentar.map((kom) => (
+          {daftarKomentar && daftarKomentar.map((kom) => (
             <div class="border-b border-[#2A2A2A] pb-4">
               <div class="flex justify-between text-xs text-gray-500 mb-1">
                 <span class="font-bold text-gray-300">{kom.nama_pembaca}</span>
