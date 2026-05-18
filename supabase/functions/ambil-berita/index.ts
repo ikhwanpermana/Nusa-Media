@@ -1,15 +1,18 @@
+// Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "jsr:@supabase/server@^1";
 
-console.info("Robot Hemat Memori Nusa Media dimulai");
+console.info("Robot Penyedot Berita GNews Nusa Media dimulai");
 
 export default {
+  // Hanya menerima otentikasi 'secret' (Service Role Key) agar aman dari pihak luar
   fetch: withSupabase({ auth: ["secret"] }, async (req, ctx) => {
     try {
+      // 1. Ambil API Key GNews dari Environment Variables cloud Supabase
       const GNEWS_API_KEY = Deno.env.get('GNEWS_API_KEY') ?? '';
       const supabase = ctx.supabase;
 
-      // 1. Ambil data berita (Batasi hanya ambil top 5 berita agar hemat memori)
+      // 2. Ambil top 5 berita berbahasa Indonesia (max=5 agar hemat memori)
       const responNews = await fetch(
         `https://gnews.io{GNEWS_API_KEY}`
       );
@@ -23,21 +26,17 @@ export default {
         return Response.json({ pesan: "Tidak ada berita baru disedot." }, { status: 200 });
       }
 
-      // 2. Tarik semua judul yang sudah ada di DB sekaligus (Mengurangi beban query berulang)
-      const { data: listBeritaAda } = await supabase
-        .from('berita')
-        .select('judul');
-      
+      // 3. Tarik semua judul berita yang sudah ada di database agar tidak ganda
+      const { data: listBeritaAda } = await supabase.from('berita').select('judul');
       const setJudulAda = new Set(listBeritaAda?.map(b => b.judul) || []);
       const dataAkanDimasukkan = [];
 
-      // 3. Olah data di memori secara kilat
+      // 4. Olah data artikel yang didapat dari internet
       for (const artikel of dataNews.articles) {
         if (!artikel.title || !artikel.description) continue;
-        
-        // Lewati jika judul sudah ada di database
-        if (setJudulAda.has(artikel.title)) continue;
+        if (setJudulAda.has(artikel.title)) continue; // Lewati jika sudah ada di DB
 
+        // Membuat slug URL otomatis dari judul berita
         const slug = artikel.title
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, '-')
@@ -52,23 +51,20 @@ export default {
           url_sumber: artikel.url,
           gambar_url: artikel.image || "https://unsplash.com",
           id_video_youtube: "dQw4w9WgXcQ", 
-          status: "Terbit",
+          status: "Terbit", // Otomatis terbit agar terbaca oleh aplikasi Astro Anda
           is_utama: false
         });
       }
 
-      // 4. Kirim semua data sekaligus ke database dalam 1 kali ketukan (Sangat hemat resource)
+      // 5. Masukkan semua data baru sekaligus menggunakan teknik Bulk Insert
       if (dataAkanDimasukkan.length > 0) {
-        const { error: insertError } = await supabase
-          .from('berita')
-          .insert(dataAkanDimasukkan);
-
+        const { error: insertError } = await supabase.from('berita').insert(dataAkanDimasukkan);
         if (insertError) throw new Error(insertError.message);
       }
 
       return Response.json({
         sukses: true,
-        pesan: `Robot berhasil! Memproses ${dataAkanDimasukkan.length} berita baru.`
+        pesan: `Robot berhasil berjalan! Menambahkan ${dataAkanDimasukkan.length} berita baru ke database.`
       });
 
     } catch (error: any) {
