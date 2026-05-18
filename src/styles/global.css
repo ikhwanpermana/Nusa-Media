@@ -1,2 +1,4 @@
-@import "tailwindcss";
-@source "../**/*.astro";
+/* Mengaktifkan komponen dasar Tailwind v3 secara aman */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

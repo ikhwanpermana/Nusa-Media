@@ -3,10 +3,10 @@ import tailwind from '@astrojs/tailwind';
 import vercel from '@astrojs/vercel/serverless';
 
 export default defineConfig({
-  // Mengaktifkan konfigurasi pencarian class CSS langsung di dalam integrasi Astro
+  // Mendaftarkan integrasi Tailwind v3 dengan properti content yang benar
   integrations: [
     tailwind({
-      configFile: false, // Beritahu Astro kita tidak pakai file tailwind.config.js terpisah
+      applyBaseStyles: false, // Menghindari bentrok style bawaan Astro
       config: {
         content: ['./src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}'],
       },
