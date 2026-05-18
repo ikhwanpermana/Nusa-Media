@@ -142,12 +142,27 @@ const { data: beritaUtama } = await supabase
           </div>
         </div>
 
-        {totalHalaman > 1 && (
-          <div class="flex items-center justify-between pt-6 border-t border-[#2A2A2A] mt-8">
-            <a href={halamanSekarang > 1 ? `?search=${kataKunci}&page=${halamanSekarang - 1}` : '#'} class={`text-xs uppercase tracking-wider ${halamanSekarang <= 1 ? 'text-gray-700 pointer-events-none' : 'text-white hover:underline'}`}>&larr; Prev</a>
-            <span class="text-xs font-mono text-gray-500">{halamanSekarang} / {totalHalaman}</span>
-            <a href={halamanSekarang < totalHalaman ? `?search=${kataKunci}&page=${halamanSekarang + 1}` : '#'} class={`text-xs uppercase tracking-wider ${halamanSekarang >= totalHalaman ? 'text-gray-700 pointer-events-none' : 'text-white hover:underline'}`}>Next &rarr;</a>
-          </div>
+       {totalHalaman > 1 && (
+  <div class="flex items-center justify-between pt-6 border-t border-[#2A2A2A] mt-8 font-mono">
+    {/* Tombol SEBELUMNYA */}
+    {halamanSekarang > 1 ? (
+      <a href={`?search=${kataKunci}&page=${halamanSekarang - 1}`} class="text-xs uppercase tracking-wider text-white hover:underline">&larr; Prev</a>
+    ) : (
+      <span class="text-xs uppercase tracking-wider text-gray-700 cursor-not-allowed">&larr; Prev</span>
+    )}
+
+    {/* Indikator Halaman */}
+    <span class="text-xs text-gray-500">{halamanSekarang} / {totalHalaman}</span>
+
+    {/* Tombol SELANJUTNYA */}
+    {halamanSekarang < totalHalaman ? (
+      <a href={`?search=${kataKunci}&page=${halamanSekarang + 1}`} class="text-xs uppercase tracking-wider text-white hover:underline">Next &rarr;</a>
+    ) : (
+      <span class="text-xs uppercase tracking-wider text-gray-700 cursor-not-allowed">Next &rarr;</span>
+    )}
+  </div>
+)}
+ 
         )}
       </section>
 
