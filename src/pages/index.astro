@@ -40,7 +40,7 @@ if (kataKunci) {
 const { data: beritaSampingan, count } = await querySampingan;
 const totalHalaman = Math.ceil((count || 0) / beritaPerHalaman);
 
-// 2. Tarik data berita utama
+// 2. Tarik data berita utama (Headline)
 const { data: beritaUtama } = await supabase
   .from('berita')
   .select('*')
@@ -83,15 +83,18 @@ const { data: beritaUtama } = await supabase
           <article class="h-full flex flex-col justify-between">
             <div>
               <span class="text-xs font-bold tracking-widest text-white border-b border-white pb-1 uppercase">{beritaUtama.kategori}</span>
-              <h2 class="text-3xl md:text-4xl font-serif font-bold text-white tracking-tight leading-tight mt-6 mb-4 hover:underline">
+              {/* SINKRONISASI: line-clamp-3 mengunci tinggi judul agar simetris */}
+              <h2 class="text-3xl md:text-4xl font-serif font-bold text-white tracking-tight leading-tight mt-6 mb-4 hover:underline line-clamp-3">
                 <a href={`/berita/${beritaUtama.slug}`}>{beritaUtama.judul}</a>
               </h2>
+              {/* SINKRONISASI: Menggunakan beritaUtama.gambar_url sesuai kolom database baru */}
               {beritaUtama.gambar_url ? (
                 <img src={beritaUtama.gambar_url} alt={beritaUtama.judul} class="w-full aspect-video object-cover mb-4 border border-[#2A2A2A] grayscale hover:grayscale-0 transition-all duration-300" />
               ) : (
                 <div class="w-full bg-zinc-900 aspect-video mb-4 border border-[#2A2A2A] flex items-center justify-center text-gray-600 relative overflow-hidden"><span class="text-sm tracking-widest uppercase">[ NO IMAGE ]</span></div>
               )}
-              <p class="text-gray-400 text-sm leading-relaxed mb-6">{beritaUtama.ringkasan}</p>
+              {/* SINKRONISASI: line-clamp-4 memotong ringkasan berita robot yang terlalu panjang */}
+              <p class="text-gray-400 text-sm leading-relaxed mb-6 line-clamp-4">{beritaUtama.ringkasan}</p>
             </div>
             <div class="flex items-center justify-between text-xs text-gray-500">
               <span>Oleh <strong class="text-gray-300">{beritaUtama.sumber || 'Redaksi'}</strong></span>
@@ -105,7 +108,7 @@ const { data: beritaUtama } = await supabase
         )}
       </div>
 
-      {/* Kolom Berita Sampingan */}
+      {/* Kolom Berita Sampingan (Hasil Sedotan Robot) */}
       <section class="lg:col-span-3 border-b lg:border-b-0 lg:border-r border-[#2A2A2A] pb-8 lg:pb-0 lg:pr-8 flex flex-col justify-between">
         <div>
           <h3 class="text-xs font-black tracking-widest uppercase text-gray-400 mb-4">{kataKunci ? "HASIL ARSIP" : "TREN POPULER (FYP)"}</h3>
@@ -114,11 +117,15 @@ const { data: beritaUtama } = await supabase
               beritaSampingan.map((berita, index) => (
                 <div class="pb-6 border-b border-[#2A2A2A] last:border-0 last:pb-0">
                   <span class="text-[10px] tracking-widest text-gray-400 uppercase font-mono">0{index + 1 + indexMulai} / {berita.kategori}</span>
-                  {berita.gambar_url && <img src={berita.gambar_url} alt={berita.judul} class="w-full aspect-video object-cover my-3 border border-[#2A2A2A] grayscale hover:grayscale-0 transition-all duration-300" />}
-                  <h4 class="text-base font-bold text-white leading-snug mt-2 hover:text-gray-300">
+                  {/* SINKRONISASI: Menggunakan berita.gambar_url agar gambar dari robot muncul */}
+                  {berita.gambar_url && (
+                    <img src={berita.gambar_url} alt={berita.judul} class="w-full aspect-video object-cover my-3 border border-[#2A2A2A] grayscale hover:grayscale-0 transition-all duration-300" />
+                  )}
+                  {/* SINKRONISASI: line-clamp-3 mencegah judul berita robot memakan ruang terlalu besar */}
+                  <h4 class="text-base font-bold text-white leading-snug mt-2 hover:text-gray-300 line-clamp-3">
                     <a href={`/berita/${berita.slug}`}>{berita.judul}</a>
                   </h4>
-                  <p class="text-xs text-gray-500 mt-1">Oleh {berita.sumber || 'Nusa Network'}</p>
+                  <p class="text-xs text-gray-500 mt-1 line-clamp-1">Oleh {berita.sumber || 'Nusa Network'}</p>
                 </div>
               ))
             ) : (
@@ -136,6 +143,7 @@ const { data: beritaUtama } = await supabase
         )}
       </section>
 
+      {/* Kolom Sponsor */}
       <aside class="lg:col-span-3 space-y-6">
         <h3 class="text-xs font-black tracking-widest uppercase text-gray-400">SPONSOR UTAMA</h3>
         <div class="w-full bg-[#1A1A1A] border border-[#2A2A2A] aspect-square flex items-center justify-center text-xs text-gray-600 uppercase">[ IKLAN #2 ]</div>
