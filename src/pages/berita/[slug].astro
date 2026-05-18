@@ -1,0 +1,51 @@
+---
+// File: src/pages/berita/[slug].astro
+import { createClient } from '@supabase/supabase-js';
+
+const { slug } = Astro.params;
+const supabase = createClient(import.meta.env.SUPABASE_URL, import.meta.env.SUPABASE_ANON_KEY);
+
+// Tarik data berdasarkan slug unik dari tabel berita Anda
+const { data: artikel, error } = await supabase
+  .from('berita')
+  .select('*, kategori(nama), penulis(nama)')
+  .eq('slug', slug)
+  .single();
+
+if (error || !artikel) {
+  return Astro.redirect('/404');
+}
+
+const judulSitus = "NUSA MEDIA";
+const tanggalTerbit = new Date(artikel.created_at).toLocaleDateString('id-ID', {
+  weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+});
+---
+
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{artikel.judul} - {judulSitus}</title>
+  </head>
+  <body class="bg-[#111111] text-[#E5E5E5] font-sans antialiased">
+    <header class="border-b border-[#2A2A2A] py-4 px-4 flex justify-between items-center max-w-7xl mx-auto">
+      <a href="/" class="text-xs uppercase tracking-widest text-gray-400 hover:text-white">&larr; Beranda</a>
+      <span class="font-serif font-black text-white text-xl">{judulSitus}</span>
+    </header>
+    <main class="max-w-3xl mx-auto px-4 py-12">
+      <article>
+        <div class="text-xs tracking-widest text-gray-400 uppercase mb-4">
+          <span class="text-white font-bold">{artikel.kategori?.nama || artikel.kategori}</span> • {tanggalTerbit}
+        </div>
+        <h1 class="text-3xl md:text-5xl font-serif font-bold text-white mb-6">{artikel.judul}</h1>
+        <div class="border-t border-b border-[#2A2A2A] py-3 flex justify-between text-xs text-gray-500 mb-8">
+          <span>Oleh: <strong class="text-gray-300">{artikel.penulis?.nama || 'Redaksi'}</strong></span>
+          <span>Sumber: {artikel.sumber}</span>
+        </div>
+        <p class="text-lg text-white font-medium italic border-l-2 border-white pl-4 mb-8">{artikel.ringkasan}</p>
+        <div class="text-gray-300 text-base md:text-lg leading-relaxed space-y-6 whitespace-pre-line">{artikel.konten}</div>
+      </article>
+    </main>
+  </body>
+</html>

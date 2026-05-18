@@ -56,8 +56,9 @@ const beritaSampingan = [
         <div>
           <span class="text-xs font-bold tracking-widest text-white border-b border-white pb-1 uppercase">{beritaUtama.kategori}</span>
           <h2 class="text-3xl md:text-4xl font-serif font-bold text-white tracking-tight leading-tight mt-6 mb-4 hover:underline cursor-pointer">
-            {beritaUtama.judul}
-          </h2>
+  <a href={`/berita/${beritaUtama.slug}`}>{beritaUtama.judul}</a>
+</h2>
+
           <!-- Placeholder Video/Gambar Multimedia Aman Hak Cipta -->
           <div class="w-full bg-zinc-900 aspect-video mb-4 border border-[#2A2A2A] flex items-center justify-center text-gray-600 relative overflow-hidden group">
             <span class="z-10 text-sm tracking-widest uppercase group-hover:text-white transition-colors">[ MULTIMEDIA PLAYER - YOUTUBE EMBED ]</span>
@@ -81,9 +82,10 @@ const beritaSampingan = [
           <div class="pb-6 border-b border-[#2A2A2A] last:border-0 last:pb-0 flex flex-col justify-between h-full">
             <div>
               <span class="text-[10px] tracking-widest text-gray-400 uppercase font-mono">0{index + 1} / {berita.kategori}</span>
-              <h4 class="text-base font-bold text-white leading-snug mt-2 mb-2 hover:text-gray-300 cursor-pointer">
-                {berita.judul}
-              </h4>
+              <h4 class="text-base font-bold text-white leading-snug mt-2 hover:text-gray-300 cursor-pointer">
+  <a href={`/berita/${berita.slug}`}>{berita.judul}</a>
+</h4>
+
             </div>
             <span class="text-[11px] text-gray-500 mt-2">{berita.waktu}</span>
           </div>
