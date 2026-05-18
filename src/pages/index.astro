@@ -7,6 +7,15 @@ import { createClient } from '@supabase/supabase-js';
 const judulSitus = "NUSA MEDIA";
 const tagline = "Suara Nusantara, Jendela Dunia";
 
+const supabase = createClient(import.meta.env.SUPABASE_URL, import.meta.env.SUPABASE_ANON_KEY);
+
+// ========================================================
+// TAMBAHKAN BARIS INI UNTUK MEMATIKAN CACHE VERCEL (REALTIME DATA)
+Astro.response.headers.set('Cache-Control', 'no-store, max-age=0, must-revalidate');
+// ========================================================
+
+const url = new URL(Astro.request.url);
+const kataKunci = url.searchParams.get('search') || '';
 const tanggalHariIni = new Date().toLocaleDateString('id-ID', {
   weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
 });
