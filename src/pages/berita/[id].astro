@@ -1,4 +1,64 @@
-<h2 class="text-3xl md:text-4xl font-serif font-bold text-white tracking-tight leading-tight mt-6 mb-4 hover:underline cursor-pointer">
-  <a href={`/berita/${beritaUtama.slug}`}>{beritaUtama.judul}</a>
-</h2>
-git checkout -- src/pages/berita/[id].astro
+---
+// 1. Impor Supabase client yang sudah Anda buat (sesuaikan path folders jika berbeda)
+// Jika Anda belum membuat file client, buat file baru di src/lib/supabase.js
+import { supabase } from '../../lib/supabase'; 
+
+// 2. Ambil parameter ID dari URL secara aman
+const { id } = Astro.params;
+
+// Validasi awal: Jika ID tidak ada, langsung lempar ke halaman 404
+if (!id) {
+  return Astro.redirect('/404');
+}
+
+// 3. Ambil data berita dari tabel Supabase berdasarkan ID
+// Ganti 'berita' dengan nama tabel asli Anda di Supabase jika berbeda
+const { data: artikel, error } = await supabase
+  .from('berita')
+  .select('*')
+  .eq('id', id)
+  .single(); // Mengambil satu baris data saja, bukan array
+
+// 4. Penanganan Eror: Jika data tidak ditemukan atau ada masalah koneksi
+if (error || !artikel) {
+  console.error("Eror Supabase:", error);
+  return Astro.redirect('/404'); // Mengalihkan pengguna ke halaman 404 bawaan
+}
+---
+
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <title>{artikel.judul}</title>
+    <!-- Tambahkan meta tag SEO atau Tailwind jika diperlukan -->
+  </head>
+  <body class="bg-gray-50 text-gray-900 antialiased">
+    <main class="max-w-3xl mx-auto px-4 py-8">
+      <!-- Tombol Kembali -->
+      <a href="/" class="text-blue-600 hover:underline text-sm mb-4 inline-block">&larr; Kembali ke Beranda</a>
+      
+      <!-- Konten Berita -->
+      <article class="prose lg:prose-xl mt-4">
+        <h1 class="text-3xl font-bold tracking-tight sm:text-4xl mb-2">
+          {artikel.judul}
+        </h1>
+        
+        <!-- Format Tanggal (Sesuaikan nama kolom tanggal Anda di Supabase, misal: created_at) -->
+        {artikel.created_at && (
+          <p class="text-sm text-gray-500 mb-6">
+            Dipublikasikan pada: {new Date(artikel.created_at).toLocaleDateString('id-ID', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            })}
+          </p>
+        )}
+
+        <!-- Isi Konten Berita -->
+        <div class="mt-6 leading-relaxed text-lg text-gray-700 whitespace-pre-line">
+          {artikel.konten}
+        </div>
+      </article>
+    </main>
+  </body>
+</html>
