@@ -1,139 +1,238 @@
 ---
-// 1. KODE SERVER ASTRO: Cek koneksi & ambil data admin
 import { supabase } from '../lib/supabase';
-
-// Mengaktifkan mode SSR
 export const prerender = false;
 
-// Mengambil data artikel sekaligus menguji koneksi database
+// Mengambil data artikel secara live dari database Supabase untuk publik
 const { data: artikel, error } = await supabase
   .from('posts')
-  .select('id, judul, created_at, slug')
-  .order('created_at', { ascending: false });
+  .select('*')
+  .order('id', { ascending: false });
 
-// Logika penentu status koneksi database
-const isConnected = !error && artikel !== null;
+// Memisahkan berita utama pertama (Hero) dan sisa berita lainnya
+const beritaUtama = artikel && artikel.length > 0 ? artikel[0] : null;
+const beritaSisa = artikel && artikel.length > 1 ? artikel.slice(1) : [];
 ---
 
 <!DOCTYPE html>
 <html lang="id">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Panel Admin - Nusa Media</title>
-  </head>
-  <body class="bg-gray-100 text-gray-900 font-sans antialiased">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nusa Media - Portal Berita Dunia Terkini</title>
 
-    <div class="flex min-h-screen">
-      <!-- Sidebar Admin -->
-      <aside class="w-64 bg-slate-900 text-white p-6 hidden md:block">
-        <h2 class="text-xl font-black tracking-wider text-amber-500 mb-8">NUSA ADMIN</h2>
-        <nav class="space-y-2">
-          <a href="/admin" class="block py-2.5 px-4 rounded bg-slate-800 text-amber-400 font-semibold">
-            Dashboard Admin
-          </a>
-          <!-- TOMBOL KEMBALI KE HALAMAN UMUM DI SIDEBAR -->
-          <a href="/" class="block py-2.5 px-4 rounded hover:bg-slate-800 text-green-400 font-medium transition-colors">
-            🌐 Lihat Situs Umum
-          </a>
-        </nav>
-      </aside>
+  <!-- KODE CSS GLOBAL: Standar Desain Media Internasional (Bersih & Tipografi Kuat) -->
+  <style is:global>
+    @import url('https://googleapis.com');
+    
+    body {
+      background-color: #fdfdfd !important;
+      color: #0f172a !important;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .serif-title {
+      font-family: 'Playfair Display', serif;
+    }
+    .main-layout {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    .nav-bar {
+      border-bottom: 2px solid #0f172a;
+      padding: 20px 0;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+    .hero-section {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 32px;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 40px;
+      margin-bottom: 40px;
+    }
+    @media (max-width: 768px) {
+      .hero-section {
+        grid-template-columns: 1fr;
+      }
+    }
+    .news-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 32px;
+      margin-bottom: 60px;
+    }
+    .img-wrapper {
+      position: relative;
+      overflow: hidden;
+      border-radius: 8px;
+      background-color: #f1f5f9;
+    }
+    .img-fluid {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+    .img-wrapper:hover .img-fluid {
+      transform: scale(1.03);
+    }
+    .tag-category {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #2563eb;
+      margin-bottom: 8px;
+      display: inline-block;
+    }
+    .read-more-link {
+      color: #0f172a;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 12px;
+    }
+    .read-more-link:hover {
+      color: #2563eb;
+    }
+  </style>
+</head>
+<body>
 
-      <!-- Konten Utama Admin -->
-      <main class="flex-1 p-6 md:p-10">
-        
-        <!-- Baris Judul & Indikator Status Koneksi -->
-        <header class="flex flex-col md:flex-row md:items-center md:justify-between pb-6 border-b border-gray-200 mb-8 gap-4">
-          <div>
-            <h1 class="text-3xl font-bold tracking-tight text-slate-800">Dashboard Manajemen Berita</h1>
-            <p class="text-gray-500 text-sm mt-1">Kelola konten portal Berita Nusa Media Anda.</p>
-          </div>
-          
-          <div class="flex items-center gap-3">
-            <!-- TOMBOL KEMBALI KE HALAMAN UMUM PADA VERSI MOBILE / RESPONSIV -->
-            <a href="/" class="md:hidden inline-flex items-center justify-center py-1.5 px-3 rounded-xl text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 transition-colors">
-              🌐 Ke Situs Umum
-            </a>
-
-            <!-- INDIKATOR UTAMA KONEKSI DATABASE -->
-            {isConnected ? (
-              <span class="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
-                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                Database Terhubung
-              </span>
-            ) : (
-              <span class="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
-                <span class="w-2 h-2 rounded-full bg-red-500"></span>
-                Koneksi Terputus
-              </span>
-            )}
-          </div>
-        </header>
-
-        <!-- Jika Terjadi Error / Gagal Hubung -->
-        {error && (
-          <div class="p-4 mb-6 text-red-800 bg-red-50 border border-red-200 rounded-xl text-sm">
-            <h3 class="font-bold mb-1">Gagal Sinkronisasi dengan Supabase:</h3>
-            <p class="font-mono text-xs text-red-600 bg-white p-2 rounded border mt-2">{error.message}</p>
-          </div>
-        )}
-
-        <!-- Statistik Singkat -->
-        <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div class="p-6 bg-white rounded-xl shadow-sm border border-gray-200">
-            <p class="text-sm font-medium text-gray-500 truncate">Total Artikel Saat Ini</p>
-            <p class="mt-2 text-3xl font-semibold text-slate-900">{artikel ? artikel.length : 0}</p>
-          </div>
-        </section>
-
-        <!-- Tabel Daftar Berita dari Database -->
-        <section class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
-          <div class="p-5 border-b border-gray-100">
-            <h3 class="font-bold text-slate-800">Daftar Posting</h3>
-          </div>
-          
-          <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-              <thead>
-                <tr class="bg-slate-50 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  <th class="p-4">ID</th>
-                  <th class="p-4">Judul Berita</th>
-                  <th class="p-4">Tanggal Dibuat</th>
-                  <th class="p-4 text-center">Aksi</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100 text-sm text-gray-700">
-                {artikel && artikel.map((post) => (
-                  <tr class="hover:bg-slate-50 transition-colors">
-                    <td class="p-4 font-mono text-gray-400">{post.id}</td>
-                    <td class="p-4 font-semibold text-slate-900">{post.judul}</td>
-                    <td class="p-4 text-gray-500">{new Date(post.created_at).toLocaleDateString('id-ID')}</td>
-                    <td class="p-4 text-center">
-                      <!-- TOMBOL EDIT UNTUK MELOMPAT KE HALAMAN EDIT [id].astro -->
-                      <a 
-                        href={`/${post.id}`} 
-                        class="inline-flex items-center justify-center py-1.5 px-3 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-lg transition-colors shadow-sm"
-                      >
-                        ✏️ Edit Berita
-                      </a>
-                    </td>
-                  </tr>
-                ))}
-
-                {(!artikel || artikel.length === 0) && (
-                  <tr>
-                    <td colspan="4" class="p-8 text-center text-gray-400">
-                      Tidak ada data posting yang ditemukan di database.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-      </main>
+  <!-- 1. HEADER UTAMA (Gaya Koran Kelas Dunia / New York Times Style) -->
+  <div class="main-layout">
+    <div class="nav-bar">
+      <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #64748b; margin-bottom: 4px;">
+        {new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+      </div>
+      <h1 class="serif-title" style="font-size: 52px; font-weight: 700; margin: 0; tracking-tight: -0.05em;">NUSA MEDIA</h1>
+      <div style="border-top: 1px solid #e2e8f0; margin-top: 16px; padding-top: 8px; font-size: 13px; font-weight: 600; color: #475569; display: flex; justify-content: center; gap: 24px;">
+        <span>INDONESIA</span> &bull; <span>DUNIA</span> &bull; <span>EKONOMI</span> &bull; <span>TEKNOLOGI</span> &bull; <span>GAYA HIDUP</span>
+      </div>
     </div>
 
-  </body>
+    <!-- TAMPILAN JIKA TERJADI KENDALA KONEKSI -->
+    {error && (
+      <div style="padding: 16px; background-color: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; border-radius: 8px; margin-bottom: 24px; font-size: 14px; text-align: center;">
+        Layanan sedang memuat ulang arsip berita secara berkala.
+      </div>
+    )}
+
+    <!-- 2. BERITA UTAMA / HERO SECTION (Jika data tersedia) -->
+    {beritaUtama && (
+      <section class="hero-section">
+        <!-- Sisi Kiri: Gambar Besar & Judul Utama -->
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div class="img-wrapper" style="height: 450px;">
+            {beritaUtama.gambar_url ? (
+              <img src={beritaUtama.gambar_url} alt={beritaUtama.judul} class="img-fluid" />
+            ) : (
+              <div style="height: 100%; display: flex; align-items: center; justify-content: center; color: #94a3b8;">Nusa Media Photo Archive</div>
+            )}
+          </div>
+          <div>
+            <span class="tag-category">{beritaUtama.kategori || 'Fokus Utama'}</span>
+            <h2 class="serif-title" style="font-size: 36px; font-weight: 700; margin: 4px 0 12px 0; line-height: 1.15; cursor: pointer;">
+              {beritaUtama.judul}
+            </h2>
+            <p style="font-size: 16px; color: #334155; line-height: 1.6; margin: 0;">
+              {beritaUtama.ringkasan}
+            </p>
+            <div style="margin-top: 12px; font-size: 13px; color: #64748b; font-weight: 600;">
+              Oleh <span style="color: #0f172a;">{beritaUtama.penulis || 'Redaksi'}</span> &bull; {beritaUtama.created_at ? new Date(beritaUtama.created_at).toLocaleDateString('id-ID', {month: 'short', day: 'numeric'}) : ''}
+            </div>
+          </div>
+        </div>
+
+        <!-- Sisi Kanan: Pengantar Editorial Singkat Kelas Dunia -->
+        <div style="border-left: 1px solid #e2e8f0; padding-left: 32px; display: flex; flex-direction: column; justify-content: space-between;" class="hidden-mobile">
+          <div style="border-bottom: 3px solid #0f172a; padding-bottom: 8px; margin-bottom: 16px;">
+            <h4 style="margin: 0; font-size: 14px; font-weight: 800; uppercase; tracking: 1px;">SOROTAN HARI INI</h4>
+          </div>
+          <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 20px;">
+            <p style="font-size: 15px; font-style: italic; line-height: 1.6; color: #475569; margin: 0;">
+              "Menyajikan arus jurnalisme bermutu tinggi, berimbang, dan independen langsung dari penjuru nusantara dan dunia."
+            </p>
+            {beritaUtama.youtube_url && (
+              <a href={beritaUtama.youtube_url} target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: #e11d48; text-decoration: none; font-weight: 700; bg-color:#fff1f2; padding: 10px; border-radius: 6px; border:1px solid #ffe4e6; text-align:center;">
+                📺 Buka Liputan Video Terkait
+              </a>
+            )}
+          </div>
+          <div style="background-color: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 20px;">
+            <span style="font-size: 11px; font-weight: 800; color: #64748b; display: block; margin-bottom: 4px;">EDISI DIGITAL</span>
+            <span style="font-size: 13px; font-weight: 700; color: #0f172a;">Akses Tanpa Batas 24 Jam Live</span>
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- 3. KISI BERITA GRID (Untuk sisa berita lainnya) -->
+    {beritaSisa.length > 0 && (
+      <h3 class="serif-title" style="font-size: 24px; font-weight: 700; margin-bottom: 24px; border-bottom: 1px solid #0f172a; padding-bottom: 8px;">
+        Arsip Berita Terbaru
+      </h3>
+    )}
+
+    <section class="news-grid">
+      {beritaSisa.map((item) => (
+        <article style="display: flex; flex-direction: column; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 16px;">
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div class="img-wrapper" style="height: 200px;">
+              {item.gambar_url ? (
+                <img src={item.gambar_url} alt={item.judul} class="img-fluid" />
+              ) : (
+                <div style="height: 100%; display: flex; align-items: center; justify-content: center; color: #cbd5e1; font-size: 12px;">Nusa Media Gallery</div>
+              )}
+            </div>
+            
+            <div>
+              <span class="tag-category">{item.kategori || 'Umum'}</span>
+              <h4 class="serif-title" style="font-size: 19px; font-weight: 700; margin: 4px 0 8px 0; line-height: 1.3; color: #0f172a;">
+                {item.judul}
+              </h4>
+              <p style="font-size: 14px; color: #475569; line-height: 1.5; margin: 0; line-clamp: 3; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                {item.ringkasan}
+              </p>
+            </div>
+          </div>
+
+          <div style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #64748b; font-weight: 600; border-top: 1px dashed #e2e8f0; padding-top: 12px;">
+            <span>Oleh {item.penulis || 'Redaksi'}</span>
+            <span>📆 {item.created_at ? new Date(item.created_at).toLocaleDateString('id-ID', {month: 'short', day: 'numeric'}) : ''}</span>
+          </div>
+        </article>
+      ))}
+    </section>
+
+    {(!artikel || artikel.length === 0) && (
+      <div style="text-align: center; padding: 80px 24px; color: #64748b;">
+        <p style="font-size: 18px; font-weight: 700; margin: 0;">Belum Ada Warta Hari Ini</p>
+        <p style="font-size: 14px; margin-top: 4px;">Arus berita global sedang dipersiapkan oleh dewan jurnalis.</p>
+      </div>
+    )}
+  </div>
+
+  <!-- 4. FOOTER MEDIA GLOBAL (Bersih & Elegan) -->
+  <footer style="background-color: #0f172a; color: #94a3b8; padding: 40px 0; margin-top: auto; font-size: 14px;">
+    <div class="main-layout" style="display: flex; flex-col sm:flex-row; justify-content: space-between; align-items: center; gap: 16px;">
+      <div>
+        <strong style="color: white; font-size: 16px; font-family: 'Playfair Display', serif; tracking-wider: 1px;">NUSA MEDIA</strong>
+        <p style="margin: 6px 0 0 0; font-size: 12px; color: #475569;">&copy; 2026 PT Nusa Media Internasional. Hak Cipta Dilindungi.</p>
+      </div>
+      
+      <!-- Pintu Akses Tersembunyi (Hanya berupa link teks kecil abu-abu di pojok kanan bawah agar tidak merusak tampilan umum) -->
+      <a href="/admin" style="color: #334155; text-decoration: none; font-size: 11px; font-weight: 700; border: 1px solid #1e293b; padding: 4px 8px; border-radius: 4px; transition: color 0.3s;" onmouseover="this.style.color='#64748b'" onmouseout="this.style.color='#334155'">
+        GATEWAY LOGIN
+      </a>
+    </div>
+  </footer>
+
+</body>
 </html>
