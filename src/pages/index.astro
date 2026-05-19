@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase';
 // Mengambil data artikel dari tabel 'posts'
 const { data: artikel, error } = await supabase
   .from('posts')
-  .select('judul, ringkasan, slug');
+  .select('id, judul, ringkasan, slug'); // <--- ID ditambahkan agar tombol edit berfungsi
 
 // Menampilkan pesan error di terminal jika koneksi bermasalah
 if (error) {
@@ -57,13 +57,22 @@ if (error) {
               </p>
             </div>
             
-            <div class="mt-5">
+            <!-- Tempat tombol aksi diposisikan sejajar -->
+            <div class="mt-5 flex justify-between items-center border-t border-gray-100 pt-3">
               <a 
                 href={`/berita/${item.slug}`} 
-                class="inline-flex items-center text-sm text-amber-600 font-bold hover:text-amber-700 hover:underline"
+                class="text-sm text-amber-600 font-bold hover:text-amber-700 hover:underline"
               >
                 Baca Selengkapnya 
                 <span class="ml-1 transition-transform group-hover:translate-x-1">→</span>
+              </a>
+
+              <!-- Tombol Edit Baru -->
+              <a 
+                href={`/edit/${item.id}`} 
+                class="text-xs bg-gray-100 hover:bg-blue-50 text-gray-600 hover:text-blue-600 font-medium px-3 py-1.5 rounded-lg transition-colors border border-gray-200 flex items-center gap-1"
+              >
+                ✏️ Edit
               </a>
             </div>
           </article>
