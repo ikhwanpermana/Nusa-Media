@@ -1,57 +1,6 @@
 ---
-// 1. BAGIAN ATAS: Logika Node.js (Server) untuk Memasukkan Data ke Supabase
-import { supabase } from '../../lib/supabase'; // Mundur 2 folder ke src/lib/supabase
-
-let pesanSukses = "";
-let pesanGagal = "";
-
-// Mengecek apakah admin menekan tombol submit (Formulir dikirim via POST)
-if (Astro.request.method === 'POST') {
-  try {
-    const formData = await Astro.request.formData();
-    
-    // Mengambil semua data dari input HTML
-    const judul = formData.get('judul')?.toString();
-    const kategori = formData.get('kategori')?.toString();
-    const penulis = formData.get('penulis')?.toString();
-    const ringkasan = formData.get('ringkasan')?.toString();
-    const isi = formData.get('isi')?.toString();
-    const gambar = formData.get('gambar')?.toString();
-    
-    // Membuat slug URL otomatis dari judul (Huruf kecil, spasi diganti tanda strip -)
-    const slug = judul
-      ?.toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-');
-
-    // Memasukkan data baru ke dalam tabel 'posts' di Supabase
-    const { error } = await supabase
-      .from('posts')
-      .insert([
-        { 
-          judul: judul, 
-          ringkasan: ringkasan, 
-          slug: slug
-          // Hapus tanda garis miring di bawah ini jika kolomnya sudah Anda buat di Supabase:
-          //, kategori: kategori,
-          // penulis: penulis,
-          // isi: isi,
-          // gambar: gambar
-        }
-      ]);
-
-    if (error) {
-  pesanGagal = `Gagal Supabase (Kode: ${error.code}): ${error.message}. Detail: ${error.details}`;
-}
-    } else {
-      pesanSukses = `🚀 Berita "${judul}" berhasil diterbitkan secara instan!`;
-    }
-  } catch (e) {
-    pesanGagal = "Terjadi kesalahan pada sistem server backend.";
-  }
-}
+// Kosongkan bagian Node.js atas agar terhindar dari kendala port dan runtime lokal
 ---
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -59,114 +8,75 @@ if (Astro.request.method === 'POST') {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Dashboard - Nusa Media</title>
 </head>
-<body class="bg-gray-900 text-gray-100 font-sans p-6">
+<body style="background-color: #111827; color: #f3f4f6; font-family: sans-serif; padding: 24px;">
 
-  <div class="max-w-3xl mx-auto bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-700 mt-6">
-    
-    <!-- Header Admin -->
-    <header class="mb-6 border-b border-gray-700 pb-4 flex justify-between items-center">
+  <div style="max-w: 768px; margin: 24px auto; background-color: #1f2937; padding: 32px; border-radius: 16px; border: 1px solid #374151;">
+    <header style="margin-bottom: 24px; border-bottom: 1px solid #374151; padding-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
       <div>
-        <h1 class="text-3xl font-black text-blue-400 tracking-wide">NUSA MEDIA</h1>
-        <p class="text-xs text-gray-400 mt-1">v1.0.0 - Open Admin • Role: Administrator</p>
-      </div>
-      <div class="space-x-2 text-xs">
-        <a href="https://github.dev" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-medium transition-colors inline-block">
-          🌐 Lihat Website Utama ↗
-        </a>
+        <h1 style="font-size: 28px; font-weight: 900; color: #60a5fa; margin: 0;">NUSA MEDIA</h1>
+        <p style="font-size: 12px; color: #9ca3af; margin: 4px 0 0 0;">v1.0.0 - Mode Hibrida (Manual & Otomatis)</p>
       </div>
     </header>
 
-    <!-- Menu Navigasi Singkat -->
-    <div class="flex gap-4 mb-8 text-sm border-b border-gray-700 pb-4 text-gray-400">
-      <span class="text-blue-400 border-b-2 border-blue-400 pb-4 font-bold">📝 Tulis Berita Baru</span>
-      <span class="opacity-50 cursor-not-allowed">📢 Kelola Slot Iklan</span>
-    </div>
+    <div id="status-box" style="display: none; padding: 16px; margin-bottom: 24px; border-radius: 12px; font-size: 14px;"></div>
 
-    <div class="mb-6">
-      <h2 class="text-xl font-bold text-white">Tulis Berita Baru</h2>
-      <p class="text-sm text-gray-400 mt-1">Publikasikan informasi digital secara instan dari satu tempat tanpa coding.</p>
-      <p class="text-xs text-blue-400 mt-2 font-medium">Selasa, 19 Mei 2026</p>
-    </div>
-
-    <!-- Notifikasi Status Input -->
-    {pesanSukses && <div class="p-4 mb-6 text-green-200 bg-green-900/50 border border-green-700 rounded-xl text-sm">{pesanSukses}</div>}
-    {pesanGagal && <div class="p-4 mb-6 text-red-200 bg-red-900/50 border border-red-700 rounded-xl text-sm">{pesanGagal}</div>}
-
-    <!-- Formulir Input Berita Manual (Method POST terhubung ke Node.js) -->
-    <form method="POST" class="space-y-5">
+    <form id="form-manual" style="display: flex; flex-direction: column; gap: 20px;">
       <div>
-        <label class="block text-sm font-bold text-gray-300 mb-2">Judul Berita</label>
-        <input 
-          type="text" 
-          name="judul" 
-          required 
-          placeholder="Masukkan judul berita yang menarik dan fyp..." 
-          class="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
-        />
+        <label style="display: block; font-size: 14px; font-weight: bold; color: #d1d5db; margin-bottom: 8px;">Judul Berita (Manual)</label>
+        <input type="text" id="judul" required placeholder="Ketik judul berita manual..." style="width: 100%; padding: 10px; background-color: #4b5563; border: 1px solid #4b5563; border-radius: 12px; color: white; box-sizing: border-box;" />
       </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-bold text-gray-300 mb-2">Kategori</label>
-          <select name="kategori" class="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-            <option value="TEKNOLOGI">TEKNOLOGI</option>
-            <option value="HIBURAN">HIBURAN</option>
-            <option value="BISNIS">BISNIS</option>
-            <option value="OLAHRAGA">OLAHRAGA</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-bold text-gray-300 mb-2">Penulis / Jurnalis</label>
-          <input 
-            type="text" 
-            name="penulis" 
-            value="Redaksi Nusa Media" 
-            class="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 rounded-xl text-white focus:outline-none"
-          />
-        </div>
-      </div>
-
       <div>
-        <label class="block text-sm font-bold text-gray-300 mb-2">Ringkasan Pendek (Halaman Depan)</label>
-        <input 
-          type="text" 
-          name="ringkasan" 
-          required 
-          placeholder="Tulis 1 kalimat ringkasan pendek untuk memancing klik pembaca..." 
-          class="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
-        />
+        <label style="display: block; font-size: 14px; font-weight: bold; color: #d1d5db; margin-bottom: 8px;">Ringkasan Pendek</label>
+        <input type="text" id="ringkasan" required placeholder="Ketik ringkasan berita..." style="width: 100%; padding: 10px; background-color: #4b5563; border: 1px solid #4b5563; border-radius: 12px; color: white; box-sizing: border-box;" />
       </div>
-
-      <div>
-        <label class="block text-sm font-bold text-gray-300 mb-2">Isi Artikel Utama (Utuh)</label>
-        <textarea 
-          name="isi" 
-          rows="6" 
-          required 
-          placeholder="Ketik isi narasi berita lengkap Anda secara mendalam di sini..." 
-          class="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
-        ></textarea>
-      </div>
-
-      <div>
-        <label class="block text-sm font-bold text-gray-300 mb-2">URL Gambar Sampul (Link Foto)</label>
-        <input 
-          type="url" 
-          name="gambar" 
-          placeholder="https://unsplash.com..." 
-          class="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
-        />
-      </div>
-
-      <button 
-        type="submit" 
-        class="w-full bg-blue-500 hover:bg-blue-600 text-white font-black py-3.5 px-4 rounded-xl transition-all shadow-md transform active:scale-[0.99] cursor-pointer text-center block"
-      >
-        🚀 Terbitkan Berita Sekarang
+      <button type="submit" style="width: 100%; background-color: #3b82f6; color: white; font-weight: bold; padding: 14px; border-radius: 12px; border: none; cursor: pointer; font-size: 16px;">
+        🚀 Terbitkan Berita Manual Sekarang
       </button>
     </form>
-
   </div>
 
+  <script is:inline>
+    // Alamat REST API Supabase murni langsung ke endpoint database
+    const API_URL = "https://supabase.co";
+    const ANON_KEY = "MASUKKAN_ANON_KEY_SUPABASE_ANDA"; // <-- Tempelkan token ey... Anda di sini
+
+    const form = document.getElementById('form-manual');
+    const statusBox = document.getElementById('status-box');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const judul = document.getElementById('judul').value;
+      const ringkasan = document.getElementById('ringkasan').value;
+      const slug = judul.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
+
+      try {
+        // Menggunakan metode FETCH HTTP standar bawaan semua web browser
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'apikey': ANON_KEY,
+            'Authorization': `Bearer ${ANON_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({ judul, ringkasan, slug })
+        });
+
+        if (!response.ok) throw new Error(`Eror Server: ${response.statusText}`);
+
+        statusBox.style.display = 'block';
+        statusBox.style.backgroundColor = 'rgba(6, 78, 59, 0.5)';
+        statusBox.style.color = '#a7f3d0';
+        statusBox.innerText = `🟢 Sukses! Berita manual "${judul}" berhasil ditayangkan!`;
+        form.reset();
+      } catch (err) {
+        statusBox.style.display = 'block';
+        statusBox.style.backgroundColor = 'rgba(127, 29, 29, 0.5)';
+        statusBox.style.color = '#fca5a5';
+        statusBox.innerText = `🔴 Gagal: ${err.message}`;
+      }
+    });
+  </script>
 </body>
 </html>
