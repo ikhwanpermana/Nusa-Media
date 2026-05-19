@@ -20,7 +20,7 @@
     "tailwindcss": "^3.4.4"
   },
   "engines": {
-    "node": "20.x"
+    "node": "22.x"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0"
