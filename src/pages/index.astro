@@ -45,7 +45,7 @@ if (error) {
       <!-- Kisi Berita (Grid) -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         
-        {/* Mengulangi HTML sesuai jumlah data yang ada di Supabase */}
+        <!-- Proses perulangan data artikel dari Supabase -->
         {artikel && artikel.map((item) => (
           <article class="p-5 bg-white shadow-sm hover:shadow-md transition-shadow rounded-xl border border-gray-100 flex flex-col justify-between">
             <div>
@@ -69,7 +69,7 @@ if (error) {
           </article>
         ))}
 
-        {/* Kondisi jika koneksi sukses tetapi tabel Anda memang kosong */}
+        <!-- Kondisi jika koneksi sukses tetapi tabel Anda memang kosong -->
         {artikel && artikel.length === 0 && (
           <div class="col-span-2 text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
             <p class="text-gray-500 font-medium">Belum ada berita terbaru saat ini.</p>
