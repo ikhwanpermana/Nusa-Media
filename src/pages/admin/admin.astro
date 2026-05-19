@@ -10,7 +10,7 @@ const { data: artikel, error } = await supabase
 
 // Memisahkan berita utama pertama (Hero Story) dan sisa berita lainnya (Grid)
 const beritaUtama = artikel && artikel.length > 0 ? artikel[0] : null;
-const beritaSisa = artikel && artikel.length > 1 ? artikel.slice(1) : (artikel && artikel.length === 1 ? [] : null);
+const beritaSisa = artikel && artikel.length > 1 ? artikel.slice(1) : [];
 ---
 
 <!DOCTYPE html>
