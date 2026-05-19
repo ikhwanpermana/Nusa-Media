@@ -41,7 +41,8 @@ if (Astro.request.method === 'POST') {
       ]);
 
     if (error) {
-      pesanGagal = "Gagal menyimpan ke Supabase: " + error.message;
+  pesanGagal = `Gagal Supabase (Kode: ${error.code}): ${error.message}. Detail: ${error.details}`;
+}
     } else {
       pesanSukses = `🚀 Berita "${judul}" berhasil diterbitkan secara instan!`;
     }
