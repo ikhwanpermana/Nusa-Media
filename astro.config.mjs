@@ -1,14 +1,8 @@
 import { defineConfig } from 'astro/config';
 import tailwind from '@astrojs/tailwind';
-import vercel from '@astrojs/vercel/serverless';
 
-// https://astro.build/config
+// Mode SSR hibrida tanpa memerlukan adapter eksternal untuk pengujian lokal
 export default defineConfig({
-  output: 'server',
+  output: 'hybrid',
   integrations: [tailwind()],
-  adapter: vercel({
-    webAnalytics: {
-      enabled: true, // <--- Baris ini akan otomatis memasang script Vercel Analytics gratis ke semua halaman Anda
-    },
-  }),
 });

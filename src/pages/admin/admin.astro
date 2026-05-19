@@ -2,10 +2,13 @@
 // 1. KODE SERVER ASTRO: Cek koneksi & ambil data admin
 import { supabase } from '../lib/supabase';
 
+// Mengaktifkan mode SSR
+export const prerender = false;
+
 // Mengambil data artikel sekaligus menguji koneksi database
 const { data: artikel, error } = await supabase
   .from('posts')
-  .select('id, judul, created_at')
+  .select('id, judul, created_at, slug')
   .order('created_at', { ascending: false });
 
 // Logika penentu status koneksi database
@@ -27,10 +30,11 @@ const isConnected = !error && artikel !== null;
         <h2 class="text-xl font-black tracking-wider text-amber-500 mb-8">NUSA ADMIN</h2>
         <nav class="space-y-2">
           <a href="/admin" class="block py-2.5 px-4 rounded bg-slate-800 text-amber-400 font-semibold">
-            Dashboard
+            Dashboard Admin
           </a>
-          <a href="/" class="block py-2.5 px-4 rounded hover:bg-slate-800 text-slate-300 transition-colors">
-            Lihat Website →
+          <!-- TOMBOL KEMBALI KE HALAMAN UMUM DI SIDEBAR -->
+          <a href="/" class="block py-2.5 px-4 rounded hover:bg-slate-800 text-green-400 font-medium transition-colors">
+            🌐 Lihat Situs Umum
           </a>
         </nav>
       </aside>
@@ -45,8 +49,13 @@ const isConnected = !error && artikel !== null;
             <p class="text-gray-500 text-sm mt-1">Kelola konten portal Berita Nusa Media Anda.</p>
           </div>
           
-          <!-- INDIKATOR UTAMA KONEKSI DATABASE -->
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-3">
+            <!-- TOMBOL KEMBALI KE HALAMAN UMUM PADA VERSI MOBILE / RESPONSIV -->
+            <a href="/" class="md:hidden inline-flex items-center justify-center py-1.5 px-3 rounded-xl text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 transition-colors">
+              🌐 Ke Situs Umum
+            </a>
+
+            <!-- INDIKATOR UTAMA KONEKSI DATABASE -->
             {isConnected ? (
               <span class="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
                 <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
@@ -90,6 +99,7 @@ const isConnected = !error && artikel !== null;
                   <th class="p-4">ID</th>
                   <th class="p-4">Judul Berita</th>
                   <th class="p-4">Tanggal Dibuat</th>
+                  <th class="p-4 text-center">Aksi</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100 text-sm text-gray-700">
@@ -98,12 +108,21 @@ const isConnected = !error && artikel !== null;
                     <td class="p-4 font-mono text-gray-400">{post.id}</td>
                     <td class="p-4 font-semibold text-slate-900">{post.judul}</td>
                     <td class="p-4 text-gray-500">{new Date(post.created_at).toLocaleDateString('id-ID')}</td>
+                    <td class="p-4 text-center">
+                      <!-- TOMBOL EDIT UNTUK MELOMPAT KE HALAMAN EDIT [id].astro -->
+                      <a 
+                        href={`/${post.id}`} 
+                        class="inline-flex items-center justify-center py-1.5 px-3 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-lg transition-colors shadow-sm"
+                      >
+                        ✏️ Edit Berita
+                      </a>
+                    </td>
                   </tr>
                 ))}
 
                 {(!artikel || artikel.length === 0) && (
                   <tr>
-                    <td colspan="3" class="p-8 text-center text-gray-400">
+                    <td colspan="4" class="p-8 text-center text-gray-400">
                       Tidak ada data posting yang ditemukan di database.
                     </td>
                   </tr>

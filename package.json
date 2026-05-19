@@ -26,6 +26,7 @@
     "node": "22.x"
   },
   "devDependencies": {
+    "@astrojs/node": "^8.3.4",
     "@playwright/test": "^1.60.0"
   }
 }
