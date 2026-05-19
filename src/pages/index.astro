@@ -1,44 +1,84 @@
 ---
-// FITUR ASTRO: Mengambil data dari database Supabase Anda
-import { supabase } from '../lib/supabase'; // Pastikan file ini sudah dibuat
+// 1. BAGIAN ATAS: Logika Astro & Pengambilan Data Supabase
+import { supabase } from '../lib/supabase';
 
-// Mengambil data dan menangkap error dari Supabase
+// Mengambil data artikel dari tabel 'posts'
 const { data: artikel, error } = await supabase
   .from('posts')
-  .select('judul, ringkasan, slug'); // Mengambil kolom yang dibutuhkan saja agar lebih cepat
+  .select('judul, ringkasan, slug');
 
-// Mencetak error di terminal VS Code jika koneksi gagal
+// Menampilkan pesan error di terminal jika koneksi bermasalah
 if (error) {
   console.error("Terjadi kesalahan Supabase:", error.message);
 }
 ---
 
-<!-- KOLABORASI HTML & ASTRO: -->
-<main class="max-w-4xl mx-auto p-4">
-  <h1 class="text-3xl font-bold mb-6">Berita Nusa Media</h1>
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Berita Nusa Media</title>
+  </head>
+  <body class="bg-gray-50 text-gray-900 font-sans antialiased">
 
-  <!-- Menampilkan pesan jika koneksi ke Supabase gagal -->
-  {error && (
-    <div class="p-4 mb-4 text-red-700 bg-red-100 rounded-lg">
-      Gagal memuat berita. Silakan periksa koneksi database Anda.
-    </div>
-  )}
+    <!-- 2. BAGIAN BAWAH: Tampilan HTML dengan Tailwind CSS -->
+    <main class="max-w-4xl mx-auto p-6 md:py-12">
+      
+      <!-- Header Website -->
+      <header class="mb-10 border-b border-gray-200 pb-6">
+        <h1 class="text-4xl font-black tracking-tight text-blue-700">
+          Berita Nusa Media
+        </h1>
+        <p class="text-gray-500 mt-2 text-sm md:text-base">
+          Informasi terkini dan terpercaya, langsung dari database Supabase Anda.
+        </p>
+      </header>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    {/* PENGAMAN: Menambahkan 'artikel &&' agar map tidak error jika data null */}
-    {artikel && artikel.map((item) => (
-      <article class="p-4 bg-white shadow rounded-lg border border-gray-100">
-        <h2 class="text-xl font-semibold text-blue-600">{item.judul}</h2>
-        <p class="text-gray-600 mt-2">{item.ringkasan}</p>
-        <a href={`/berita/${item.slug}`} class="text-sm text-amber-500 font-bold block mt-4 hover:underline">
-          Baca Selengkapnya →
-        </a>
-      </article>
-    ))}
+      <!-- Notifikasi Jika Server/Database Mengalami Error -->
+      {error && (
+        <div class="p-4 mb-6 text-red-800 bg-red-50 border border-red-200 rounded-xl text-sm">
+          <strong>Gagal memuat berita:</strong> {error.message}. Silakan periksa konfigurasi database Anda.
+        </div>
+      )}
 
-    {/* KONDISI JIKA DATA KOSONG: Menampilkan pesan jika tabel di Supabase belum ada isinya */}
-    {artikel && artikel.length === 0 && (
-      <p class="text-gray-500 col-span-2 text-center py-8">Belum ada berita terbaru saat ini.</p>
-    )}
-  </div>
-</main>
+      <!-- Kisi Berita (Grid) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        {/* Mengulangi HTML sesuai jumlah data yang ada di Supabase */}
+        {artikel && artikel.map((item) => (
+          <article class="p-5 bg-white shadow-sm hover:shadow-md transition-shadow rounded-xl border border-gray-100 flex flex-col justify-between">
+            <div>
+              <h2 class="text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors">
+                {item.judul}
+              </h2>
+              <p class="text-gray-600 mt-3 text-sm leading-relaxed">
+                {item.ringkasan}
+              </p>
+            </div>
+            
+            <div class="mt-5">
+              <a 
+                href={`/berita/${item.slug}`} 
+                class="inline-flex items-center text-sm text-amber-600 font-bold hover:text-amber-700 hover:underline"
+              >
+                Baca Selengkapnya 
+                <span class="ml-1 transition-transform group-hover:translate-x-1">→</span>
+              </a>
+            </div>
+          </article>
+        ))}
+
+        {/* Kondisi jika koneksi sukses tetapi tabel Anda memang kosong */}
+        {artikel && artikel.length === 0 && (
+          <div class="col-span-2 text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
+            <p class="text-gray-500 font-medium">Belum ada berita terbaru saat ini.</p>
+            <p class="text-gray-400 text-xs mt-1">Silakan tambahkan data baru melalui SQL Editor atau Table Editor Supabase.</p>
+          </div>
+        )}
+
+      </div>
+    </main>
+
+  </body>
+</html>
