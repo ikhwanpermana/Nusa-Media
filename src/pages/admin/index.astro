@@ -1,16 +1,20 @@
 ---
 // NUSA MEDIA - Premium Admin Dashboard Portal (No Password Mode)
 const judulHalaman = "Nusa Media - Central Control Panel";
-const tanggal = "Senin, 18 Mei 2026";
+const tanggal = "Selasa, 19 Mei 2026";
 ---
 <html lang="id">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{judulHalaman}</title>
-    <script src="https://tailwindcss.com"></script>
-    <link href="https://googleapis.com" rel="stylesheet">
-    <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
+    <!-- Perbaikan Jalur CDN Tailwind CSS v4 Standalone -->
+    <script src="https://jsdelivr.net"></script>
+    <!-- Perbaikan Jalur Font Google Plus Jakarta Sans -->
+    <style>
+      @import url('https://googleapis.com');
+      body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
   </head>
   <body class="bg-[#0A0A0A] text-[#E5E5E5] antialiased">
 
@@ -107,7 +111,7 @@ const tanggal = "Senin, 18 Mei 2026";
             <!-- URL GAMBAR ILUSTRASI -->
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">URL Gambar Sampul (Link Foto)</label>
-              <input type="url" name="url_gambar" placeholder="https://unsplash.com..." 
+              <input type="url" name="url_gambar" placeholder="https://unsplash.com" 
                 class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-white transition-colors text-xs font-mono" />
             </div>
 
@@ -124,9 +128,14 @@ const tanggal = "Senin, 18 Mei 2026";
 
     </div>
 
-    <!-- LOGIKA TEMBAK LANGSUNG KE SUPABASE REST API -->
-    <script>
+    <!-- LOGIKA JAVASCRIPT LENGKAP (TIDAK TERPOTONG) -->
+    <script is:inline>
       const form = document.getElementById('formBerita');
+      
+      const SUPABASE_PROJECT_ID = "zmvlvzspjohrewjbtfxc"; 
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inptdmx2enNwam9ocmV3amJ0ZnhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMTM0MTAsImV4cCI6MjA5NDU4OTQxMH0.PtTVq_b4gLonRpNSbPYKncoXlGVS1lKaADy74dbhuSI";     
+      const NAMA_TABEL = "berita";                    
+
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -139,32 +148,35 @@ const tanggal = "Senin, 18 Mei 2026";
           penulis: formData.get('penulis'),
           sumber: 'Nusa Media Redaksi',
           url_sumber: window.location.origin,
-          url_gambar: formData.get('url_gambar') || 'https://unsplash.com1504711434969-e33886168f5c'
+          url_gambar: formData.get('url_gambar') || 'https://unsplash.com'
         };
 
-        const SUPABASE_URL = "https://supabase.co";
+        const ENDPOINT_URL = `https://${SUPABASE_PROJECT_ID}.supabase.co/rest/v1/${NAMA_TABEL}`;
         
         try {
-          const response = await fetch(SUPABASE_URL, {
+          const response = await fetch(ENDPOINT_URL, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
               'Prefer': 'return=minimal'
             },
             body: JSON.stringify(dataBerita)
           });
 
           if(response.ok) {
-            alert('🎉 Sukses! Berita baru Anda berhasil diterbitkan secara live ke seluruh dunia.');
+            alert('🎉 Sukses! Berita baru Anda berhasil diterbitkan secara live ke database Supabase.');
             form.reset();
           } else {
-            alert('Gagal menerbitkan berita. Sila pastikan koneksi atau struktur tabel database Anda sudah sesuai.');
+            const errorText = await response.text();
+            alert(`Gagal menerbitkan berita: ${response.status} - ${errorText}`);
           }
         } catch (error) {
-          alert('Terjadi kesalahan jaringan: ' + error.message);
+          console.error("Detail Error:", error);
+          alert('Terjadi kesalahan jaringan saat menghubungi Supabase.');
         }
       });
     </script>
-
   </body>
 </html>
