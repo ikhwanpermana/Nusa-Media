@@ -1,13 +1,14 @@
 ---
+// Memanggil koneksi database Supabase dari sisi server Astro secara aman
 import { supabase } from '../lib/supabase';
 
-// 1. Ambil data artikel berita terbaru dari Supabase
+// Mengambil data artikel berita terbaru
 const { data: postingan, error: errorBerita } = await supabase
   .from('artikel')
   .select('*')
   .order('created_at', { ascending: false });
 
-// 2. Ambil data iklan aktif khusus untuk posisi 'sidebar_atas'
+// Mengambil data iklan aktif khusus untuk posisi 'sidebar_atas'
 const { data: iklanSidebarAtas } = await supabase
   .from('iklan')
   .select('*')
@@ -17,7 +18,7 @@ const { data: iklanSidebarAtas } = await supabase
   .limit(1)
   .maybeSingle();
 
-// 3. Ambil data iklan aktif khusus untuk posisi 'detail_atas' (di atas daftar berita bawah)
+// Mengambil data iklan aktif khusus untuk posisi 'detail_atas'
 const { data: iklanTengah } = await supabase
   .from('iklan')
   .select('*')
@@ -27,7 +28,6 @@ const { data: iklanTengah } = await supabase
   .limit(1)
   .maybeSingle();
 
-// Memisahkan porsi data berita untuk kebutuhan tata letak (layout)
 const beritaUtama = postingan && postingan.length > 0 ? postingan[0] : null;
 const beritaTerkini = postingan && postingan.length > 1 ? postingan.slice(1, 6) : [];
 const beritaBawah = postingan && postingan.length > 6 ? postingan.slice(6, 12) : (postingan && postingan.length > 1 ? postingan.slice(1) : []);
@@ -47,23 +47,16 @@ const beritaBawah = postingan && postingan.length > 6 ? postingan.slice(6, 12) :
   </head>
   <body class="bg-gray-100 text-gray-900 min-h-screen">
 
-    <!-- Top Bar Info & Tanggal -->
+    <!-- Top Bar Info -->
     <div class="bg-red-700 text-white text-xs py-2">
       <div class="max-w-6xl mx-auto px-4 flex justify-between items-center">
         <div>📍 Regional Pembaruan Nusantara</div>
-        <div>Rabu, 20 Mei 2026</div>
+        <div>Portal Berita Utama</div>
       </div>
     </div>
 
-    <!-- 📢 SLOT IKLAN 1: PREMIUM TOP LEADERBOARD STATIC -->
-    <div class="max-w-6xl mx-auto px-4 pt-4 hidden sm:block">
-      <div class="w-full bg-yellow-100 border border-yellow-300 text-yellow-800 text-center py-4 font-bold text-sm rounded shadow-sm cursor-pointer">
-        SPACE IKLAN UTAMA BANNER PEMDA / PEMPROV (728 x 90 PX)
-      </div>
-    </div>
-
-    <!-- Main Branding Header -->
-    <header class="bg-slate-900 text-white border-b-4 border-red-600 shadow-md mt-3">
+    <!-- Header Branding -->
+    <header class="bg-slate-900 text-white border-b-4 border-red-600 shadow-md">
       <div class="max-w-6xl mx-auto px-4 py-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
           <h1 class="text-4xl font-black tracking-tight text-white flex items-center gap-1">
@@ -71,41 +64,38 @@ const beritaBawah = postingan && postingan.length > 6 ? postingan.slice(6, 12) :
           </h1>
           <p class="text-xs text-gray-400 mt-0.5">Media Informasi Terpercaya & Aktual</p>
         </div>
-        <!-- 📢 SLOT IKLAN 2: BANNER HEADER STATIC (Samping Logo) -->
         <div class="w-full md:w-96 bg-red-50 border border-red-200 text-red-700 font-bold p-3 text-center text-xs rounded">
           Space Iklan Ucapan Selamat & Sukses Instansi / Perorangan
         </div>
       </div>
     </header>
 
-    <!-- Kategori Menu Navigasi Berita (Sticky) -->
+    <!-- Navigasi -->
     <nav class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
       <div class="max-w-6xl mx-auto px-4 flex items-center gap-6 overflow-x-auto text-sm font-bold h-12">
         <a href="/" class="text-red-600 border-b-2 border-red-600 py-3 px-1 whitespace-nowrap">Home</a>
         <a href="#" class="text-gray-600 hover:text-red-600 py-3 px-1 whitespace-nowrap transition">Terkini</a>
         <a href="#" class="text-gray-600 hover:text-red-600 py-3 px-1 whitespace-nowrap transition">Fokus</a>
-        <a href="#" class="text-gray-600 hover:text-red-600 py-3 px-1 whitespace-nowrap transition">Advertorial</a>
       </div>
     </nav>
 
-    <!-- Konten Utama Dua Kolom ala Ajatappareng -->
+    <!-- Konten Utama -->
     <main class="max-w-6xl mx-auto px-4 py-6">
       
       {errorBerita && (
         <div class="bg-red-100 border-l-4 border-red-600 p-4 rounded text-red-800 text-sm mb-6">
-          <strong>Koneksi Eror:</strong> Gagal memuat data berita dari Supabase ({errorBerita.message})
+          <strong>Koneksi Eror:</strong> Gagal terhubung ke database. Sila cek pengaturan netlify.toml Anda.
         </div>
       )}
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        <!-- KOLOM KIRI & TENGAH: Berita Utama & Highlight -->
+        <!-- Kolom Utama Berita -->
         <div class="lg:col-span-2 space-y-6">
-          <div class="border-b-2 border-slate-800 pb-1 flex justify-between items-center">
-            <h2 class="bg-slate-800 text-white px-3 py-1 text-xs font-bold uppercase tracking-wider">Berita Utama</h2>
+          <div class="border-b-2 border-slate-800 pb-1">
+            <h2 class="bg-slate-800 text-white px-3 py-1 text-xs font-bold uppercase tracking-wider inline-block">Berita Utama</h2>
           </div>
 
-          <!-- Tampilan Berita Utama Dinamis -->
           {beritaUtama ? (
             <article class="bg-white rounded border border-gray-200 shadow-sm overflow-hidden group">
               <div class="h-64 sm:h-80 bg-slate-800 flex items-center justify-center relative">
@@ -115,79 +105,64 @@ const beritaBawah = postingan && postingan.length > 6 ? postingan.slice(6, 12) :
                 </span>
               </div>
               <div class="p-6">
-                <div class="text-xs text-gray-500 mb-2">⏱️ {beritaUtama.created_at ? new Date(beritaUtama.created_at).toLocaleDateString('id-ID') : 'Baru Saja'} • Oleh Redaksi</div>
-                <h3 class="text-2xl sm:text-3xl font-bold text-gray-900 group-hover:text-red-600 transition mb-3 leading-tight">
+                <h3 class="text-2xl font-bold text-gray-900 group-hover:text-red-600 transition mb-3">
                   <a href={`/berita/${beritaUtama.id}`}>{beritaUtama.judul}</a>
                 </h3>
-                <p class="text-gray-600 text-sm leading-relaxed line-clamp-3">
-                  {beritaUtama.konten}
-                </p>
+                <p class="text-gray-600 text-sm line-clamp-3">{beritaUtama.konten}</p>
               </div>
             </article>
           ) : (
             <div class="bg-white border border-dashed border-gray-300 p-8 text-center text-gray-500 rounded">
-              Belum ada data berita. Silakan input manual lewat halaman admin rahasia Anda.
+              Belum ada data berita. Silakan isi berita melalui dasbor admin.
             </div>
           )}
 
-          <!-- 📢 SLOT IKLAN 3: DINAMIS TENGAH HALAMAN (Input dari Admin) -->
+          <!-- Iklan Tengah Dinamis -->
           <div class="w-full">
             {iklanTengah ? (
-              <a href={iklanTengah.link_tujuan} target="_blank" class="block w-full bg-emerald-50 border border-emerald-200 rounded p-4 flex flex-col sm:flex-row items-center justify-between gap-4 cursor-pointer hover:bg-emerald-100 transition">
+              <a href={iklanTengah.link_tujuan} target="_blank" class="block w-full bg-emerald-50 border border-emerald-200 rounded p-4 flex justify-between items-center">
                 <div>
-                  <span class="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase">Iklan Sponsor Aktif</span>
+                  <span class="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase">Iklan Aktif</span>
                   <h4 class="font-bold text-sm text-emerald-900 mt-1">{iklanTengah.konten_teks}</h4>
                 </div>
-                <span class="text-xs bg-emerald-600 text-white font-bold px-3 py-1.5 rounded whitespace-nowrap">Kunjungi Situs ↗</span>
+                <span class="text-xs bg-emerald-600 text-white font-bold px-3 py-1.5 rounded">Kunjungi ↗</span>
               </a>
             ) : (
               <div class="w-full bg-emerald-50 border border-emerald-200 rounded p-4 text-center text-xs text-emerald-700 font-semibold">
-                SPACE IKLAN KEMITRAAN / BIMTEK DAERAH (Hubungi Redaksi Untuk Pasang di Sini)
+                SPACE IKLAN KEMITRAAN DAERAH
               </div>
             )}
           </div>
 
-          <!-- Grid Berita Sekunder Bagian Bawah -->
-          <div class="border-b border-gray-200 pb-1 mt-4">
-            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Artikel Terkait Lainnya</h3>
-          </div>
-          
+          <!-- Daftar Berita Bawah -->
           <div class="grid gap-4 sm:grid-cols-2">
-            {beritaBawah.length > 0 ? (
-              beritaBawah.map((item) => (
-                <div class="bg-white p-4 border border-gray-200 rounded shadow-sm flex flex-col justify-between group">
-                  <div>
-                    <span class="text-[10px] uppercase font-bold text-red-600 tracking-wider block mb-1">{item.kategori || 'Berita'}</span>
-                    <h4 class="font-bold text-sm text-gray-900 group-hover:text-red-600 line-clamp-2 mb-2">
-                      <a href={`/berita/${item.id}`}>{item.judul}</a>
-                    </h4>
-                  </div>
-                  <span class="text-[10px] text-gray-400 block mt-2">⏱️ {item.created_at ? new Date(item.created_at).toLocaleDateString('id-ID') : 'Baru saja'}</span>
+            {beritaBawah.map((item) => (
+              <div class="bg-white p-4 border border-gray-200 rounded shadow-sm flex flex-col justify-between group">
+                <div>
+                  <span class="text-[10px] uppercase font-bold text-red-600 block mb-1">{item.kategori || 'Berita'}</span>
+                  <h4 class="font-bold text-sm text-gray-900 group-hover:text-red-600 line-clamp-2">
+                    <a href={`/berita/${item.id}`}>{item.judul}</a>
+                  </h4>
                 </div>
-              ))
-            ) : (
-              <p class="text-xs text-gray-400 col-span-2 py-4">Belum ada daftar arsip berita tambahan.</p>
-            )}
+              </div>
+            ))}
           </div>
         </div>
 
-        <!-- KOLOM KANAN: Sidebar Berita Terkini & Slot Iklan Pendapatan Daerah -->
+        <!-- Kolom Samping -->
         <div class="space-y-6">
           <div class="border-b-2 border-red-600 pb-1">
             <h2 class="bg-red-600 text-white px-3 py-1 text-xs font-bold uppercase tracking-wider inline-block">Berita Terkini</h2>
           </div>
 
-          <!-- List Samping Berita Kronologis -->
           <div class="bg-white border border-gray-200 rounded divide-y divide-gray-100 shadow-sm">
             {beritaTerkini.length > 0 ? (
               beritaTerkini.map((item, index) => (
                 <div class="p-4 hover:bg-gray-50 transition flex gap-3 items-start">
                   <span class="text-2xl font-black text-gray-300 w-6 text-center leading-none">{index + 1}</span>
-                  <div>
-                    <h4 class="font-semibold text-xs text-gray-900 hover:text-red-600 transition line-clamp-2 leading-snug">
-                      <a href={`/berita/${item.id}`}>{item.judul}</a>
-                    </h4>
-                  </div>
+                  <h4 class="font-semibold text-xs text-gray-900 hover:text-red-600 line-clamp-2">
+                    <a href={`/berita/${item.id}`}>{item.judul}</a>
+                  </h4>
                 </div>
               ))
             ) : (
@@ -195,45 +170,27 @@ const beritaBawah = postingan && postingan.length > 6 ? postingan.slice(6, 12) :
             )}
           </div>
 
-          <!-- 📢 SLOT IKLAN 4: DINAMIS SIDEBAR (Input dari Admin) -->
+          <!-- Iklan Sidebar Dinamis -->
           <div class="w-full">
             {iklanSidebarAtas ? (
-              <a href={iklanSidebarAtas.link_tujuan} target="_blank" class="block w-full bg-sky-50 border border-sky-300 text-sky-900 p-5 text-center rounded shadow-sm hover:bg-sky-100 transition">
-                <span class="bg-sky-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase block w-max mx-auto mb-2">Iklan Utama Aktif</span>
-                <h4 class="font-bold text-xs leading-snug">{iklanSidebarAtas.konten_teks}</h4>
-                <span class="text-[10px] text-sky-500 block mt-3 underline">Klik Detail Sponsor ↗</span>
+              <a href={iklanSidebarAtas.link_tujuan} target="_blank" class="block w-full bg-sky-50 border border-sky-300 text-sky-900 p-5 text-center rounded">
+                <span class="bg-sky-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase block w-max mx-auto mb-2">Iklan Utama</span>
+                <h4 class="font-bold text-xs">{iklanSidebarAtas.konten_teks}</h4>
               </a>
             ) : (
-              <div class="w-full bg-sky-100 border border-sky-300 text-sky-800 text-center py-12 font-bold text-xs rounded shadow-sm">
-                SLOT BANNER DINAMIS SIDEBAR (300 x 250 PX)<br/>
-                <span class="text-[10px] font-normal text-sky-600 block mt-1">Status: Siap Disewa</span>
+              <div class="w-full bg-sky-100 border border-sky-300 text-sky-800 text-center py-12 font-bold text-xs rounded">
+                SLOT BANNER DINAMIS SIDEBAR
               </div>
             )}
-          </div>
-
-          <!-- Banner Kontak Redaksi Portal Berita -->
-          <div class="bg-slate-950 text-white rounded p-4 text-center border-l-4 border-red-500 shadow-sm">
-            <h4 class="text-xs font-bold uppercase tracking-wider text-red-400">Hubungi Redaksi</h4>
-            <p class="text-[11px] text-gray-400 mt-1 leading-relaxed">Kirimkan rilis berita acara, kerja sama advertorial, atau pemasangan iklan Anda melalui kontak redaksi utama.</p>
           </div>
         </div>
 
       </div>
     </main>
 
-    <!-- Footer Portal Berita -->
-    <footer class="bg-slate-900 text-gray-400 border-t-4 border-slate-950 mt-20 text-xs">
-      <div class="max-w-6xl mx-auto px-4 py-8 flex flex-col md:flex-row justify-between items-center gap-4">
-        <div>
-          <p class="font-bold text-white text-sm">NUSA-MEDIA ONLINE</p>
-          <p class="mt-1 text-gray-500">&copy; 2026 Nusa-Media Portal Serverless. All Rights Reserved.</p>
-        </div>
-        <div class="flex gap-4 text-gray-400 font-medium">
-          <a href="#" class="hover:text-white">Tentang Kami</a>
-          <a href="#" class="hover:text-white">Info Iklan</a>
-          <a href="#" class="hover:text-white">Panduan Media</a>
-        </div>
-      </div>
+    <footer class="bg-slate-900 text-gray-500 border-t-4 border-slate-950 mt-20 py-8 text-xs text-center">
+      <p class="font-bold text-white">NUSA-MEDIA ONLINE</p>
+      <p class="mt-1">&copy; 2026 Portal Berita Nusantara Serverless.</p>
     </footer>
 
   </body>
