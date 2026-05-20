@@ -1,49 +1,144 @@
 ---
-const judulHalaman = "Nusa Media - Control Panel Admin";
+// 🎯 WAJIB DI MODE STATIS (SSG): Daftarkan rute kata apa saja yang boleh diakses oleh URL [id]
+export function getStaticPaths() {
+  return [
+    { params: { id: 'admin' } },
+    { params: { id: 'control' } }
+  ];
+}
+
+// Mengambil parameter ID aktif dari URL (/admin atau /control)
+const { id } = Astro.params;
+const judulHalaman = `Nusa Media - Control Panel (${id.toUpperCase()})`;
+const tanggal = "Rabu, 20 Mei 2026";
 ---
 <html lang="id">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{judulHalaman}</title>
+    
+    <!-- 🎯 TAILWIND PLAY CDN RESMI -->
     <script src="https://tailwindcss.com"></script>
-    <link href="https://googleapis.com" rel="stylesheet">
+    
+    <!-- 🎯 INTERKONEKSI GOOGLE FONTS -->
+    <link rel="preconnect" href="https://googleapis.com">
+    <link rel="preconnect" href="https://gstatic.com" crossorigin>
+    <link href="https://googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+      body { font-family: 'Plus Jakarta Sans', sans-serif; }
+      #listBerita::-webkit-scrollbar { width: 4px; }
+      #listBerita::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+    </style>
   </head>
-  <body class="bg-[#0A0A0A] text-[#E5E5E5] antialiased font-['Plus+Jakarta+Sans']">
+  <body class="bg-[#0A0A0A] text-[#E5E5E5] antialiased">
 
     <div class="min-h-screen flex flex-col md:flex-row">
-      <aside class="w-full md:w-64 bg-[#111111] border-b md:border-b-0 md:border-r border-[#222222] p-6 space-y-6">
-        <h2 class="text-sm font-bold text-white tracking-wider">NUSA MEDIA ADMIN</h2>
-        <button onclick="isiOtomatis()" class="w-full text-left px-4 py-2 rounded bg-amber-950/40 border border-amber-900/50 text-amber-400 text-xs font-bold">🤖 Isi Form Otomatis</button>
+      
+      <!-- MENU SISI KIRI (SIDEBAR) -->
+      <aside class="w-full md:w-64 bg-[#111111] border-b md:border-b-0 md:border-r border-[#222222] p-6 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center gap-3 pb-6 border-b border-[#222222]">
+            <div class="w-8 h-8 rounded bg-white flex items-center justify-center text-black font-black text-sm">N</div>
+            <div>
+              <h2 class="text-sm font-bold text-white tracking-wider">NUSA MEDIA</h2>
+              <p class="text-[10px] text-gray-500 font-mono">v1.4.0 - Route: /{id}</p>
+            </div>
+          </div>
+          
+          <nav class="mt-8 space-y-2">
+            <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-zinc-900 text-white text-xs font-semibold tracking-wide border border-zinc-800">
+              📝 Kelola & Tulis Berita
+            </a>
+            <button onclick="isiOtomatis()" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-amber-400 bg-amber-950/20 hover:bg-amber-950/40 text-xs font-semibold tracking-wide border border-amber-900/30 transition-all text-left cursor-pointer">
+              🤖 Isi Form Otomatis
+            </button>
+          </nav>
+        </div>
+
+        <div class="pt-6 border-t border-[#222222] text-[10px] text-gray-600 font-mono hidden md:block">
+          Scope ID: <span class="text-gray-400 uppercase font-bold">{id}</span>
+        </div>
       </aside>
 
+      <!-- KONTEN UTAMA -->
       <main class="flex-1 p-6 md:p-10 max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div class="lg:col-span-2 space-y-4">
-          <h1 class="text-xl font-black text-white">Kelola Berita</h1>
-          <form id="formBerita" class="bg-[#111111] border border-[#222222] rounded-xl p-6 space-y-4">
-            <input type="text" id="judul" name="judul" required placeholder="Judul Berita" class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg px-3 py-2 text-sm text-white focus:outline-none"/>
-            <select id="kategori" name="kategori" class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
-              <option value="TEKNOLOGI">TEKNOLOGI</option>
-              <option value="POLITIK">POLITIK</option>
-              <option value="BISNIS">BISNIS</option>
-              <option value="GAYA HIDUP">GAYA HIDUP</option>
-            </select>
-            <input type="text" id="penulis" name="penulis" value="Redaksi Nusa Media" class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg px-3 py-2 text-sm text-white focus:outline-none"/>
-            <textarea id="konten" name="konten" rows="4" required placeholder="Isi Narasi Artikel" class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg p-3 text-sm text-white focus:outline-none"></textarea>
-            <input type="url" id="url_gambar" name="url_gambar" placeholder="URL Gambar Sampul (Unsplash)" class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg px-3 py-2 text-xs text-white focus:outline-none"/>
-            <button type="submit" id="btnSubmit" class="w-full bg-white text-black font-bold py-2.5 rounded-lg text-xs uppercase tracking-widest">✍️ Terbitkan Berita</button>
-          </form>
-        </div>
+        
+        <!-- SISI KIRI: FORMULIR INPUT -->
+        <div class="lg:col-span-2 space-y-6">
+          <header class="flex justify-between items-center">
+            <div>
+              <h1 class="text-2xl font-extrabold text-white tracking-tight">Kelola Berita ({id.toUpperCase()})</h1>
+              <p class="text-xs text-gray-500 mt-1">Input data secara manual di bawah atau gunakan tombol otomatis di sidebar.</p>
+            </div>
+          </header>
 
-        <div class="space-y-4">
-          <h2 class="text-lg font-bold text-white">Daftar Berita Live</h2>
-          <div id="listBerita" class="space-y-3 max-h-[70vh] overflow-y-auto">
-            <p class="text-xs text-gray-500">Memuat data...</p>
+          <div class="bg-[#111111] border border-[#222222] rounded-xl p-6 shadow-xl">
+            <form id="formBerita" class="space-y-4">
+              <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Judul Berita</label>
+                <input type="text" id="judul" name="judul" required placeholder="Masukkan judul berita..." 
+                  class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white transition-colors" />
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Kategori</label>
+                  <select id="kategori" name="kategori" class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white transition-colors">
+                    <option value="TEKNOLOGI">TEKNOLOGI</option>
+                    <option value="POLITIK">POLITIK</option>
+                    <option value="BISNIS">BISNIS</option>
+                    <option value="GAYA HIDUP">GAYA HIDUP</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Penulis</label>
+                  <input type="text" id="penulis" name="penulis" value="Redaksi Nusa Media" required
+                    class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white transition-colors" />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Isi Artikel (Konten)</label>
+                <textarea id="konten" name="konten" rows="5" required placeholder="Ketik narasi artikel di sini..." 
+                  class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg p-3 text-sm text-white focus:outline-none focus:border-white transition-colors leading-relaxed"></textarea>
+              </div>
+
+              <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">URL Gambar Sampul</label>
+                <input type="url" id="url_gambar" name="url_gambar" placeholder="https://unsplash.com..." 
+                  class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-white transition-colors font-mono" />
+              </div>
+
+              <div class="flex gap-4 pt-2">
+                <button type="submit" id="btnSubmit" class="w-full bg-white text-black hover:bg-gray-200 transition-all font-bold text-xs uppercase tracking-widest py-3 rounded-lg shadow-lg cursor-pointer">
+                  ✍️ Terbitkan Berita
+                </button>
+              </div>
+            </form>
           </div>
         </div>
+
+        <!-- SISI KANAN: DAFTAR BERITA LIVE & TOMBOL HAPUS -->
+        <div class="space-y-6">
+          <header class="flex justify-between items-center">
+            <div>
+              <h2 class="text-xl font-bold text-white tracking-tight">Daftar Berita</h2>
+              <p class="text-[10px] text-gray-500 mt-0.5">Telah Tayang & Tersedia.</p>
+            </div>
+            <span class="text-[10px] font-mono text-zinc-500 bg-zinc-900 px-2 py-1 rounded border border-zinc-800">{tanggal}</span>
+          </header>
+
+          <div id="listBerita" class="space-y-3 max-h-[72vh] overflow-y-auto pr-1">
+            <p class="text-xs text-gray-500 animate-pulse">Memuat data berita...</p>
+          </div>
+        </div>
+
       </main>
     </div>
 
+    <!-- TRANSMISI FITUR UTAMA & AUTOMATION -->
     <script is:inline>
       const form = document.getElementById('formBerita');
       const listContainer = document.getElementById('listBerita');
@@ -51,61 +146,108 @@ const judulHalaman = "Nusa Media - Control Panel Admin";
       
       const SUPABASE_PROJECT_ID = "zmvlvzspjohrewjbtfxc"; 
       const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inptdmx2enNwam9ocmV3amJ0ZnhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMTM0MTAsImV4cCI6MjA5NDU4OTQxMH0.PtTVq_b4gLonRpNSbPYKncoXlGVS1lKaADy74dbhuSI";     
-      const BASE_URL = `https://${SUPABASE_PROJECT_ID}.supabase.co/rest/v1/berita`;
+      const NAMA_TABEL = "berita";                    
+
+      const BASE_URL = `https://${SUPABASE_PROJECT_ID}.supabase.co/rest/v1/${NAMA_TABEL}`;
 
       async function muatBeritaAdmin() {
         try {
           const response = await fetch(`${BASE_URL}?select=*&order=dibuat_pada.desc`, {
-            headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+            }
           });
           const data = await response.json();
+          
+          if (!data || data.length === 0) {
+            listContainer.innerHTML = '<p class="text-xs text-gray-600 p-4">Belum ada data berita di database.</p>';
+            return;
+          }
+
           listContainer.innerHTML = data.map(item => `
-            <div class="p-4 bg-[#111111] border border-[#222222] rounded-lg space-y-1 relative">
-              <div class="flex justify-between items-center mb-1">
-                <span class="text-[9px] bg-zinc-800 text-gray-300 font-bold px-2 py-0.5 rounded uppercase">${item.kategori || 'UMUM'}</span>
-                <button onclick="hapusBerita('${item.id}')" class="text-[10px] text-red-400 bg-red-950/30 border border-red-900/40 px-2 py-0.5 rounded font-bold">🗑️ HAPUS</button>
+            <div class="p-4 bg-[#111111] border border-[#222222] rounded-lg space-y-1 relative group">
+              <div class="flex justify-between items-center">
+                <span class="text-[9px] bg-zinc-800 text-gray-300 font-bold px-2 py-0.5 rounded uppercase tracking-wider">${item.kategori || 'UMUM'}</span>
+                <button 
+                  onclick="konfirmasiHapus('${item.id}', '${item.judul ? item.judul.replace(/'/g, "\\'") : 'Berita Tanpa Judul'}')" 
+                  class="text-xs text-red-500 hover:text-red-400 bg-red-950/20 hover:bg-red-950/50 border border-red-900/30 px-2 py-0.5 rounded font-bold font-mono transition-all cursor-pointer"
+                >
+                  🗑️ HAPUS
+                </button>
               </div>
-              <h4 class="text-xs font-bold text-white line-clamp-1">${item.judul || 'Tanpa Judul'}</h4>
+              <h4 class="text-xs font-bold text-white line-clamp-1 pr-14">${item.judul || 'Tanpa Judul'}</h4>
+              <p class="text-[10px] text-gray-500 line-clamp-2 leading-relaxed">${item.konten || ''}</p>
             </div>
           `).join('');
-        } catch (error) { listContainer.innerHTML = '<p class="text-xs text-red-500">Gagal memuat data.</p>'; }
+        } catch (error) {
+          listContainer.innerHTML = '<p class="text-xs text-red-500 p-4">Gagal menyinkronkan data.</p>';
+        }
       }
+
+      window.konfirmasiHapus = async function(idBerita, judulBerita) {
+        if (confirm(`Apakah Anda yakin ingin menghapus berita ini secara permanen?\n\nJudul: "${judulBerita}"`)) {
+          try {
+            const response = await fetch(`${BASE_URL}?id=eq.${idBerita}`, {
+              method: 'DELETE',
+              headers: {
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+              }
+            });
+            if (!response.ok) throw new Error();
+            alert('🗑️ Berita telah sukses dihapus!');
+            muatBeritaAdmin();
+          } catch (error) {
+            alert('❌ Gagal menghapus data.');
+          }
+        }
+      };
 
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        btnSubmit.disabled = true; btnSubmit.innerText = "MENERBITKAN...";
+        btnSubmit.disabled = true;
+        btnSubmit.innerText = "SEDANG MENERBITKAN...";
+
         const formData = new FormData(form);
         const payload = {
-          judul: formData.get('judul'), kategori: formData.get('kategori'), penulis: formData.get('penulis'), konten: formData.get('konten'),
-          url_gambar: formData.get('url_gambar') || 'https://unsplash.com',
-          status: 'publish', dibuat_pada: new Date().toISOString()
+          judul: formData.get('judul'),
+          kategori: formData.get('kategori'),
+          penulis: formData.get('penulis'),
+          konten: formData.get('konten'),
+          url_gambar: formData.get('url_gambar') || 'https://unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=600',
+          status: 'publish',
+          dibuat_pada: new Date().toISOString()
         };
+
         try {
-          await fetch(BASE_URL, {
+          const response = await fetch(BASE_URL, {
             method: 'POST',
-            headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json'
+            },
             body: JSON.stringify(payload)
           });
-          form.reset(); alert('🎉 Berita berhasil diterbitkan!'); muatBeritaAdmin();
-        } catch (error) { alert('❌ Gagal menerbitkan berita.'); }
-        finally { btnSubmit.disabled = false; btnSubmit.innerText = "✍️ TERBITKAN BERITA"; }
-      });
-
-      window.hapusBerita = async function(id) {
-        if(confirm('Hapus berita ini permanen?')) {
-          await fetch(`${BASE_URL}?id=eq.${id}`, {
-            method: 'DELETE',
-            headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
-          });
-          alert('🗑️ Berita dihapus!'); muatBeritaAdmin();
+          if (!response.ok) throw new Error();
+          form.reset();
+          alert('🎉 Berita berhasil diterbitkan!');
+          muatBeritaAdmin();
+        } catch (error) {
+          alert('❌ Gagal mengirim data.');
+        } finally {
+          btnSubmit.disabled = false;
+          btnSubmit.innerText = "✍️ TERBITKAN BERITA";
         }
-      }
+      });
 
       window.isiOtomatis = function() {
         document.getElementById('judul').value = "Inovasi Baru AI Mengguncang Industri Teknologi Nasional";
         document.getElementById('konten').value = "Sistem kecerdasan buatan teranyar buatan anak bangsa dilaporkan berhasil mengotomatisasi infrastruktur komputasi cloud secara cerdas.";
-        document.getElementById('url_gambar').value = "https://unsplash.com";
+        document.getElementById('url_gambar').value = "https://unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600";
       }
+
       muatBeritaAdmin();
     </script>
   </body>
