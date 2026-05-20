@@ -1,4 +1,4 @@
 import { defineConfig } from 'astro/config';
 
-// Mode default Astro adalah Statis (SSG)
+// Mengembalikan Astro ke mode Statis (SSG) bawaan
 export default defineConfig({});

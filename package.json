@@ -1,9 +1,6 @@
 {
   "name": "nusa-media",
   "version": "1.0.0",
-  "engines": {
-    "node": "22.x"
-  },
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
