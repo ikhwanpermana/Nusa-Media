@@ -2,10 +2,6 @@
   command = "npm install @astrojs/tailwind@5.1.2 @astrojs/netlify@5.5.2 && npm run build"
   publish = "dist"
 
-# Mengubah subdomain gratisan Netlify menjadi nusamedia.netlify.app
-[site]
-  id = "nusamedia"
-
 [build.environment]
   PUBLIC_SUPABASE_URL = "https://zmvlvzspjohrewjbtfxc.supabase.co/rest/v1/"
   PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inptdmx2enNwam9ocmV3amJ0ZnhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMTM0MTAsImV4cCI6MjA5NDU4OTQxMH0.PtTVq_b4gLonRpNSbPYKncoXlGVS1lKaADy74dbhuSI"
