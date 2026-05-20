@@ -1,87 +1,112 @@
 ---
-// 1. Impor koneksi database Supabase resmi
-import { supabase } from '../lib/supabase';
-
-// 2. WAJIB DI MODE STATIS (SSG): Beri tahu Astro daftar ID berita apa saja yang ada di Supabase
-export async function getStaticPaths() {
-  const SUPABASE_PROJECT_ID = "zmvlvzspjohrewjbtfxc";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inptdmx2enNwam9ocmV3amJ0ZnhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMTM0MTAsImV4cCI6MjA5NDU4OTQxMH0.PtTVq_b4gLonRpNSbPYKncoXlGVS1lKaADy74dbhuSI";
-  
-  try {
-    // Ambil semua ID dari tabel berita
-    const response = await fetch(`https://${SUPABASE_PROJECT_ID}.supabase.co/rest/v1/berita?select=id`, {
-      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
-    });
-    const daftarBerita = await response.json();
-    
-    // Kembalikan rute parameter ID ke mesin build Astro
-    return daftarBerita.map((berita) => ({
-      params: { id: berita.id.toString() },
-    }));
-  } catch (error) {
-    console.error("Gagal membuat rute statis:", error);
-    return [];
-  }
-}
-
-// 3. Ambil parameter ID dari URL halaman aktif
-const { id } = Astro.params;
-
-// 4. Ambil data berita lengkap sesuai ID yang sedang dibuka (Fetch Sisi Server saat Build)
-const SUPABASE_PROJECT_ID = "zmvlvzspjohrewjbtfxc";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inptdmx2enNwam9ocmV3amJ0ZnhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMTM0MTAsImV4cCI6MjA5NDU4OTQxMH0.PtTVq_b4gLonRpNSbPYKncoXlGVS1lKaADy74dbhuSI";
-
-const response = await fetch(`https://${SUPABASE_PROJECT_ID}.supabase.co/rest/v1/berita?id=eq.${id}&select=*`, {
-  headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
-});
-const dataBerita = await response.json();
-const berita = dataBerita[0];
+const judulHalaman = "Nusa Media - Control Panel Admin";
 ---
-
 <html lang="id">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{berita ? berita.judul : 'Detail Berita'} - Nusa Media</title>
+    <title>{judulHalaman}</title>
     <script src="https://tailwindcss.com"></script>
+    <link href="https://googleapis.com" rel="stylesheet">
   </head>
-  <body class="bg-[#FBFBFA] text-[#1A1A1A] antialiased">
-    
-    <!-- Tombol Kembali -->
-    <div class="max-w-3xl mx-auto px-6 pt-10">
-      <a href="/" class="text-xs font-bold text-blue-600 hover:text-blue-700 tracking-wide uppercase font-mono">
-        ← Kembali ke Beranda
-      </a>
+  <body class="bg-[#0A0A0A] text-[#E5E5E5] antialiased font-['Plus+Jakarta+Sans']">
+
+    <div class="min-h-screen flex flex-col md:flex-row">
+      <aside class="w-full md:w-64 bg-[#111111] border-b md:border-b-0 md:border-r border-[#222222] p-6 space-y-6">
+        <h2 class="text-sm font-bold text-white tracking-wider">NUSA MEDIA ADMIN</h2>
+        <button onclick="isiOtomatis()" class="w-full text-left px-4 py-2 rounded bg-amber-950/40 border border-amber-900/50 text-amber-400 text-xs font-bold">🤖 Isi Form Otomatis</button>
+      </aside>
+
+      <main class="flex-1 p-6 md:p-10 max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2 space-y-4">
+          <h1 class="text-xl font-black text-white">Kelola Berita</h1>
+          <form id="formBerita" class="bg-[#111111] border border-[#222222] rounded-xl p-6 space-y-4">
+            <input type="text" id="judul" name="judul" required placeholder="Judul Berita" class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg px-3 py-2 text-sm text-white focus:outline-none"/>
+            <select id="kategori" name="kategori" class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+              <option value="TEKNOLOGI">TEKNOLOGI</option>
+              <option value="POLITIK">POLITIK</option>
+              <option value="BISNIS">BISNIS</option>
+              <option value="GAYA HIDUP">GAYA HIDUP</option>
+            </select>
+            <input type="text" id="penulis" name="penulis" value="Redaksi Nusa Media" class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg px-3 py-2 text-sm text-white focus:outline-none"/>
+            <textarea id="konten" name="konten" rows="4" required placeholder="Isi Narasi Artikel" class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg p-3 text-sm text-white focus:outline-none"></textarea>
+            <input type="url" id="url_gambar" name="url_gambar" placeholder="URL Gambar Sampul (Unsplash)" class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg px-3 py-2 text-xs text-white focus:outline-none"/>
+            <button type="submit" id="btnSubmit" class="w-full bg-white text-black font-bold py-2.5 rounded-lg text-xs uppercase tracking-widest">✍️ Terbitkan Berita</button>
+          </form>
+        </div>
+
+        <div class="space-y-4">
+          <h2 class="text-lg font-bold text-white">Daftar Berita Live</h2>
+          <div id="listBerita" class="space-y-3 max-h-[70vh] overflow-y-auto">
+            <p class="text-xs text-gray-500">Memuat data...</p>
+          </div>
+        </div>
+      </main>
     </div>
 
-    <!-- Konten Detail Artikel Koran Premium -->
-    {berita ? (
-      <main class="max-w-3xl mx-auto px-6 py-8 space-y-6">
-        <span class="bg-zinc-900 text-white text-[9px] font-extrabold px-2.5 py-1 rounded-sm uppercase tracking-widest">
-          {berita.kategori}
-        </span>
-        
-        <h1 class="text-3xl md:text-4xl font-black text-gray-900 leading-tight tracking-tight font-serif">
-          {berita.judul}
-        </h1>
+    <script is:inline>
+      const form = document.getElementById('formBerita');
+      const listContainer = document.getElementById('listBerita');
+      const btnSubmit = document.getElementById('btnSubmit');
+      
+      const SUPABASE_PROJECT_ID = "zmvlvzspjohrewjbtfxc"; 
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inptdmx2enNwam9ocmV3amJ0ZnhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMTM0MTAsImV4cCI6MjA5NDU4OTQxMH0.PtTVq_b4gLonRpNSbPYKncoXlGVS1lKaADy74dbhuSI";     
+      const BASE_URL = `https://${SUPABASE_PROJECT_ID}.supabase.co/rest/v1/berita`;
 
-        <div class="flex items-center gap-2 text-xs text-gray-400 font-mono border-b border-gray-100 pb-4">
-          <span class="font-bold text-gray-700">{berita.penulis || 'Redaksi'}</span>
-          <span>•</span>
-          <span>{new Date(berita.dibuat_pada).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-        </div>
+      async function muatBeritaAdmin() {
+        try {
+          const response = await fetch(`${BASE_URL}?select=*&order=dibuat_pada.desc`, {
+            headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+          });
+          const data = await response.json();
+          listContainer.innerHTML = data.map(item => `
+            <div class="p-4 bg-[#111111] border border-[#222222] rounded-lg space-y-1 relative">
+              <div class="flex justify-between items-center mb-1">
+                <span class="text-[9px] bg-zinc-800 text-gray-300 font-bold px-2 py-0.5 rounded uppercase">${item.kategori || 'UMUM'}</span>
+                <button onclick="hapusBerita('${item.id}')" class="text-[10px] text-red-400 bg-red-950/30 border border-red-900/40 px-2 py-0.5 rounded font-bold">🗑️ HAPUS</button>
+              </div>
+              <h4 class="text-xs font-bold text-white line-clamp-1">${item.judul || 'Tanpa Judul'}</h4>
+            </div>
+          `).join('');
+        } catch (error) { listContainer.innerHTML = '<p class="text-xs text-red-500">Gagal memuat data.</p>'; }
+      }
 
-        <div class="aspect-video w-full bg-gray-100 rounded-xl overflow-hidden shadow-xs">
-          <img src={berita.url_gambar} alt={berita.judul} class="w-full h-full object-cover" />
-        </div>
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        btnSubmit.disabled = true; btnSubmit.innerText = "MENERBITKAN...";
+        const formData = new FormData(form);
+        const payload = {
+          judul: formData.get('judul'), kategori: formData.get('kategori'), penulis: formData.get('penulis'), konten: formData.get('konten'),
+          url_gambar: formData.get('url_gambar') || 'https://unsplash.com',
+          status: 'publish', dibuat_pada: new Date().toISOString()
+        };
+        try {
+          await fetch(BASE_URL, {
+            method: 'POST',
+            headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          form.reset(); alert('🎉 Berita berhasil diterbitkan!'); muatBeritaAdmin();
+        } catch (error) { alert('❌ Gagal menerbitkan berita.'); }
+        finally { btnSubmit.disabled = false; btnSubmit.innerText = "✍️ TERBITKAN BERITA"; }
+      });
 
-        <p class="text-gray-800 text-base md:text-lg leading-relaxed text-justify whitespace-pre-line font-serif pt-4">
-          {berita.konten}
-        </p>
-      </main>
-    ) : (
-      <div class="text-center py-20 text-gray-400">Berita tidak ditemukan atau telah dihapus.</div>
-    )}
+      window.hapusBerita = async function(id) {
+        if(confirm('Hapus berita ini permanen?')) {
+          await fetch(`${BASE_URL}?id=eq.${id}`, {
+            method: 'DELETE',
+            headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+          });
+          alert('🗑️ Berita dihapus!'); muatBeritaAdmin();
+        }
+      }
 
+      window.isiOtomatis = function() {
+        document.getElementById('judul').value = "Inovasi Baru AI Mengguncang Industri Teknologi Nasional";
+        document.getElementById('konten').value = "Sistem kecerdasan buatan teranyar buatan anak bangsa dilaporkan berhasil mengotomatisasi infrastruktur komputasi cloud secara cerdas.";
+        document.getElementById('url_gambar').value = "https://unsplash.com";
+      }
+      muatBeritaAdmin();
+    </script>
   </body>
 </html>
