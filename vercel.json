@@ -1,6 +1,0 @@
-{
-  "cleanUrls": true,
-  "outputDirectory": "public",
-  "framework": null,
-  "comment": "Force Vercel build version 2"
-}
