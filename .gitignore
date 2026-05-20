@@ -14,3 +14,5 @@ logs
 
 # Folder Cadangan Astro
 cadangan-astro/
+# Local Netlify folder
+.netlify
