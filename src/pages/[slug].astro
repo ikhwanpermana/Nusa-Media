@@ -1,84 +1,85 @@
 ---
-// src/pages/berita/[slug].astro
-export const output = 'server';
+// 1. Fungsi Wajib Astro Statis: Daftarkan semua slug berita yang ada di Supabase
+export async function getStaticPaths() {
+  const SUPABASE_PROJECT_ID = "zmvlvzspjohrewjbtfxc";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inptdmx2enNwam9ocmV3amJ0ZnhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMTM0MTAsImV4cCI6MjA5NDU4OTQxMH0.PtTVq_b4gLonRpNSbPYKncoXlGVS1lKaADy74dbhuSI";
+  
+  try {
+    const response = await fetch(`https://${SUPABASE_PROJECT_ID}.supabase.co/rest/v1/berita?select=id`, {
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+    });
+    const daftarBerita = await response.json();
+    
+    // Gunakan 'slug' sebagai penampung ID atau teks slug artikel
+    return daftarBerita.map((berita) => ({
+      params: { slug: berita.id.toString() },
+    }));
+  } catch (error) {
+    console.error("Gagal membuat rute artikel:", error);
+    return [];
+  }
+}
 
+// 2. Ambil parameter slug dari URL
 const { slug } = Astro.params;
-const judulHalaman = "Nusa Media - Detail Berita";
 ---
+
 <html lang="id">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{judulHalaman}</title>
-    <script src="https://jsdelivr.net"></script>
+    <title>Nusa Media - Detail Berita</title>
+    <script src="https://tailwindcss.com"></script>
   </head>
   <body class="bg-[#FBFBFA] text-[#1A1A1A] antialiased">
     
-    <nav class="bg-white border-b border-gray-200 px-6 py-4 shadow-xs">
-      <div class="max-w-4xl mx-auto flex justify-between items-center">
-        <a href="/" class="text-xl font-extrabold tracking-tight text-gray-950">🏝️ NUSA <span class="text-blue-600">MEDIA</span></a>
-        <a href="/" class="text-xs font-bold text-gray-500 hover:text-blue-600">← Kembali ke Beranda</a>
-      </div>
-    </nav>
+    <div class="max-w-3xl mx-auto px-6 pt-10">
+      <a href="/" class="text-xs font-bold text-blue-600 hover:text-blue-700 font-mono uppercase">
+        ← Kembali ke Beranda
+      </a>
+    </div>
 
-    <main class="max-w-3xl mx-auto p-6 my-8 bg-white border border-gray-100 rounded-2xl shadow-2xs">
-      <div id="kontenBeritaDetail">
-        <p class="text-xs text-gray-400 animate-pulse">Sedang memuat artikel...</p>
+    <main class="max-w-3xl mx-auto px-6 py-8 space-y-6">
+      <div id="kontenArtikel" class="space-y-4">
+        <p class="text-xs text-gray-400 font-mono animate-pulse">Memuat konten berita secara aman...</p>
       </div>
     </main>
 
-    <script is:inline>
-      // Ambil slug dari parameter URL window location
-      const pathSegments = window.location.pathname.split('/');
-      const slugUrl = pathSegments[pathSegments.length - 1] || pathSegments[pathSegments.length - 2];
-
-      const SUPABASE_PROJECT_ID = "zmvlvzspjohrewjbtfxc"; 
-      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inptdmx2enNwam9ocmV3amJ0ZnhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMTM0MTAsImV4cCI6MjA5NDU4OTQxMH0.PtTVq_b4gLonRpNSbPYKncoXlGVS1lKaADy74dbhuSI";     
+    <!-- KONEKSI CLIENT-SIDE KE SUPABASE (Hemat Kuota Vercel 100%) -->
+    <script is:inline define:vars={{ slug }}>
+      const container = document.getElementById('kontenArtikel');
       
-      const container = document.getElementById('kontenBeritaDetail');
-      const API_URL = `https://${SUPABASE_PROJECT_ID}.supabase.co/rest/v1/berita?slug=eq.${slugUrl}&limit=1`;
+      const SUPABASE_PROJECT_ID = "zmvlvzspjohrewjbtfxc";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inptdmx2enNwam9ocmV3amJ0ZnhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMTM0MTAsImV4cCI6MjA5NDU4OTQxMH0.PtTVq_b4gLonRpNSbPYKncoXlGVS1lKaADy74dbhuSI";
 
-      async function muatDetailBerita() {
+      async function ambilDetailBerita() {
         try {
-          const response = await fetch(API_URL, {
-            headers: {
-              'apikey': SUPABASE_ANON_KEY,
-              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-            }
+          const response = await fetch(`https://${SUPABASE_PROJECT_ID}.supabase.co/rest/v1/berita?id=eq.${slug}&select=*`, {
+            headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
           });
-
-          if (!response.ok) throw new Error('Gagal mengunduh artikel dari database.');
           const data = await response.json();
+          const berita = data[0];
 
-          if (data.length === 0) {
-            container.innerHTML = `<p class="text-sm text-gray-500 text-center py-8">⚠️ Artikel tidak ditemukan atau tautan salah.</p>`;
+          if (!berita) {
+            container.innerHTML = `<p class="text-gray-500">Berita tidak ditemukan atau telah dihapus.</p>`;
             return;
           }
 
-          const artikel = data[0];
-          document.title = `${artikel.judul} - Nusa Media`;
-
           container.innerHTML = `
-            <span class="inline-block bg-blue-50 text-blue-600 border border-blue-100 text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider mb-4">${artikel.kategori}</span>
-            <h1 class="text-2xl md:text-3xl font-black text-gray-900 leading-tight mb-3">${artikel.judul}</h1>
-            
-            <div class="flex items-center gap-2 text-xs text-gray-400 mb-6 pb-4 border-b border-gray-100">
-              <span>Oleh <strong class="text-gray-700">${artikel.penulis || 'Redaksi'}</strong></span>
-              <span>•</span>
-              <span>${new Date(artikel.dibuat_pada).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-            </div>
-
-            ${artikel.url_gambar ? `<img src="${artikel.url_gambar}" class="w-full aspect-video object-cover rounded-xl mb-6 shadow-2xs" />` : ''}
-            
-            <p class="text-gray-800 leading-relaxed text-sm whitespace-pre-line">${artikel.konten || artikel.ringkasan}</p>
+            <span class="bg-zinc-900 text-white text-[9px] font-extrabold px-2.5 py-1 rounded-sm uppercase tracking-widest">
+              ${berita.kategori || 'UMUM'}
+            </span>
+            <h1 class="text-3xl font-black text-gray-900 leading-tight">${berita.judul}</h1>
+            <p class="text-xs text-gray-400 font-mono border-b pb-4">Oleh: ${berita.penulis || 'Redaksi'}</p>
+            <img src="${berita.url_gambar}" class="w-full h-64 object-cover rounded-xl shadow-xs" />
+            <p class="text-gray-800 text-sm leading-relaxed whitespace-pre-line pt-4">${berita.konten}</p>
           `;
-
         } catch (error) {
-          container.innerHTML = `<p class="text-sm text-red-500">🛑 Error: ${error.message}</p>`;
+          container.innerHTML = `<p class="text-red-500">Gagal memuat artikel.</p>`;
         }
       }
 
-      muatDetailBerita();
+      ambilDetailBerita();
     </script>
   </body>
 </html>
