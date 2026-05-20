@@ -1,10 +1,15 @@
-// src/lib/supabase.ts
 import { createClient } from '@supabase/supabase-js';
 
-// Menggunakan awalan PUBLIC_ agar aman dibaca oleh Astro di sisi server maupun client browser
-let supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || 'https://zmvlvzspjohrewjbtfxc.supabase.co';
-supabaseUrl = supabaseUrl.replace(/\/$/, ""); 
+// Membaca variabel lingkungan secara aman dengan TypeScript menggunakan Astro env
+const supabaseUrl = import.meta.env.SUPABASE_URL;
+const supabaseKey = import.meta.env.SUPABASE_ANON_KEY;
 
-const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || '';
+// Validasi untuk memastikan variabel lingkungan sudah terisi di .env
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error(
+    'Variabel lingkungan SUPABASE_URL atau SUPABASE_ANON_KEY belum dikonfigurasi di file .env!'
+  );
+}
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Membuat dan mengekspor instansi client Supabase
+export const supabase = createClient(supabaseUrl, supabaseKey);
