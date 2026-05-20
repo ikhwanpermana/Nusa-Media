@@ -1,0 +1,113 @@
+---
+import { supabase } from '../lib/supabase';
+
+// Wajib ditambahkan agar Astro memproses halaman ini secara live di server (SSR)
+export const prerender = false;
+
+// 1. AMBIL DATA BERITA LAMA (Dijalankan saat halaman dibuka)
+const { id } = Astro.params;
+
+// Ambil data artikel yang mau diedit berdasarkan ID
+const { data: artikel, error: fetchError } = await supabase
+  .from('posts')
+  .select('*')
+  .eq('id', id)
+  .single();
+
+let pesanSukses = "";
+let pesanGagal = "";
+
+// 2. PROSES UPDATE DATA (Dijalankan oleh Node.js saat tombol "Simpan" diklik)
+if (Astro.request.method === 'POST') {
+  try {
+    const formData = await Astro.request.formData();
+    const judul = formData.get('judul')?.toString();
+    const ringkasan = formData.get('ringkasan')?.toString();
+    const slug = formData.get('slug')?.toString();
+
+    // Jalankan perintah UPDATE ke database Supabase
+    const { error: updateError } = await supabase
+      .from('posts')
+      .update({ judul, ringkasan, slug })
+      .eq('id', id);
+
+    if (updateError) {
+      pesanGagal = updateError.message;
+    } else {
+      pesanSukses = "Berita berhasil diperbarui secara live!";
+      // Segarkan data artikel di layar dengan data baru
+      return Astro.redirect('/');
+    }
+  } catch (e) {
+    pesanGagal = "Terjadi kesalahan koneksi server.";
+  }
+}
+---
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edit Berita - Nusa Media</title>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans p-6">
+
+  <main class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-gray-100 mt-10">
+    <header class="mb-6">
+      <a href="/" class="text-sm text-blue-600 hover:underline">&larr; Kembali ke Beranda</a>
+      <h1 class="text-3xl font-black text-gray-800 mt-2">Edit Berita</h1>
+    </header>
+
+    <!-- Notifikasi Status -->
+    {pesanSukses && <div class="p-4 mb-4 text-green-800 bg-green-50 rounded-xl text-sm border border-green-200">{pesanSukses}</div>}
+    {pesanGagal && <div class="p-4 mb-4 text-red-800 bg-red-50 rounded-xl text-sm border border-red-200">{pesanGagal}</div>}
+    {fetchError && <div class="p-4 mb-4 text-amber-800 bg-amber-50 rounded-xl text-sm">Berita tidak ditemukan atau ID salah.</div>}
+
+    {artikel && (
+      // Formulir HTML standar yang mengirimkan data via POST ke Node.js
+      <form method="POST" class="space-y-5">
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-2">Judul Berita</label>
+          <input 
+            type="text" 
+            name="judul" 
+            value={artikel.judul} 
+            required 
+            class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-2">Slug URL (Tanpa spasi, gunakan tanda -)</label>
+          <input 
+            type="text" 
+            name="slug" 
+            value={artikel.slug} 
+            required 
+            class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-2">Ringkasan Berita</label>
+          <textarea 
+            name="ringkasan" 
+            rows="5" 
+            required 
+            class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          >{artikel.ringkasan}</textarea>
+        </div>
+
+        <button 
+          type="submit" 
+          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-colors shadow-sm"
+        >
+          Simpan Perubahan Berita
+        </button>
+      </form>
+    )}
+  </main>
+
+</body>
+</html>
