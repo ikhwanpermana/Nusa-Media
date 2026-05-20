@@ -1,9 +1,10 @@
+// src/lib/supabase.ts
 import { createClient } from '@supabase/supabase-js';
 
-// Ambil URL dan hapus spasi atau garis miring '/' di bagian paling akhir jika ada
-let supabaseUrl = import.meta.env.SUPABASE_URL || 'https://supabase.co';
-supabaseUrl = supabaseUrl.replace(/\/$/, ""); // <-- Ini mencegah eror "Invalid path"
+// Menggunakan awalan PUBLIC_ agar aman dibaca oleh Astro di sisi server maupun client browser
+let supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || 'https://zmvlvzspjohrewjbtfxc.supabase.co';
+supabaseUrl = supabaseUrl.replace(/\/$/, ""); 
 
-const supabaseAnonKey = import.meta.env.SUPABASE_ANON_KEY || '';
+const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || '';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
