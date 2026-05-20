@@ -1,14 +1,13 @@
 ---
-// Memanggil koneksi database Supabase dari sisi server Astro secara aman
 import { supabase } from '../lib/supabase';
 
-// Mengambil data artikel berita terbaru
+// 1. Ambil SEMUA data berita tanpa batasan .limit()
 const { data: postingan, error: errorBerita } = await supabase
   .from('artikel')
   .select('*')
   .order('created_at', { ascending: false });
 
-// Mengambil data iklan aktif khusus untuk posisi 'sidebar_atas'
+// 2. Ambil data iklan aktif khusus untuk posisi 'sidebar_atas'
 const { data: iklanSidebarAtas } = await supabase
   .from('iklan')
   .select('*')
@@ -18,7 +17,7 @@ const { data: iklanSidebarAtas } = await supabase
   .limit(1)
   .maybeSingle();
 
-// Mengambil data iklan aktif khusus untuk posisi 'detail_atas'
+// 3. Ambil data iklan aktif khusus untuk posisi 'detail_atas'
 const { data: iklanTengah } = await supabase
   .from('iklan')
   .select('*')
@@ -28,16 +27,16 @@ const { data: iklanTengah } = await supabase
   .limit(1)
   .maybeSingle();
 
+// Berita pertama menjadi Headline Utama, sisa SEMUA berita lainnya masuk ke daftar bawah
 const beritaUtama = postingan && postingan.length > 0 ? postingan[0] : null;
-const beritaTerkini = postingan && postingan.length > 1 ? postingan.slice(1, 6) : [];
-const beritaBawah = postingan && postingan.length > 6 ? postingan.slice(6, 12) : (postingan && postingan.length > 1 ? postingan.slice(1) : []);
+const semuaBeritaSisa = postingan && postingan.length > 1 ? postingan.slice(1) : [];
 ---
 
 <html lang="id">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Nusa-Media | Portal Berita Terpercaya & Aktual</title>
+    <title>Nusa-Media | Semua Berita Terkini Nusantara</title>
     <link rel="preconnect" href="https://googleapis.com">
     <link rel="preconnect" href="https://gstatic.com" crossorigin>
     <link href="https://googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -51,7 +50,7 @@ const beritaBawah = postingan && postingan.length > 6 ? postingan.slice(6, 12) :
     <div class="bg-red-700 text-white text-xs py-2">
       <div class="max-w-6xl mx-auto px-4 flex justify-between items-center">
         <div>📍 Regional Pembaruan Nusantara</div>
-        <div>Portal Berita Utama</div>
+        <div>Total Berita Terbit: {postingan ? postingan.length : 0}</div>
       </div>
     </div>
 
@@ -70,34 +69,34 @@ const beritaBawah = postingan && postingan.length > 6 ? postingan.slice(6, 12) :
       </div>
     </header>
 
-    <!-- Navigasi -->
+    <!-- Navigasi (Sticky) -->
     <nav class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
       <div class="max-w-6xl mx-auto px-4 flex items-center gap-6 overflow-x-auto text-sm font-bold h-12">
         <a href="/" class="text-red-600 border-b-2 border-red-600 py-3 px-1 whitespace-nowrap">Home</a>
-        <a href="#" class="text-gray-600 hover:text-red-600 py-3 px-1 whitespace-nowrap transition">Terkini</a>
-        <a href="#" class="text-gray-600 hover:text-red-600 py-3 px-1 whitespace-nowrap transition">Fokus</a>
+        <a href="#" class="text-gray-600 hover:text-red-600 py-3 px-1 whitespace-nowrap transition">Semua Berita</a>
       </div>
     </nav>
 
-    <!-- Konten Utama -->
+    <!-- Konten Utama Dua Kolom -->
     <main class="max-w-6xl mx-auto px-4 py-6">
       
       {errorBerita && (
         <div class="bg-red-100 border-l-4 border-red-600 p-4 rounded text-red-800 text-sm mb-6">
-          <strong>Koneksi Eror:</strong> Gagal terhubung ke database. Sila cek pengaturan netlify.toml Anda.
+          <strong>Koneksi Eror:</strong> Gagal memuat data berita dari Supabase ({errorBerita.message})
         </div>
       )}
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        <!-- Kolom Utama Berita -->
+        <!-- KOLOM KIRI & TENGAH: Berita Utama & Aliran Semua Berita -->
         <div class="lg:col-span-2 space-y-6">
           <div class="border-b-2 border-slate-800 pb-1">
-            <h2 class="bg-slate-800 text-white px-3 py-1 text-xs font-bold uppercase tracking-wider inline-block">Berita Utama</h2>
+            <h2 class="bg-slate-800 text-white px-3 py-1 text-xs font-bold uppercase tracking-wider inline-block">Berita Teratas</h2>
           </div>
 
+          <!-- Headline Utama Berita Paling Baru -->
           {beritaUtama ? (
-            <article class="bg-white rounded border border-gray-200 shadow-sm overflow-hidden group">
+            <article class="bg-white rounded border border-gray-200 shadow-sm overflow-hidden group mb-6">
               <div class="h-64 sm:h-80 bg-slate-800 flex items-center justify-center relative">
                 <span class="text-slate-500 text-xs font-bold tracking-widest uppercase">FOTO UTAMA LIVE</span>
                 <span class="absolute bottom-4 left-4 bg-red-600 text-white font-bold text-xs px-2.5 py-1 uppercase rounded">
@@ -105,92 +104,97 @@ const beritaBawah = postingan && postingan.length > 6 ? postingan.slice(6, 12) :
                 </span>
               </div>
               <div class="p-6">
-                <h3 class="text-2xl font-bold text-gray-900 group-hover:text-red-600 transition mb-3">
+                <div class="text-xs text-gray-500 mb-2">⏱️ {beritaUtama.created_at ? new Date(beritaUtama.created_at).toLocaleDateString('id-ID') : 'Baru Saja'} • Oleh Redaksi</div>
+                <h3 class="text-2xl sm:text-3xl font-bold text-gray-900 group-hover:text-red-600 transition mb-3 leading-tight">
                   <a href={`/berita/${beritaUtama.id}`}>{beritaUtama.judul}</a>
                 </h3>
-                <p class="text-gray-600 text-sm line-clamp-3">{beritaUtama.konten}</p>
+                <p class="text-gray-600 text-sm leading-relaxed line-clamp-3">
+                  {beritaUtama.konten}
+                </p>
               </div>
             </article>
           ) : (
             <div class="bg-white border border-dashed border-gray-300 p-8 text-center text-gray-500 rounded">
-              Belum ada data berita. Silakan isi berita melalui dasbor admin.
+              Belum ada berita. Silakan input manual lewat halaman admin.
             </div>
           )}
 
           <!-- Iklan Tengah Dinamis -->
           <div class="w-full">
             {iklanTengah ? (
-              <a href={iklanTengah.link_tujuan} target="_blank" class="block w-full bg-emerald-50 border border-emerald-200 rounded p-4 flex justify-between items-center">
+              <a href={iklanTengah.link_tujuan} target="_blank" class="block w-full bg-emerald-50 border border-emerald-200 rounded p-4 flex flex-col sm:flex-row items-center justify-between gap-4 cursor-pointer hover:bg-emerald-100 transition">
                 <div>
-                  <span class="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase">Iklan Aktif</span>
+                  <span class="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase">Iklan Sponsor Aktif</span>
                   <h4 class="font-bold text-sm text-emerald-900 mt-1">{iklanTengah.konten_teks}</h4>
                 </div>
-                <span class="text-xs bg-emerald-600 text-white font-bold px-3 py-1.5 rounded">Kunjungi ↗</span>
+                <span class="text-xs bg-emerald-600 text-white font-bold px-3 py-1.5 rounded whitespace-nowrap">Kunjungi Situs ↗</span>
               </a>
             ) : (
               <div class="w-full bg-emerald-50 border border-emerald-200 rounded p-4 text-center text-xs text-emerald-700 font-semibold">
-                SPACE IKLAN KEMITRAAN DAERAH
+                SPACE IKLAN KEMITRAAN / ADVERTORIAL DAERAH
               </div>
             )}
           </div>
 
-          <!-- Daftar Berita Bawah -->
+          <!-- DAFTAR ALIRAN SEMUA BERITA SISA -->
+          <div class="border-b border-gray-200 pb-1 mt-6">
+            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Indeks Arsip Berita Terbit</h3>
+          </div>
+          
           <div class="grid gap-4 sm:grid-cols-2">
-            {beritaBawah.map((item) => (
-              <div class="bg-white p-4 border border-gray-200 rounded shadow-sm flex flex-col justify-between group">
-                <div>
-                  <span class="text-[10px] uppercase font-bold text-red-600 block mb-1">{item.kategori || 'Berita'}</span>
-                  <h4 class="font-bold text-sm text-gray-900 group-hover:text-red-600 line-clamp-2">
-                    <a href={`/berita/${item.id}`}>{item.judul}</a>
-                  </h4>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <!-- Kolom Samping -->
-        <div class="space-y-6">
-          <div class="border-b-2 border-red-600 pb-1">
-            <h2 class="bg-red-600 text-white px-3 py-1 text-xs font-bold uppercase tracking-wider inline-block">Berita Terkini</h2>
-          </div>
-
-          <div class="bg-white border border-gray-200 rounded divide-y divide-gray-100 shadow-sm">
-            {beritaTerkini.length > 0 ? (
-              beritaTerkini.map((item, index) => (
-                <div class="p-4 hover:bg-gray-50 transition flex gap-3 items-start">
-                  <span class="text-2xl font-black text-gray-300 w-6 text-center leading-none">{index + 1}</span>
-                  <h4 class="font-semibold text-xs text-gray-900 hover:text-red-600 line-clamp-2">
-                    <a href={`/berita/${item.id}`}>{item.judul}</a>
-                  </h4>
+            {semuaBeritaSisa.length > 0 ? (
+              // Menggunakan .map() tanpa batasan slice panjang data agar seluruh tabel bocor ke halaman depan
+              semuaBeritaSisa.map((item) => (
+                <div class="bg-white p-4 border border-gray-200 rounded shadow-sm flex flex-col justify-between group">
+                  <div>
+                    <span class="text-[10px] uppercase font-bold text-red-600 tracking-wider block mb-1">{item.kategori || 'Berita'}</span>
+                    <h4 class="font-bold text-sm text-gray-900 group-hover:text-red-600 line-clamp-2 mb-2">
+                      <a href={`/berita/${item.id}`}>{item.judul}</a>
+                    </h4>
+                    <p class="text-gray-500 text-xs line-clamp-2 mt-1">{item.konten}</p>
+                  </div>
+                  <span class="text-[10px] text-gray-400 block mt-3">⏱️ {item.created_at ? new Date(item.created_at).toLocaleDateString('id-ID') : 'Baru saja'}</span>
                 </div>
               ))
             ) : (
-              <p class="p-4 text-xs text-gray-400 text-center">Belum ada antrean berita terkini.</p>
+              <p class="text-xs text-gray-400 col-span-2 py-4 text-center">Belum ada daftar arsip berita tambahan di database.</p>
             )}
+          </div>
+        </div>
+
+        <!-- KOLOM KANAN: Sidebar & Slot Iklan -->
+        <div class="space-y-6">
+          <div class="border-b-2 border-red-600 pb-1">
+            <h2 class="bg-red-600 text-white px-3 py-1 text-xs font-bold uppercase tracking-wider inline-block">Sorotan Tambahan</h2>
           </div>
 
           <!-- Iklan Sidebar Dinamis -->
           <div class="w-full">
             {iklanSidebarAtas ? (
-              <a href={iklanSidebarAtas.link_tujuan} target="_blank" class="block w-full bg-sky-50 border border-sky-300 text-sky-900 p-5 text-center rounded">
-                <span class="bg-sky-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase block w-max mx-auto mb-2">Iklan Utama</span>
-                <h4 class="font-bold text-xs">{iklanSidebarAtas.konten_teks}</h4>
+              <a href={iklanSidebarAtas.link_tujuan} target="_blank" class="block w-full bg-sky-50 border border-sky-300 text-sky-900 p-5 text-center rounded shadow-sm hover:bg-sky-100 transition">
+                <span class="bg-sky-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase block w-max mx-auto mb-2">Iklan Utama Aktif</span>
+                <h4 class="font-bold text-xs leading-snug">{iklanSidebarAtas.konten_teks}</h4>
+                <span class="text-[10px] text-sky-500 block mt-3 underline">Klik Detail Sponsor ↗</span>
               </a>
             ) : (
-              <div class="w-full bg-sky-100 border border-sky-300 text-sky-800 text-center py-12 font-bold text-xs rounded">
-                SLOT BANNER DINAMIS SIDEBAR
+              <div class="w-full bg-sky-100 border border-sky-300 text-sky-800 text-center py-12 font-bold text-xs rounded shadow-sm">
+                SLOT BANNER DINAMIS SIDEBAR (300 x 250 PX)
               </div>
             )}
+          </div>
+
+          <div class="bg-slate-950 text-white rounded p-4 text-center border-l-4 border-red-500 shadow-sm">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-red-400">Hubungi Redaksi</h4>
+            <p class="text-[11px] text-gray-400 mt-1 leading-relaxed">Kirimkan rilis berita acara, kerja sama advertorial, atau pemasangan iklan Anda melalui kontak redaksi utama.</p>
           </div>
         </div>
 
       </div>
     </main>
 
-    <footer class="bg-slate-900 text-gray-500 border-t-4 border-slate-950 mt-20 py-8 text-xs text-center">
+    <footer class="bg-slate-900 text-gray-400 border-t-4 border-slate-950 mt-20 py-8 text-xs text-center">
       <p class="font-bold text-white">NUSA-MEDIA ONLINE</p>
-      <p class="mt-1">&copy; 2026 Portal Berita Nusantara Serverless.</p>
+      <p class="mt-1">&copy; 2026 Nusa-Media Portal Serverless. All Rights Reserved.</p>
     </footer>
 
   </body>
