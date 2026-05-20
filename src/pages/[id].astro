@@ -1,17 +1,6 @@
 ---
-// 1. Mengatur mode SSR (Server-Side Rendering) agar parameter URL bisa dibaca secara dinamis
-export const output = 'server';
-
-// 2. Mengambil parameter ID dari URL (misal: /admin, /control, dll)
-const { id } = Astro.params;
-
-// Validasi keamanan sederhana: Hanya izinkan akses jika ID URL adalah "admin" atau "control"
-// Jika user mengetik ID lain, halaman akan otomatis menampilkan error 404
-if (id !== "admin" && id !== "control") {
-  return Astro.redirect('/404');
-}
-
-const judulHalaman = `Nusa Media - Control Panel (${id.toUpperCase()})`;
+// NUSA MEDIA - Control Panel Admin Statis Ramah Kuota Vercel
+const judulHalaman = "Nusa Media - Control Panel Admin";
 const tanggal = "Rabu, 20 Mei 2026";
 ---
 <html lang="id">
@@ -19,15 +8,28 @@ const tanggal = "Rabu, 20 Mei 2026";
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{judulHalaman}</title>
-    <script src="https://jsdelivr.net"></script>
+    
+    <!-- 🎯 PLAY CDN TAILWIND RESMI -->
+    <script src="https://tailwindcss.com"></script>
+    
+    <!-- 🎯 GOOGLE FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://gstatic.com" crossorigin>
+    <link href="https://googleapis.com" rel="stylesheet">
+
     <style>
-      @import url('https://googleapis.com');
       body { font-family: 'Plus Jakarta Sans', sans-serif; }
       #listBerita::-webkit-scrollbar { width: 4px; }
       #listBerita::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
     </style>
   </head>
   <body class="bg-[#0A0A0A] text-[#E5E5E5] antialiased">
+
+    <!-- LAYER PROTEKSI AKSES CLIENT-SIDE (Mencegah kedipan halaman) -->
+    <div id="lockScreen" class="fixed inset-0 bg-[#0A0A0A] z-50 flex flex-col items-center justify-center space-y-4">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+      <p class="text-xs text-gray-400 font-mono tracking-widest uppercase">Memeriksa Hak Akses...</p>
+    </div>
 
     <div class="min-h-screen flex flex-col md:flex-row">
       
@@ -38,7 +40,7 @@ const tanggal = "Rabu, 20 Mei 2026";
             <div class="w-8 h-8 rounded bg-white flex items-center justify-center text-black font-black text-sm">N</div>
             <div>
               <h2 class="text-sm font-bold text-white tracking-wider">NUSA MEDIA</h2>
-              <p class="text-[10px] text-gray-500 font-mono">v1.3.0 - Route: /{id}</p>
+              <p class="text-[10px] text-gray-500 font-mono">v1.3.0 - Route: Static Admin</p>
             </div>
           </div>
           
@@ -53,7 +55,7 @@ const tanggal = "Rabu, 20 Mei 2026";
         </div>
 
         <div class="pt-6 border-t border-[#222222] text-[10px] text-gray-600 font-mono hidden md:block">
-          Scope ID: <span class="text-gray-400 uppercase font-bold">{id}</span>
+          Scope ID: <span class="text-gray-400 uppercase font-bold">ADMIN</span>
         </div>
       </aside>
 
@@ -95,12 +97,6 @@ const tanggal = "Rabu, 20 Mei 2026";
               </div>
 
               <div>
-                <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Ringkasan Pendek</label>
-                <input type="text" id="ringkasan" name="ringkasan" required placeholder="1 kalimat ringkasan..." 
-                  class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white transition-colors" />
-              </div>
-
-              <div>
                 <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Isi Artikel (Konten)</label>
                 <textarea id="konten" name="konten" rows="5" required placeholder="Ketik narasi artikel di sini..." 
                   class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg p-3 text-sm text-white focus:outline-none focus:border-white transition-colors leading-relaxed"></textarea>
@@ -108,7 +104,7 @@ const tanggal = "Rabu, 20 Mei 2026";
 
               <div>
                 <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">URL Gambar Sampul</label>
-                <input type="url" id="url_gambar" name="url_gambar" placeholder="https://unsplash.com..." 
+                <input type="url" id="url_gambar" name="url_gambar" placeholder="https://images.unsplash.com..." 
                   class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-white transition-colors font-mono" />
               </div>
 
@@ -139,8 +135,19 @@ const tanggal = "Rabu, 20 Mei 2026";
       </main>
     </div>
 
-    <!-- TRANSMISI FITUR UTAMA (AUTOMATION, DOCKING, SERVER-SAFE HEADERS) -->
+    <!-- TRANSMISI FITUR UTAMA (AUTOMATION & INTEGRASI SUPABASE) -->
     <script is:inline>
+      // 🎯 Proteksi Keamanan URL Statis Sederhana (Mengganti fungsi SSR)
+      // Mengizinkan masuk jika URL mengandung ?key=admin atau ?key=control
+      const params = new URLSearchParams(window.location.search);
+      const accessKey = params.get('key');
+      
+      if (accessKey !== "admin" && accessKey !== "control") {
+        window.location.href = '/404';
+      } else {
+        document.getElementById('lockScreen').remove(); // Buka kunci halaman
+      }
+
       const form = document.getElementById('formBerita');
       const listContainer = document.getElementById('listBerita');
       const btnSubmit = document.getElementById('btnSubmit');
@@ -150,118 +157,90 @@ const tanggal = "Rabu, 20 Mei 2026";
       const NAMA_TABEL = "berita";                    
 
       const BASE_URL = `https://${SUPABASE_PROJECT_ID}.supabase.co/rest/v1/${NAMA_TABEL}`;
-      
-      // 🛡️ FITUR 3: Server-Safe API Headers (Kunci Enkripsi Bearer Token)
-      const HEADERS = {
-        'Content-Type': 'application/json',
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-      };
 
-      // 🔌 FITUR 2: Realtime Database Docking (Ambil data SELECT otomatis)
-      async function muatDaftarBerita() {
+      // 1. Ambil & Tampilkan Daftar Berita Kontrol
+      async function muatBeritaAdmin() {
         try {
-          const response = await fetch(`${BASE_URL}?select=*&order=dibuat_pada.desc`, { headers: HEADERS });
-          if (!response.ok) throw new Error('Gagal mengambil data dari database');
+          const response = await fetch(`${BASE_URL}?select=*&order=dibuat_pada.desc`, {
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+            }
+          });
           const data = await response.json();
           
           if (data.length === 0) {
-            listContainer.innerHTML = `<p class="text-xs text-zinc-600 border border-dashed border-zinc-800 p-4 rounded-xl text-center">Belum ada berita di basis data.</p>`;
+            listContainer.innerHTML = '<p class="text-xs text-gray-600">Belum ada data berita di database.</p>';
             return;
           }
 
           listContainer.innerHTML = data.map(item => `
-            <div class="bg-[#111111] border border-[#222222] p-4 rounded-xl space-y-2 hover:border-zinc-700 transition-colors">
-              <div class="flex justify-between items-center text-[9px] font-mono tracking-wider">
-                <span class="text-blue-400 bg-blue-950/40 px-2 py-0.5 rounded border border-blue-900/30">${item.kategori}</span>
-                <span class="text-zinc-500">${new Date(item.dibuat_pada).toLocaleDateString('id-ID')}</span>
+            <div class="p-4 bg-[#111111] border border-[#222222] rounded-lg space-y-1">
+              <div class="flex justify-between items-center">
+                <span class="text-[9px] bg-zinc-800 text-gray-300 font-bold px-2 py-0.5 rounded uppercase tracking-wider">${item.kategori}</span>
+                <span class="text-[9px] text-gray-600 font-mono">${new Date(item.dibuat_pada).toLocaleDateString('id-ID')}</span>
               </div>
-              <h3 class="text-xs font-bold text-white leading-snug line-clamp-2">${item.judul}</h3>
-              <p class="text-[11px] text-zinc-400 line-clamp-2 leading-relaxed">${item.ringkasan}</p>
-              <div class="text-[9px] text-zinc-600 flex justify-between pt-1 border-t border-zinc-900">
-                <span>By: ${item.penulis || 'Redaksi'}</span>
-                <span>👁️ ${item.jumlah_baca || 0}</span>
-              </div>
+              <h4 class="text-xs font-bold text-white line-clamp-1">${item.judul}</h4>
+              <p class="text-[10px] text-gray-500 line-clamp-2 leading-relaxed">${item.konten}</p>
             </div>
           `).join('');
         } catch (error) {
-          listContainer.innerHTML = `<p class="text-xs text-red-400 p-2">🛑 Error: ${error.message}</p>`;
+          listContainer.innerHTML = '<p class="text-xs text-red-500">Gagal menyinkronkan data.</p>';
         }
       }
 
-      // Interseptor Insert Data Form
+      // 2. Kirim Data Berita Baru ke Supabase via Form Submit
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         btnSubmit.disabled = true;
-        btnSubmit.innerText = "⏳ SEDANG MENERBITKAN...";
+        btnSubmit.innerText = "SEDANG MENERBITKAN...";
 
         const formData = new FormData(form);
-        const dataBerita = {
+        const payload = {
           judul: formData.get('judul'),
           kategori: formData.get('kategori'),
           penulis: formData.get('penulis'),
-          ringkasan: formData.get('ringkasan'),
           konten: formData.get('konten'),
-          url_gambar: formData.get('url_gambar') || null,
-          sumber: "Nusa Media Panel",
-          url_sumber: window.location.href,
-          status: "publish"
+          url_gambar: formData.get('url_gambar') || 'https://unsplash.com',
+          status: 'publish',
+          dibuat_pada: new Date().toISOString()
         };
 
         try {
           const response = await fetch(BASE_URL, {
             method: 'POST',
-            headers: { ...HEADERS, 'Prefer': 'return=representation' },
-            body: JSON.stringify(dataBerita)
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+              'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify(payload)
           });
 
-          if (!response.ok) throw new Error('Gagal mengirim data berita.');
+          if (!response.ok) throw new Error();
           
           form.reset();
-          document.getElementById('penulis').value = "Redaksi Nusa Media";
-          alert('🎉 Berita baru berhasil diterbitkan ke Supabase!');
-          muatDaftarBerita(); // 🔌 Realtime refresh daftar sisi kanan
+          alert('🎉 Berita berhasil diterbitkan secara live!');
+          muatBeritaAdmin();
         } catch (error) {
-          alert(`❌ Eror: ${error.message}`);
+          alert('❌ Gagal mengirim data ke Supabase.');
         } finally {
           btnSubmit.disabled = false;
           btnSubmit.innerText = "✍️ TERBITKAN BERITA";
         }
       });
 
-      // 🤖 FITUR 1: Generator Data Otomatis (Mock AI)
-      window.isiOtomatis = () => {
-        const bankJudul = [
-          "Satelit Quantum Merah Putih Sukses Mengorbit",
-          "Pasar Kripto Global Mengalami Lonjakan Drastis",
-          "Inovasi Baterai Berbasis Pasir Diluncurkan di Jakarta"
-        ];
-        const bankRingkasan = [
-          "Langkah besar lompatan teknologi komunikasi Indonesia di kancah internasional.",
-          "Sentimen positif membawa angin segar bagi aset digital minggu ini.",
-          "Solusi penyimpanan energi hijau alternatif yang murah dan ramah lingkungan."
-        ];
-        const bankKonten = [
-          "Indonesia berhasil meluncurkan satelit komunikasi berbasis quantum pertama. Proyek ini merupakan kerja sama strategis nasional untuk mengamankan jaringan siber nasional dari potensi ancaman luar.",
-          "Bitcoin dan Ethereum memimpin reli kenaikan harga aset digital setelah regulasi terbaru aset kripto resmi disahkan oleh bank sentral global pagi hari tadi.",
-          "Peneliti lokal berhasil menciptakan prototipe penampung daya listrik ramah lingkungan dari silika pasir. Teknologi ini diklaim mampu bertahan 3 kali lebih lama dari lithium biasa."
-        ];
-        const bankGambar = [
-          "https://unsplash.comphoto-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80",
-          "https://unsplash.comphoto-1621761191319-c6fb62004040?auto=format&fit=crop&w=600&q=80",
-          "https://unsplash.comphoto-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=600&q=80"
-        ];
+      // 3. Fungsi Isi Form Otomatis untuk Testing Cepat
+      window.isiOtomatis = function() {
+        document.getElementById('judul').value = "Inovasi Baru AI Mengguncang Industri Teknologi Nasional";
+        document.getElementById('kategori').value = "TEKNOLOGI";
+        document.getElementById('konten').value = "Sistem kecerdasan buatan teranyar buatan anak bangsa dilaporkan berhasil mengotomatisasi infrastruktur komputasi cloud secara cerdas dan memangkas biaya server perusahaan hingga 80 persen.";
+        document.getElementById('url_gambar').value = "https://unsplash.com";
+      }
 
-        const indeksAcak = Math.floor(Math.random() * bankJudul.length);
-        
-        document.getElementById('judul').value = bankJudul[indeksAcak];
-        document.getElementById('ringkasan').value = bankRingkasan[indeksAcak];
-        document.getElementById('konten').value = bankKonten[indeksAcak];
-        document.getElementById('url_gambar').value = bankGambar[indeksAcak];
-        document.getElementById('kategori').value = indeksAcak === 1 ? "BISNIS" : "TEKNOLOGI";
-      };
-
-      muatDaftarBerita();
+      // Jalankan fungsi muat awal
+      muatBeritaAdmin();
     </script>
   </body>
 </html>
