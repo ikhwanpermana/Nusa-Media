@@ -1,33 +1,64 @@
 ---
 import { supabase } from '../lib/supabase';
 
-// 1. Ambil SEMUA data berita tanpa batasan .limit()
-const { data: postingan, error: errorBerita } = await supabase
-  .from('artikel')
-  .select('*')
-  .order('created_at', { ascending: false });
+// ⚙️ KONFIGURASI GITHUB CADANGAN (FALLBACK)
+const GITHUB_USERNAME = "ikhwanpermana"; // 👈 Ganti dengan username GitHub Anda
+const REPO_NAME = "gh repo clone ikhwanpermana/Nusa-Media";       // 👈 Ganti dengan nama repositori proyek Anda
+const FILE_PATH = "data/berita.json";            // 👈 Jalur file berita JSON di GitHub
 
-// 2. Ambil data iklan aktif khusus untuk posisi 'sidebar_atas'
-const { data: iklanSidebarAtas } = await supabase
-  .from('iklan')
-  .select('*')
-  .eq('posisi', 'sidebar_atas')
-  .eq('status', 'aktif')
-  .order('created_at', { ascending: false })
-  .limit(1)
-  .maybeSingle();
+let postingan = [];
+let sumberData = "Supabase Database";
+let errorSistem = null;
 
-// 3. Ambil data iklan aktif khusus untuk posisi 'detail_atas'
-const { data: iklanTengah } = await supabase
-  .from('iklan')
-  .select('*')
-  .eq('posisi', 'detail_atas')
-  .eq('status', 'aktif')
-  .order('created_at', { ascending: false })
-  .limit(1)
-  .maybeSingle();
+// 1. STRATEGI UTAMA: Ambil Data dari Supabase
+try {
+  const { data: dataSupabase, error: errorSupabase } = await supabase
+    .from('artikel')
+    .select('*')
+    .order('created_at', { ascending: false });
 
-// Berita pertama menjadi Headline Utama, sisa SEMUA berita lainnya masuk ke daftar bawah
+  if (errorSupabase || !dataSupabase || dataSupabase.length === 0) {
+    throw new Error(errorSupabase?.message || "Tabel Supabase kosong, beralih ke cadangan.");
+  }
+  
+  postingan = dataSupabase;
+  sumberData = "Supabase Database (Utama)";
+
+} catch (mainError) {
+  // 2. STRATEGI CADANGAN: Jika Supabase Gagal/Kosong, Ambil dari GitHub JSON
+  try {
+    const githubResponse = await fetch(
+      `https://githubusercontent.com{GITHUB_USERNAME}/${REPO_NAME}/main/${FILE_PATH}`,
+      { headers: { 'Accept': 'application/vnd.github.v3.raw' } }
+    );
+
+    if (!githubResponse.ok) {
+      throw new Error(`GitHub API juga gagal (Status: ${githubResponse.status})`);
+    }
+
+    const dataJson = await githubResponse.json();
+    postingan = dataJson.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    sumberData = "GitHub Repository (Cadangan)";
+    
+  } catch (fallbackError) {
+    errorSistem = `Kedua sumber gagal. Supabase: ${mainError.message} | GitHub: ${fallbackError.message}`;
+  }
+}
+
+// 3. AMBIL DATA IKLAN (Tetap via Supabase dengan pengaman jika gagal)
+let iklanSidebarAtas = null;
+let iklanTengah = null;
+
+try {
+  const { data: adSidebar } = await supabase.from('iklan').select('*').eq('posisi', 'sidebar_atas').eq('status', 'aktif').order('created_at', { ascending: false }).limit(1).maybeSingle();
+  const { data: adTengah } = await supabase.from('iklan').select('*').eq('posisi', 'detail_atas').eq('status', 'aktif').order('created_at', { ascending: false }).limit(1).maybeSingle();
+  iklanSidebarAtas = adSidebar;
+  iklanTengah = adTengah;
+} catch (e) {
+  // Biarkan null jika database iklan supasbase offline
+}
+
+// Memisahkan Berita Utama (Teratas) dan Berita Sisa
 const beritaUtama = postingan && postingan.length > 0 ? postingan[0] : null;
 const semuaBeritaSisa = postingan && postingan.length > 1 ? postingan.slice(1) : [];
 ---
@@ -36,7 +67,8 @@ const semuaBeritaSisa = postingan && postingan.length > 1 ? postingan.slice(1) :
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Nusa-Media | Semua Berita Terkini Nusantara</title>
+    <title>Nusa-Media | Portal Berita Multi-Sistem Hybrid</title>
+    <script src="https://tailwindcss.com"></script>
     <link rel="preconnect" href="https://googleapis.com">
     <link rel="preconnect" href="https://gstatic.com" crossorigin>
     <link href="https://googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -50,7 +82,13 @@ const semuaBeritaSisa = postingan && postingan.length > 1 ? postingan.slice(1) :
     <div class="bg-red-700 text-white text-xs py-2">
       <div class="max-w-6xl mx-auto px-4 flex justify-between items-center">
         <div>📍 Regional Pembaruan Nusantara</div>
-        <div>Total Berita Terbit: {postingan ? postingan.length : 0}</div>
+        <div class="flex items-center gap-4">
+          <span class="bg-white/20 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wide">Sumber: {sumberData}</span>
+          <div class="flex items-center gap-1.5">
+            <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+            <span>Total Berita: {postingan ? postingan.length : 0}</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -61,15 +99,15 @@ const semuaBeritaSisa = postingan && postingan.length > 1 ? postingan.slice(1) :
           <h1 class="text-4xl font-black tracking-tight text-white flex items-center gap-1">
             NUSA<span class="text-red-500">MEDIA</span><span class="text-xs text-gray-400 font-normal border-l border-gray-600 pl-2">ONLINE</span>
           </h1>
-          <p class="text-xs text-gray-400 mt-0.5">Media Informasi Terpercaya & Aktual</p>
+          <p class="text-xs text-gray-400 mt-0.5">Media Informasi Hybrid • Supabase & GitHub Sync</p>
         </div>
-        <div class="w-full md:w-96 bg-red-50 border border-red-200 text-red-700 font-bold p-3 text-center text-xs rounded">
+        <div class="w-full md:w-96 bg-red-50 border border-red-200 text-red-700 font-bold p-3 text-center text-xs rounded shadow-sm">
           Space Iklan Ucapan Selamat & Sukses Instansi / Perorangan
         </div>
       </div>
     </header>
 
-    <!-- Navigasi (Sticky) -->
+    <!-- Navigasi -->
     <nav class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
       <div class="max-w-6xl mx-auto px-4 flex items-center gap-6 overflow-x-auto text-sm font-bold h-12">
         <a href="/" class="text-red-600 border-b-2 border-red-600 py-3 px-1 whitespace-nowrap">Home</a>
@@ -80,9 +118,9 @@ const semuaBeritaSisa = postingan && postingan.length > 1 ? postingan.slice(1) :
     <!-- Konten Utama Dua Kolom -->
     <main class="max-w-6xl mx-auto px-4 py-6">
       
-      {errorBerita && (
+      {errorSistem && (
         <div class="bg-red-100 border-l-4 border-red-600 p-4 rounded text-red-800 text-sm mb-6">
-          <strong>Koneksi Eror:</strong> Gagal memuat data berita dari Supabase ({errorBerita.message})
+          <strong>Kritis:</strong> {errorSistem}
         </div>
       )}
 
@@ -97,9 +135,10 @@ const semuaBeritaSisa = postingan && postingan.length > 1 ? postingan.slice(1) :
           <!-- Headline Utama Berita Paling Baru -->
           {beritaUtama ? (
             <article class="bg-white rounded border border-gray-200 shadow-sm overflow-hidden group mb-6">
-              <div class="h-64 sm:h-80 bg-slate-800 flex items-center justify-center relative">
-                <span class="text-slate-500 text-xs font-bold tracking-widest uppercase">FOTO UTAMA LIVE</span>
-                <span class="absolute bottom-4 left-4 bg-red-600 text-white font-bold text-xs px-2.5 py-1 uppercase rounded">
+              <div class="h-64 sm:h-80 bg-slate-800 flex items-center justify-center relative overflow-hidden">
+                <img src={beritaUtama.image_url || "https://unsplash.com"} alt="Visual Berita" class="w-full h-full object-cover opacity-50 absolute inset-0" />
+                <span class="relative z-10 text-white font-black text-xl bg-black/40 px-4 py-2 rounded">FOTO UTAMA HYBRID LIVE</span>
+                <span class="absolute bottom-4 left-4 z-10 bg-red-600 text-white font-bold text-xs px-2.5 py-1 uppercase rounded">
                   {beritaUtama.kategori || 'Fokus'}
                 </span>
               </div>
@@ -115,7 +154,7 @@ const semuaBeritaSisa = postingan && postingan.length > 1 ? postingan.slice(1) :
             </article>
           ) : (
             <div class="bg-white border border-dashed border-gray-300 p-8 text-center text-gray-500 rounded">
-              Belum ada berita. Silakan input manual lewat halaman admin.
+              Tidak ada berita tersedia di kedua sistem penyimpanan.
             </div>
           )}
 
@@ -143,7 +182,6 @@ const semuaBeritaSisa = postingan && postingan.length > 1 ? postingan.slice(1) :
           
           <div class="grid gap-4 sm:grid-cols-2">
             {semuaBeritaSisa.length > 0 ? (
-              // Menggunakan .map() tanpa batasan slice panjang data agar seluruh tabel bocor ke halaman depan
               semuaBeritaSisa.map((item) => (
                 <div class="bg-white p-4 border border-gray-200 rounded shadow-sm flex flex-col justify-between group">
                   <div>
@@ -165,37 +203,58 @@ const semuaBeritaSisa = postingan && postingan.length > 1 ? postingan.slice(1) :
         <!-- KOLOM KANAN: Sidebar & Slot Iklan -->
         <div class="space-y-6">
           <div class="border-b-2 border-red-600 pb-1">
-            <h2 class="bg-red-600 text-white px-3 py-1 text-xs font-bold uppercase tracking-wider inline-block">Sorotan Tambahan</h2>
+            <h2 class="bg-red-600 text-white px-3 py-1 text-xs font-bold uppercase tracking-wider inline-block">Info Kemitraan</h2>
           </div>
 
-          <!-- Iklan Sidebar Dinamis -->
-          <div class="w-full">
+          <!-- Slot Iklan Sidebar Atas -->
+          <div class="bg-white p-4 border border-gray-200 rounded shadow-sm">
             {iklanSidebarAtas ? (
-              <a href={iklanSidebarAtas.link_tujuan} target="_blank" class="block w-full bg-sky-50 border border-sky-300 text-sky-900 p-5 text-center rounded shadow-sm hover:bg-sky-100 transition">
-                <span class="bg-sky-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase block w-max mx-auto mb-2">Iklan Utama Aktif</span>
-                <h4 class="font-bold text-xs leading-snug">{iklanSidebarAtas.konten_teks}</h4>
-                <span class="text-[10px] text-sky-500 block mt-3 underline">Klik Detail Sponsor ↗</span>
-              </a>
+              <div class="space-y-2">
+                <span class="bg-amber-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">Sponsor Utama</span>
+                <p class="text-sm font-semibold text-gray-800">{iklanSidebarAtas.konten_teks}</p>
+                <a href={iklanSidebarAtas.link_tujuan} target="_blank" class="block text-center text-xs bg-slate-900 text-white py-2 rounded font-medium hover:bg-red-600 transition">
+                  Cek Selengkapnya ↗
+                </a>
+              </div>
             ) : (
-              <div class="w-full bg-sky-100 border border-sky-300 text-sky-800 text-center py-12 font-bold text-xs rounded shadow-sm">
-                SLOT BANNER DINAMIS SIDEBAR (300 x 250 PX)
+              <div class="border-2 border-dashed border-gray-200 text-center p-6 text-xs text-gray-400 rounded">
+                Slot Iklan Kanan Atas Tersedia
               </div>
             )}
           </div>
 
-          <div class="bg-slate-950 text-white rounded p-4 text-center border-l-4 border-red-500 shadow-sm">
-            <h4 class="text-xs font-bold uppercase tracking-wider text-red-400">Hubungi Redaksi</h4>
-            <p class="text-[11px] text-gray-400 mt-1 leading-relaxed">Kirimkan rilis berita acara, kerja sama advertorial, atau pemasangan iklan Anda melalui kontak redaksi utama.</p>
+          <!-- Info Redaksi Tambahan -->
+          <div class="bg-slate-900 text-white p-4 rounded shadow-sm">
+            <h3 class="font-bold text-sm text-red-500 mb-1">Hubungi Redaksi</h3>
+            <p class="text-xs text-gray-300 leading-relaxed">
+              Anda bisa memperbarui berita langsung dari dasbor **Supabase** (Real-time otomatis) atau mengubah file rahasia <code class="bg-slate-800 text-yellow-400 px-1 rounded">data/berita.json</code> di **GitHub** lewat VS Code lokal.
+            </p>
+            <div class="mt-4 pt-2 border-t border-slate-800 text-[10px] text-gray-500 font-mono flex items-center justify-between">
+              <span>REDUNDANSI SISTEM</span>
+              <span class="text-green-400 font-bold">● AKTIF</span>
+            </div>
           </div>
         </div>
 
       </div>
     </main>
 
-    <footer class="bg-slate-900 text-gray-400 border-t-4 border-slate-950 mt-20 py-8 text-xs text-center">
-      <p class="font-bold text-white">NUSA-MEDIA ONLINE</p>
-      <p class="mt-1">&copy; 2026 Nusa-Media Portal Serverless. All Rights Reserved.</p>
+    <!-- Footer Sistem -->
+    <footer class="bg-slate-950 text-gray-500 py-6 mt-12 text-center text-xs border-t border-gray-800">
+      <p>© 2026 Nusa Media Online. Multi-storage Engine Cloud.</p>
     </footer>
 
+    <!-- KLIEN SUBSCRIPTION: Hanya berjalan jika sumber data berasal dari Supabase -->
+    {sumberData.includes("Supabase") && (
+      <script>
+        import { supabase } from '../lib/supabase';
+        supabase
+          .channel('schema-db-changes')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'artikel' }, () => {
+              window.location.reload();
+          })
+          .subscribe();
+      </script>
+    )}
   </body>
 </html>
