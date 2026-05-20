@@ -1,50 +1,72 @@
 ---
-// NUSA MEDIA - Portal Berita Publik Premium (Light Mode)
-const judulHalaman = "Nusa Media - Portal Berita Terkini & Terpercaya";
+// NUSA MEDIA - Portal Berita Publik Premium dengan Menu Kategori Khas Media Dunia
+const judulHalaman = "Nusa Media - Informasi Akurat, Menjangkau Nusantara";
 ---
 <html lang="id">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{judulHalaman}</title>
-    <!-- Tailwind CSS untuk tampilan responsif -->
     <script src="https://jsdelivr.net"></script>
     <style>
       @import url('https://googleapis.com');
       body { font-family: 'Plus Jakarta Sans', sans-serif; }
+      .brand-title { font-family: 'Playfair Display', Georgia, serif; }
+      /* Sembunyikan scrollbar menu kategori di HP */
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
   </head>
-  <body class="bg-[#F8F9FA] text-[#212529] antialiased min-h-screen flex flex-col justify-between">
+  <body class="bg-[#FBFBFA] text-[#1A1A1A] antialiased min-h-screen flex flex-col justify-between">
 
-    <!-- NAVIGASI UTAMA ATAS -->
-    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50 px-6 py-4 shadow-xs">
-      <div class="max-w-6xl mx-auto flex justify-between items-center">
-        <div class="flex items-center gap-2">
-          <span class="text-2xl">🏝️</span>
-          <h1 class="text-xl font-extrabold tracking-tight text-gray-950">NUSA <span class="text-blue-600">MEDIA</span></h1>
-        </div>
-        <div class="flex items-center gap-6 text-sm font-semibold text-gray-600">
-          <a href="/" class="text-blue-600 border-b-2 border-blue-600 pb-1">Beranda</a>
-          <a href="/admin" target="_blank" class="text-gray-400 hover:text-gray-600 text-xs font-mono border border-gray-200 px-2 py-1 rounded bg-gray-50 transition-colors">
-            Portal Admin ↗
-          </a>
+    <!-- HEADER & LOGO UTAMA (Gaya Koran Klasik Modern ala NYT) -->
+    <header class="bg-white border-b border-gray-200 pt-6">
+      <div class="max-w-6xl mx-auto px-6 text-center space-y-2">
+        <p class="text-[10px] font-bold tracking-widest text-gray-400 uppercase font-mono">Rabu, 20 Mei 2026</p>
+        <h1 class="brand-title text-4xl md:text-5xl font-black tracking-tight text-gray-900 select-none cursor-pointer">
+          NUSA <span class="italic text-blue-600">MEDIA</span>
+        </h1>
+        <p class="text-xs italic text-gray-500 font-serif max-w-md mx-auto pb-4 border-b border-gray-100">
+          "Informasi Akurat, Menjangkau Nusantara"
+        </p>
+      </div>
+
+      <!-- 🌐 TOMBOL MENU KATEGORI ALA MEDIA TERBAIK DUNIA -->
+      <div class="bg-white sticky top-0 z-50 border-b border-gray-200 shadow-xs">
+        <div class="max-w-6xl mx-auto px-4">
+          <div class="flex items-center justify-between">
+            <nav id="menuKategori" class="flex items-center gap-1 overflow-x-auto no-scrollbar py-3 text-xs md:text-sm font-bold tracking-wide text-gray-600 w-full md:w-auto">
+              <button onclick="filterKategori('SEMUA', this)" class="px-3.5 py-1.5 rounded-full bg-blue-600 text-white cursor-pointer transition-all shrink-0">
+                SEMUA BERITA
+              </button>
+              <button onclick="filterKategori('TEKNOLOGI', this)" class="px-3.5 py-1.5 rounded-full hover:bg-gray-100 cursor-pointer transition-all shrink-0">
+                TEKNOLOGI
+              </button>
+              <button onclick="filterKategori('POLITIK', this)" class="px-3.5 py-1.5 rounded-full hover:bg-gray-100 cursor-pointer transition-all shrink-0">
+                POLITIK
+              </button>
+              <button onclick="filterKategori('BISNIS', this)" class="px-3.5 py-1.5 rounded-full hover:bg-gray-100 cursor-pointer transition-all shrink-0">
+                BISNIS
+              </button>
+              <button onclick="filterKategori('GAYA HIDUP', this)" class="px-3.5 py-1.5 rounded-full hover:bg-gray-100 cursor-pointer transition-all shrink-0">
+                GAYA HIDUP
+              </button>
+            </nav>
+            <a href="/admin" target="_blank" class="hidden md:inline-block text-[11px] font-mono font-bold text-gray-400 hover:text-blue-600 border border-gray-200 px-2.5 py-1 rounded-md bg-gray-50 transition-all shadow-2xs">
+              Portal Admin ↗
+            </a>
+          </div>
         </div>
       </div>
-    </nav>
+    </header>
 
-    <!-- KONTEN BERITA UTAMA -->
+    <!-- KONTEN UTAMA -->
     <main class="max-w-6xl w-full mx-auto p-6 flex-grow">
-      <header class="mb-10 mt-4">
-        <h2 class="text-3xl font-black text-gray-900 tracking-tight">Berita Terbaru Hari Ini</h2>
-        <p class="text-sm text-gray-500 mt-1">Menyajikan informasi terpercaya yang dihimpun langsung oleh redaksi Nusa Media.</p>
-        <div class="w-20 h-1 bg-blue-600 mt-4 rounded-full"></div>
-      </header>
-
-      <!-- WADAH GRID UNTUK MENAMPILKAN BERITA LIVE -->
+      <!-- Grid Berita -->
       <div id="gridBerita" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        <!-- Efek Loading Skeleton saat data sedang diambil -->
+        <!-- Efek Loading Skeleton Awal -->
         {[1, 2, 3].map(() => (
-          <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-xs animate-pulse">
+          <div class="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-2xs animate-pulse">
             <div class="aspect-video bg-gray-200 w-full"></div>
             <div class="p-5 space-y-3">
               <div class="h-3 bg-gray-200 rounded w-1/3"></div>
@@ -56,17 +78,22 @@ const judulHalaman = "Nusa Media - Portal Berita Terkini & Terpercaya";
       </div>
     </main>
 
-    <!-- KAKI HALAMAN (FOOTER) -->
-    <footer class="bg-gray-900 text-gray-400 border-t border-gray-800 py-8 px-6 text-center text-xs mt-16">
-      <div class="max-w-6xl mx-auto space-y-3">
-        <p class="font-bold text-gray-300">NUSA MEDIA PORTAL SYSTEM</p>
-        <p>&copy; 2026 Nusa Media. Dikembangkan secara mandiri menggunakan Astro, Supabase, dan Vercel.</p>
+    <!-- FOOTER -->
+    <footer class="bg-[#111111] text-gray-500 border-t border-zinc-800 py-10 px-6 text-center text-xs mt-20">
+      <div class="max-w-6xl mx-auto space-y-4">
+        <p class="font-extrabold tracking-wider text-gray-400 uppercase font-mono">🏝️ NUSA MEDIA NETWORKS</p>
+        <p class="max-w-md mx-auto text-zinc-600 leading-relaxed">
+          Platform jurnalisme independen modern yang dibangun di atas fondasi arsitektur teknologi Astro Serverless, Supabase Database, dan Global Edge CDN Vercel.
+        </p>
+        <div class="w-12 h-[1px] bg-zinc-800 mx-auto"></div>
+        <p>&copy; 2026 Nusa Media. Hak Cipta Dilindungi Undang-Undang.</p>
       </div>
     </footer>
 
-    <!-- LOGIKA FEED KONEKSI DATA AMAN SUPABASE FRONTEND -->
+    <!-- INTERAKTIVITAS & FILTER ENGINE REALTIME -->
     <script is:inline>
       const gridContainer = document.getElementById('gridBerita');
+      let semuaDataBerita = []; // Tempat menyimpan semua berita dari Supabase
 
       const SUPABASE_PROJECT_ID = "zmvlvzspjohrewjbtfxc"; 
       const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inptdmx2enNwam9ocmV3amJ0ZnhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMTM0MTAsImV4cCI6MjA5NDU4OTQxMH0.PtTVq_b4gLonRpNSbPYKncoXlGVS1lKaADy74dbhuSI";     
@@ -74,6 +101,7 @@ const judulHalaman = "Nusa Media - Portal Berita Terkini & Terpercaya";
 
       const API_URL = `https://${SUPABASE_PROJECT_ID}.supabase.co/rest/v1/${NAMA_TABEL}?select=*&status=eq.publish&order=dibuat_pada.desc`;
       
+      // Ambil data dari Supabase saat halaman dibuka
       async function ambilBeritaPublik() {
         try {
           const response = await fetch(API_URL, {
@@ -83,75 +111,95 @@ const judulHalaman = "Nusa Media - Portal Berita Terkini & Terpercaya";
             }
           });
 
-          if (!response.ok) throw new Error('Gagal memuat kiriman data berita terbaru');
-          const data = await response.json();
+          if (!response.ok) throw new Error('Gagal memuat kiriman data berita');
+          semuaDataBerita = await response.json();
 
-          if (data.length === 0) {
-            gridContainer.innerHTML = `
-              <div class="col-span-full text-center py-20 bg-white border border-dashed border-gray-200 rounded-2xl">
-                <p class="text-gray-400 text-lg font-medium">Belum ada berita utama yang dirilis hari ini.</p>
-                <p class="text-gray-400 text-xs mt-1">Silakan masuk ke panel admin untuk menerbitkan artikel pertama Anda.</p>
-              </div>`;
-            return;
-          }
-
-          // Render Kartu Berita Premium Publik
-          gridContainer.innerHTML = data.map(item => `
-            <article class="bg-white rounded-2xl border border-gray-100 shadow-xs overflow-hidden flex flex-col justify-between group hover:shadow-md hover:border-gray-200 transition-all duration-300">
-              <div>
-                <!-- Gambar Sampul Berita -->
-                <div class="relative aspect-video bg-gray-100 overflow-hidden">
-                  <img 
-                    src="${item.url_gambar || 'https://unsplash.com'}" 
-                    alt="${item.judul}" 
-                    class="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
-                    loading="lazy"
-                  />
-                  <span class="absolute top-3 left-3 bg-blue-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider">
-                    ${item.kategori}
-                  </span>
-                </div>
-
-                <!-- Detail Teks Konten -->
-                <div class="p-5">
-                  <div class="flex items-center gap-2 text-[11px] text-gray-400 mb-2 font-medium">
-                    <span>Oleh <strong class="text-gray-600">${item.penulis || 'Redaksi'}</strong></span>
-                    <span>•</span>
-                    <span>${new Date(item.dibuat_pada).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                  </div>
-                  <h3 class="text-lg font-bold text-gray-900 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors duration-200">
-                    <a href="${item.url_sumber || '#'}" target="_blank" rel="noopener noreferrer">
-                      ${item.judul}
-                    </a>
-                  </h3>
-                  <p class="text-gray-500 text-xs mt-2.5 line-clamp-3 leading-relaxed">
-                    ${item.ringkasan}
-                  </p>
-                </div>
-              </div>
-
-              <!-- Footer Informasi Kartu Berita -->
-              <div class="p-5 pt-0 border-t border-gray-50 flex justify-between items-center text-[11px] text-gray-400 font-medium">
-                <span class="flex items-center gap-1 bg-gray-50 px-2 py-0.5 rounded border border-gray-100">
-                  👁️ ${item.jumlah_baca || 0} Kali Dibaca
-                </span>
-                <a href="${item.url_sumber || '#'}" target="_blank" rel="noopener noreferrer" class="text-blue-600 font-bold inline-flex items-center gap-0.5 hover:text-blue-700 transition-colors">
-                  Baca Selengkapnya ↗
-                </a>
-              </div>
-            </article>
-          `).join('');
+          // Render semua berita di awal
+          renderBerita(semuaDataBerita);
 
         } catch (error) {
           console.error(error);
           gridContainer.innerHTML = `
-            <div class="col-span-full bg-red-50 border border-red-100 text-red-700 p-5 rounded-2xl text-center text-sm">
-              🛑 <strong>Sistem Gagal Memuat Data:</strong> ${error.message}. Pastikan koneksi internet stabil dan tabel Supabase aktif.
+            <div class="col-span-full bg-red-50 border border-red-100 text-red-700 p-6 rounded-xl text-center text-sm font-medium">
+              🛑 Gagal terhubung ke pusat data: ${error.message}
             </div>`;
         }
       }
 
-      // Picu pemanggilan data otomatis sesaat setelah elemen halaman siap
+      // Fungsi menyusun komponen HTML kartu berita
+      function renderBerita(data) {
+        if (data.length === 0) {
+          gridContainer.innerHTML = `
+            <div class="col-span-full text-center py-20 bg-white border border-dashed border-gray-200 rounded-2xl">
+              <p class="text-gray-400 text-base font-medium">Tidak ada berita yang ditemukan dalam kategori ini.</p>
+            </div>`;
+          return;
+        }
+
+        gridContainer.innerHTML = data.map(item => `
+          <article class="bg-white rounded-xl border border-gray-200/60 shadow-2xs overflow-hidden flex flex-col justify-between group hover:shadow-sm hover:border-gray-300 transition-all duration-300">
+            <div>
+              <div class="relative aspect-video bg-gray-50 overflow-hidden border-b border-gray-100">
+                <img 
+                  src="${item.url_gambar || 'https://unsplash.com'}" 
+                  alt="${item.judul}" 
+                  class="w-full h-full object-cover group-hover:scale-101 transition-transform duration-500"
+                  loading="lazy"
+                />
+                <span class="absolute bottom-3 left-3 bg-zinc-900/90 text-white text-[9px] font-extrabold px-2.5 py-1 rounded-sm uppercase tracking-widest backdrop-blur-xs">
+                  ${item.kategori}
+                </span>
+              </div>
+
+              <div class="p-5">
+                <div class="flex items-center gap-1.5 text-[10px] text-gray-400 mb-2 font-semibold uppercase tracking-wider font-mono">
+                  <span class="text-gray-600">${item.penulis || 'Redaksi'}</span>
+                  <span>•</span>
+                  <span>${new Date(item.dibuat_pada).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</span>
+                </div>
+                <h3 class="text-base font-bold text-gray-900 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors duration-150">
+                  <a href="${item.url_sumber || '#'}" target="_blank" rel="noopener noreferrer">
+                    ${item.judul}
+                  </a>
+                </h3>
+                <p class="text-gray-500 text-xs mt-2 line-clamp-3 leading-relaxed">
+                  ${item.ringkasan}
+                </p>
+              </div>
+            </div>
+
+            <div class="p-5 pt-0 flex justify-between items-center text-[11px] text-gray-400 font-medium">
+              <span class="flex items-center gap-0.5 text-zinc-400">
+                👁️ ${item.jumlah_baca || 0} hits
+              </span>
+              <a href="${item.url_sumber || '#'}" target="_blank" rel="noopener noreferrer" class="text-blue-600 font-bold inline-flex items-center hover:text-blue-700">
+                Baca Artikel ↗
+              </a>
+            </div>
+          </article>
+        `).join('');
+      }
+
+      // 🎯 ENGINE FILTER KATEGORI ALA MEDIA BESAR (TANPA RELOAD HALAMAN)
+      window.filterKategori = (kategori, element) => {
+        // 1. Reset gaya tombol lama
+        const semuaTombol = document.querySelectorAll('#menuKategori button');
+        semuaTombol.forEach(btn => {
+          btn.className = "px-3.5 py-1.5 rounded-full hover:bg-gray-100 cursor-pointer transition-all shrink-0";
+        });
+
+        // 2. Pasang gaya aktif pada tombol yang dipilih
+        element.className = "px-3.5 py-1.5 rounded-full bg-blue-600 text-white cursor-pointer transition-all shrink-0 shadow-sm";
+
+        // 3. Lakukan penyaringan memori data
+        if (kategori === 'SEMUA') {
+          renderBerita(semuaDataBerita);
+        } else {
+          const hasilFilter = semuaDataBerita.filter(berita => berita.kategori.toUpperCase() === kategori.toUpperCase());
+          renderBerita(hasilFilter);
+        }
+      };
+
       ambilBeritaPublik();
     </script>
   </body>
