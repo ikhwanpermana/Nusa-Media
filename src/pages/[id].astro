@@ -1,113 +1,267 @@
 ---
-import { supabase } from '../lib/supabase';
+// 1. Mengatur mode SSR (Server-Side Rendering) agar parameter URL bisa dibaca secara dinamis
+export const output = 'server';
 
-// Wajib ditambahkan agar Astro memproses halaman ini secara live di server (SSR)
-export const prerender = false;
-
-// 1. AMBIL DATA BERITA LAMA (Dijalankan saat halaman dibuka)
+// 2. Mengambil parameter ID dari URL (misal: /admin, /control, dll)
 const { id } = Astro.params;
 
-// Ambil data artikel yang mau diedit berdasarkan ID
-const { data: artikel, error: fetchError } = await supabase
-  .from('posts')
-  .select('*')
-  .eq('id', id)
-  .single();
-
-let pesanSukses = "";
-let pesanGagal = "";
-
-// 2. PROSES UPDATE DATA (Dijalankan oleh Node.js saat tombol "Simpan" diklik)
-if (Astro.request.method === 'POST') {
-  try {
-    const formData = await Astro.request.formData();
-    const judul = formData.get('judul')?.toString();
-    const ringkasan = formData.get('ringkasan')?.toString();
-    const slug = formData.get('slug')?.toString();
-
-    // Jalankan perintah UPDATE ke database Supabase
-    const { error: updateError } = await supabase
-      .from('posts')
-      .update({ judul, ringkasan, slug })
-      .eq('id', id);
-
-    if (updateError) {
-      pesanGagal = updateError.message;
-    } else {
-      pesanSukses = "Berita berhasil diperbarui secara live!";
-      // Segarkan data artikel di layar dengan data baru
-      return Astro.redirect('/');
-    }
-  } catch (e) {
-    pesanGagal = "Terjadi kesalahan koneksi server.";
-  }
+// Validasi keamanan sederhana: Hanya izinkan akses jika ID URL adalah "admin" atau "control"
+// Jika user mengetik ID lain, halaman akan otomatis menampilkan error 404
+if (id !== "admin" && id !== "control") {
+  return Astro.redirect('/404');
 }
+
+const judulHalaman = `Nusa Media - Control Panel (${id.toUpperCase()})`;
+const tanggal = "Rabu, 20 Mei 2026";
 ---
-
-<!DOCTYPE html>
 <html lang="id">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Edit Berita - Nusa Media</title>
-</head>
-<body class="bg-gray-50 text-gray-900 font-sans p-6">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{judulHalaman}</title>
+    <script src="https://jsdelivr.net"></script>
+    <style>
+      @import url('https://googleapis.com');
+      body { font-family: 'Plus Jakarta Sans', sans-serif; }
+      #listBerita::-webkit-scrollbar { width: 4px; }
+      #listBerita::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+    </style>
+  </head>
+  <body class="bg-[#0A0A0A] text-[#E5E5E5] antialiased">
 
-  <main class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-gray-100 mt-10">
-    <header class="mb-6">
-      <a href="/" class="text-sm text-blue-600 hover:underline">&larr; Kembali ke Beranda</a>
-      <h1 class="text-3xl font-black text-gray-800 mt-2">Edit Berita</h1>
-    </header>
-
-    <!-- Notifikasi Status -->
-    {pesanSukses && <div class="p-4 mb-4 text-green-800 bg-green-50 rounded-xl text-sm border border-green-200">{pesanSukses}</div>}
-    {pesanGagal && <div class="p-4 mb-4 text-red-800 bg-red-50 rounded-xl text-sm border border-red-200">{pesanGagal}</div>}
-    {fetchError && <div class="p-4 mb-4 text-amber-800 bg-amber-50 rounded-xl text-sm">Berita tidak ditemukan atau ID salah.</div>}
-
-    {artikel && (
-      // Formulir HTML standar yang mengirimkan data via POST ke Node.js
-      <form method="POST" class="space-y-5">
+    <div class="min-h-screen flex flex-col md:flex-row">
+      
+      <!-- MENU SISI KIRI (SIDEBAR) -->
+      <aside class="w-full md:w-64 bg-[#111111] border-b md:border-b-0 md:border-r border-[#222222] p-6 flex flex-col justify-between">
         <div>
-          <label class="block text-sm font-bold text-gray-700 mb-2">Judul Berita</label>
-          <input 
-            type="text" 
-            name="judul" 
-            value={artikel.judul} 
-            required 
-            class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
-          />
+          <div class="flex items-center gap-3 pb-6 border-b border-[#222222]">
+            <div class="w-8 h-8 rounded bg-white flex items-center justify-center text-black font-black text-sm">N</div>
+            <div>
+              <h2 class="text-sm font-bold text-white tracking-wider">NUSA MEDIA</h2>
+              <p class="text-[10px] text-gray-500 font-mono">v1.3.0 - Route: /{id}</p>
+            </div>
+          </div>
+          
+          <nav class="mt-8 space-y-2">
+            <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-zinc-900 text-white text-xs font-semibold tracking-wide border border-zinc-800">
+              📝 Kelola & Tulis Berita
+            </a>
+            <button onclick="isiOtomatis()" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-amber-400 bg-amber-950/20 hover:bg-amber-950/40 text-xs font-semibold tracking-wide border border-amber-900/30 transition-all text-left cursor-pointer">
+              🤖 Isi Form Otomatis
+            </button>
+          </nav>
         </div>
 
-        <div>
-          <label class="block text-sm font-bold text-gray-700 mb-2">Slug URL (Tanpa spasi, gunakan tanda -)</label>
-          <input 
-            type="text" 
-            name="slug" 
-            value={artikel.slug} 
-            required 
-            class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
-          />
+        <div class="pt-6 border-t border-[#222222] text-[10px] text-gray-600 font-mono hidden md:block">
+          Scope ID: <span class="text-gray-400 uppercase font-bold">{id}</span>
+        </div>
+      </aside>
+
+      <!-- KONTEN UTAMA -->
+      <main class="flex-1 p-6 md:p-10 max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- SISI KIRI: FORMULIR INPUT -->
+        <div class="lg:col-span-2 space-y-6">
+          <header class="flex justify-between items-center">
+            <div>
+              <h1 class="text-2xl font-extrabold text-white tracking-tight">Kelola Berita</h1>
+              <p class="text-xs text-gray-500 mt-1">Input data secara manual di bawah atau gunakan tombol otomatis di sidebar.</p>
+            </div>
+          </header>
+
+          <div class="bg-[#111111] border border-[#222222] rounded-xl p-6 shadow-xl">
+            <form id="formBerita" class="space-y-4">
+              <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Judul Berita</label>
+                <input type="text" id="judul" name="judul" required placeholder="Masukkan judul berita..." 
+                  class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white transition-colors" />
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Kategori</label>
+                  <select id="kategori" name="kategori" class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white transition-colors">
+                    <option value="TEKNOLOGI">TEKNOLOGI</option>
+                    <option value="POLITIK">POLITIK</option>
+                    <option value="BISNIS">BISNIS</option>
+                    <option value="GAYA HIDUP">GAYA HIDUP</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Penulis</label>
+                  <input type="text" id="penulis" name="penulis" value="Redaksi Nusa Media" required
+                    class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white transition-colors" />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Ringkasan Pendek</label>
+                <input type="text" id="ringkasan" name="ringkasan" required placeholder="1 kalimat ringkasan..." 
+                  class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white transition-colors" />
+              </div>
+
+              <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Isi Artikel (Konten)</label>
+                <textarea id="konten" name="konten" rows="5" required placeholder="Ketik narasi artikel di sini..." 
+                  class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg p-3 text-sm text-white focus:outline-none focus:border-white transition-colors leading-relaxed"></textarea>
+              </div>
+
+              <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">URL Gambar Sampul</label>
+                <input type="url" id="url_gambar" name="url_gambar" placeholder="https://unsplash.com..." 
+                  class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-white transition-colors font-mono" />
+              </div>
+
+              <div class="flex gap-4 pt-2">
+                <button type="submit" id="btnSubmit" class="w-full bg-white text-black hover:bg-gray-200 transition-all font-bold text-xs uppercase tracking-widest py-3 rounded-lg shadow-lg cursor-pointer">
+                  ✍️ Terbitkan Berita
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
 
-        <div>
-          <label class="block text-sm font-bold text-gray-700 mb-2">Ringkasan Berita</label>
-          <textarea 
-            name="ringkasan" 
-            rows="5" 
-            required 
-            class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
-          >{artikel.ringkasan}</textarea>
+        <!-- SISI KANAN: DAFTAR BERITA LIVE -->
+        <div class="space-y-6">
+          <header class="flex justify-between items-center">
+            <div>
+              <h2 class="text-xl font-bold text-white tracking-tight">Daftar Berita</h2>
+              <p class="text-[10px] text-gray-500 mt-0.5">Sinkronisasi Basis Data.</p>
+            </div>
+            <span class="text-[10px] font-mono text-zinc-500 bg-zinc-900 px-2 py-1 rounded border border-zinc-800">{tanggal}</span>
+          </header>
+
+          <div id="listBerita" class="space-y-3 max-h-[72vh] overflow-y-auto pr-1">
+            <p class="text-xs text-gray-500 animate-pulse">Memuat data berita...</p>
+          </div>
         </div>
 
-        <button 
-          type="submit" 
-          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-colors shadow-sm"
-        >
-          Simpan Perubahan Berita
-        </button>
-      </form>
-    )}
-  </main>
+      </main>
+    </div>
 
-</body>
+    <!-- TRANSMISI FITUR UTAMA (AUTOMATION, DOCKING, SERVER-SAFE HEADERS) -->
+    <script is:inline>
+      const form = document.getElementById('formBerita');
+      const listContainer = document.getElementById('listBerita');
+      const btnSubmit = document.getElementById('btnSubmit');
+      
+      const SUPABASE_PROJECT_ID = "zmvlvzspjohrewjbtfxc"; 
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inptdmx2enNwam9ocmV3amJ0ZnhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMTM0MTAsImV4cCI6MjA5NDU4OTQxMH0.PtTVq_b4gLonRpNSbPYKncoXlGVS1lKaADy74dbhuSI";     
+      const NAMA_TABEL = "berita";                    
+
+      const BASE_URL = `https://${SUPABASE_PROJECT_ID}.supabase.co/rest/v1/${NAMA_TABEL}`;
+      
+      // 🛡️ FITUR 3: Server-Safe API Headers (Kunci Enkripsi Bearer Token)
+      const HEADERS = {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+      };
+
+      // 🔌 FITUR 2: Realtime Database Docking (Ambil data SELECT otomatis)
+      async function muatDaftarBerita() {
+        try {
+          const response = await fetch(`${BASE_URL}?select=*&order=dibuat_pada.desc`, { headers: HEADERS });
+          if (!response.ok) throw new Error('Gagal mengambil data dari database');
+          const data = await response.json();
+          
+          if (data.length === 0) {
+            listContainer.innerHTML = `<p class="text-xs text-zinc-600 border border-dashed border-zinc-800 p-4 rounded-xl text-center">Belum ada berita di basis data.</p>`;
+            return;
+          }
+
+          listContainer.innerHTML = data.map(item => `
+            <div class="bg-[#111111] border border-[#222222] p-4 rounded-xl space-y-2 hover:border-zinc-700 transition-colors">
+              <div class="flex justify-between items-center text-[9px] font-mono tracking-wider">
+                <span class="text-blue-400 bg-blue-950/40 px-2 py-0.5 rounded border border-blue-900/30">${item.kategori}</span>
+                <span class="text-zinc-500">${new Date(item.dibuat_pada).toLocaleDateString('id-ID')}</span>
+              </div>
+              <h3 class="text-xs font-bold text-white leading-snug line-clamp-2">${item.judul}</h3>
+              <p class="text-[11px] text-zinc-400 line-clamp-2 leading-relaxed">${item.ringkasan}</p>
+              <div class="text-[9px] text-zinc-600 flex justify-between pt-1 border-t border-zinc-900">
+                <span>By: ${item.penulis || 'Redaksi'}</span>
+                <span>👁️ ${item.jumlah_baca || 0}</span>
+              </div>
+            </div>
+          `).join('');
+        } catch (error) {
+          listContainer.innerHTML = `<p class="text-xs text-red-400 p-2">🛑 Error: ${error.message}</p>`;
+        }
+      }
+
+      // Interseptor Insert Data Form
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        btnSubmit.disabled = true;
+        btnSubmit.innerText = "⏳ SEDANG MENERBITKAN...";
+
+        const formData = new FormData(form);
+        const dataBerita = {
+          judul: formData.get('judul'),
+          kategori: formData.get('kategori'),
+          penulis: formData.get('penulis'),
+          ringkasan: formData.get('ringkasan'),
+          konten: formData.get('konten'),
+          url_gambar: formData.get('url_gambar') || null,
+          sumber: "Nusa Media Panel",
+          url_sumber: window.location.href,
+          status: "publish"
+        };
+
+        try {
+          const response = await fetch(BASE_URL, {
+            method: 'POST',
+            headers: { ...HEADERS, 'Prefer': 'return=representation' },
+            body: JSON.stringify(dataBerita)
+          });
+
+          if (!response.ok) throw new Error('Gagal mengirim data berita.');
+          
+          form.reset();
+          document.getElementById('penulis').value = "Redaksi Nusa Media";
+          alert('🎉 Berita baru berhasil diterbitkan ke Supabase!');
+          muatDaftarBerita(); // 🔌 Realtime refresh daftar sisi kanan
+        } catch (error) {
+          alert(`❌ Eror: ${error.message}`);
+        } finally {
+          btnSubmit.disabled = false;
+          btnSubmit.innerText = "✍️ TERBITKAN BERITA";
+        }
+      });
+
+      // 🤖 FITUR 1: Generator Data Otomatis (Mock AI)
+      window.isiOtomatis = () => {
+        const bankJudul = [
+          "Satelit Quantum Merah Putih Sukses Mengorbit",
+          "Pasar Kripto Global Mengalami Lonjakan Drastis",
+          "Inovasi Baterai Berbasis Pasir Diluncurkan di Jakarta"
+        ];
+        const bankRingkasan = [
+          "Langkah besar lompatan teknologi komunikasi Indonesia di kancah internasional.",
+          "Sentimen positif membawa angin segar bagi aset digital minggu ini.",
+          "Solusi penyimpanan energi hijau alternatif yang murah dan ramah lingkungan."
+        ];
+        const bankKonten = [
+          "Indonesia berhasil meluncurkan satelit komunikasi berbasis quantum pertama. Proyek ini merupakan kerja sama strategis nasional untuk mengamankan jaringan siber nasional dari potensi ancaman luar.",
+          "Bitcoin dan Ethereum memimpin reli kenaikan harga aset digital setelah regulasi terbaru aset kripto resmi disahkan oleh bank sentral global pagi hari tadi.",
+          "Peneliti lokal berhasil menciptakan prototipe penampung daya listrik ramah lingkungan dari silika pasir. Teknologi ini diklaim mampu bertahan 3 kali lebih lama dari lithium biasa."
+        ];
+        const bankGambar = [
+          "https://unsplash.comphoto-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80",
+          "https://unsplash.comphoto-1621761191319-c6fb62004040?auto=format&fit=crop&w=600&q=80",
+          "https://unsplash.comphoto-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=600&q=80"
+        ];
+
+        const indeksAcak = Math.floor(Math.random() * bankJudul.length);
+        
+        document.getElementById('judul').value = bankJudul[indeksAcak];
+        document.getElementById('ringkasan').value = bankRingkasan[indeksAcak];
+        document.getElementById('konten').value = bankKonten[indeksAcak];
+        document.getElementById('url_gambar').value = bankGambar[indeksAcak];
+        document.getElementById('kategori').value = indeksAcak === 1 ? "BISNIS" : "TEKNOLOGI";
+      };
+
+      muatDaftarBerita();
+    </script>
+  </body>
 </html>
