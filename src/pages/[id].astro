@@ -1,254 +1,182 @@
 ---
-// 🎯 WAJIB DI MODE STATIS (SSG): Daftarkan rute kata apa saja yang boleh diakses oleh URL [id]
-export function getStaticPaths() {
-  return [
-    { params: { id: 'admin' } },
-    { params: { id: 'control' } }
-  ];
+import { supabase } from '../lib/supabase';
+
+// Menangkap kunci rahasia admin dari URL (Misalnya: ://nusamedia.com)
+const { id: adminKey } = Astro.params;
+
+// Tentukan Kunci Rahasia Anda di sini agar tidak sembarang orang bisa input data
+const KUNCI_AKSES_ADMIN = "admin-rahasia-99"; 
+
+let statusPesan = "";
+let tipePesan = ""; // "sukses" atau "gagal"
+
+// Eksekusi jika admin menekan tombol Simpan (Metode POST)
+if (Astro.request.method === "POST") {
+  try {
+    const dataForm = await Astro.request.formData();
+    const tipeInput = dataForm.get("tipe_input"); // "berita" atau "iklan"
+
+    if (tipeInput === "berita") {
+      // 📰 LOGIKA INPUT BERITA
+      const judul = dataForm.get("judul");
+      const kategori = dataForm.get("kategori");
+      const konten = dataForm.get("konten");
+
+      const { error } = await supabase
+        .from('artikel')
+        .insert([{ judul, kategori, konten }]);
+
+      if (error) throw error;
+      statusPesan = "Berita baru berhasil diterbitkan secara live!";
+      tipePesan = "sukses";
+
+    } else if (tipeInput === "iklan") {
+      // 📢 LOGIKA INPUT IKLAN
+      const kontenTeks = dataForm.get("konten_teks");
+      const linkTujuan = dataForm.get("link_tujuan");
+      const posisi = dataForm.get("posisi"); // "detail_atas", "sidebar_atas"
+
+      const { error } = await supabase
+        .from('iklan')
+        .insert([{ konten_teks: kontenTeks, link_tujuan: linkTujuan, posisi, status: 'aktif' }]);
+
+      if (error) throw error;
+      statusPesan = "Iklan komersial baru berhasil dipasang!";
+      tipePesan = "sukses";
+    }
+  } catch (err: any) {
+    statusPesan = `Gagal menyimpan data: ${err.message}`;
+    tipePesan = "gagal";
+  }
 }
-
-// Mengambil parameter ID aktif dari URL (/admin atau /control)
-const { id } = Astro.params;
-const judulHalaman = `Nusa Media - Control Panel (${id.toUpperCase()})`;
-const tanggal = "Rabu, 20 Mei 2026";
 ---
+
 <html lang="id">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{judulHalaman}</title>
-    
-    <!-- 🎯 TAILWIND PLAY CDN RESMI -->
-    <script src="https://tailwindcss.com"></script>
-    
-    <!-- 🎯 INTERKONEKSI GOOGLE FONTS -->
-    <link rel="preconnect" href="https://googleapis.com">
-    <link rel="preconnect" href="https://gstatic.com" crossorigin>
-    <link href="https://googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistem Input Nusa-Media</title>
+  <link rel="preconnect" href="https://googleapis.com">
+  <link href="https://googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-4 sm:p-8">
 
-    <style>
-      body { font-family: 'Plus Jakarta Sans', sans-serif; }
-      #listBerita::-webkit-scrollbar { width: 4px; }
-      #listBerita::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
-    </style>
-  </head>
-  <body class="bg-[#0A0A0A] text-[#E5E5E5] antialiased">
-
-    <div class="min-h-screen flex flex-col md:flex-row">
-      
-      <!-- MENU SISI KIRI (SIDEBAR) -->
-      <aside class="w-full md:w-64 bg-[#111111] border-b md:border-b-0 md:border-r border-[#222222] p-6 flex flex-col justify-between">
-        <div>
-          <div class="flex items-center gap-3 pb-6 border-b border-[#222222]">
-            <div class="w-8 h-8 rounded bg-white flex items-center justify-center text-black font-black text-sm">N</div>
-            <div>
-              <h2 class="text-sm font-bold text-white tracking-wider">NUSA MEDIA</h2>
-              <p class="text-[10px] text-gray-500 font-mono">v1.4.0 - Route: /{id}</p>
-            </div>
-          </div>
-          
-          <nav class="mt-8 space-y-2">
-            <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-zinc-900 text-white text-xs font-semibold tracking-wide border border-zinc-800">
-              📝 Kelola & Tulis Berita
-            </a>
-            <button onclick="isiOtomatis()" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-amber-400 bg-amber-950/20 hover:bg-amber-950/40 text-xs font-semibold tracking-wide border border-amber-900/30 transition-all text-left cursor-pointer">
-              🤖 Isi Form Otomatis
-            </button>
-          </nav>
-        </div>
-
-        <div class="pt-6 border-t border-[#222222] text-[10px] text-gray-600 font-mono hidden md:block">
-          Scope ID: <span class="text-gray-400 uppercase font-bold">{id}</span>
-        </div>
-      </aside>
-
-      <!-- KONTEN UTAMA -->
-      <main class="flex-1 p-6 md:p-10 max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        <!-- SISI KIRI: FORMULIR INPUT -->
-        <div class="lg:col-span-2 space-y-6">
-          <header class="flex justify-between items-center">
-            <div>
-              <h1 class="text-2xl font-extrabold text-white tracking-tight">Kelola Berita ({id.toUpperCase()})</h1>
-              <p class="text-xs text-gray-500 mt-1">Input data secara manual di bawah atau gunakan tombol otomatis di sidebar.</p>
-            </div>
-          </header>
-
-          <div class="bg-[#111111] border border-[#222222] rounded-xl p-6 shadow-xl">
-            <form id="formBerita" class="space-y-4">
-              <div>
-                <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Judul Berita</label>
-                <input type="text" id="judul" name="judul" required placeholder="Masukkan judul berita..." 
-                  class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white transition-colors" />
-              </div>
-
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Kategori</label>
-                  <select id="kategori" name="kategori" class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white transition-colors">
-                    <option value="TEKNOLOGI">TEKNOLOGI</option>
-                    <option value="POLITIK">POLITIK</option>
-                    <option value="BISNIS">BISNIS</option>
-                    <option value="GAYA HIDUP">GAYA HIDUP</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Penulis</label>
-                  <input type="text" id="penulis" name="penulis" value="Redaksi Nusa Media" required
-                    class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white transition-colors" />
-                </div>
-              </div>
-
-              <div>
-                <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Isi Artikel (Konten)</label>
-                <textarea id="konten" name="konten" rows="5" required placeholder="Ketik narasi artikel di sini..." 
-                  class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg p-3 text-sm text-white focus:outline-none focus:border-white transition-colors leading-relaxed"></textarea>
-              </div>
-
-              <div>
-                <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">URL Gambar Sampul</label>
-                <input type="url" id="url_gambar" name="url_gambar" placeholder="https://unsplash.com..." 
-                  class="w-full bg-[#161616] border border-[#2A2A2A] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-white transition-colors font-mono" />
-              </div>
-
-              <div class="flex gap-4 pt-2">
-                <button type="submit" id="btnSubmit" class="w-full bg-white text-black hover:bg-gray-200 transition-all font-bold text-xs uppercase tracking-widest py-3 rounded-lg shadow-lg cursor-pointer">
-                  ✍️ Terbitkan Berita
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        <!-- SISI KANAN: DAFTAR BERITA LIVE & TOMBOL HAPUS -->
-        <div class="space-y-6">
-          <header class="flex justify-between items-center">
-            <div>
-              <h2 class="text-xl font-bold text-white tracking-tight">Daftar Berita</h2>
-              <p class="text-[10px] text-gray-500 mt-0.5">Telah Tayang & Tersedia.</p>
-            </div>
-            <span class="text-[10px] font-mono text-zinc-500 bg-zinc-900 px-2 py-1 rounded border border-zinc-800">{tanggal}</span>
-          </header>
-
-          <div id="listBerita" class="space-y-3 max-h-[72vh] overflow-y-auto pr-1">
-            <p class="text-xs text-gray-500 animate-pulse">Memuat data berita...</p>
-          </div>
-        </div>
-
-      </main>
+  <!-- Validasi Keamanan Kunci URL -->
+  {adminKey !== KUNCI_AKSES_ADMIN ? (
+    <div class="max-w-md mx-auto text-center bg-slate-800 border border-red-500/30 p-8 rounded-2xl shadow-xl mt-12">
+      <span class="text-4xl">🚫</span>
+      <h2 class="text-xl font-bold text-red-400 mt-4">Akses Ditolak</h2>
+      <p class="text-slate-400 text-sm mt-2">Kunci ID URL admin yang Anda masukkan tidak cocok atau salah.</p>
+      <a href="/" class="inline-block mt-6 text-xs bg-slate-700 px-4 py-2 rounded-xl text-white">Kembali ke Home</a>
     </div>
+  ) : (
+    
+    // TAMPILAN DASHBOARD INPUT UTAMA
+    <div class="max-w-2xl mx-auto">
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight">Nusa-Media Control Center</h1>
+          <p class="text-xs text-slate-400 mt-1">Mode penginputan manual berita dan slot iklan sponsor daerah</p>
+        </div>
+        <a href="/" class="text-xs bg-slate-800 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700">Lihat Web Live ↗</a>
+      </div>
 
-    <!-- TRANSMISI FITUR UTAMA & AUTOMATION -->
-    <script is:inline>
-      const form = document.getElementById('formBerita');
-      const listContainer = document.getElementById('listBerita');
-      const btnSubmit = document.getElementById('btnSubmit');
-      
-      const SUPABASE_PROJECT_ID = "zmvlvzspjohrewjbtfxc"; 
-      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inptdmx2enNwam9ocmV3amJ0ZnhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMTM0MTAsImV4cCI6MjA5NDU4OTQxMH0.PtTVq_b4gLonRpNSbPYKncoXlGVS1lKaADy74dbhuSI";     
-      const NAMA_TABEL = "berita";                    
+      <!-- Notifikasi Status Pengiriman Data -->
+      {statusPesan && (
+        <div class={`p-4 rounded-xl text-sm font-semibold mb-6 border ${
+          tipePesan === "sukses" ? "bg-emerald-950/50 border-emerald-500/30 text-emerald-400" : "bg-rose-950/50 border-rose-500/30 text-rose-400"
+        }`}>
+          {tipePesan === "sukses" ? "✅" : "⚠️"} {statusPesan}
+        </div>
+      )}
 
-      const BASE_URL = `https://${SUPABASE_PROJECT_ID}.supabase.co/rest/v1/${NAMA_TABEL}`;
+      <!-- KARTU FORMULIR -->
+      <div class="bg-slate-800 border border-slate-700/60 rounded-2xl p-6 shadow-xl" x-data="{ tab: 'berita' }">
+        
+        <!-- Pemilih Tab Input -->
+        <div class="flex bg-slate-900 p-1.5 rounded-xl gap-2 mb-6 text-sm font-bold">
+          <button id="btn-berita" class="w-full py-2 bg-indigo-600 text-white rounded-lg transition" onclick="switchTab('berita')">
+            📰 Tulis Berita Baru
+          </button>
+          <button id="btn-iklan" class="w-full py-2 text-slate-400 hover:text-white rounded-lg transition" onclick="switchTab('iklan')">
+            📢 Pasang Iklan Baru
+          </button>
+        </div>
 
-      async function muatBeritaAdmin() {
-        try {
-          const response = await fetch(`${BASE_URL}?select=*&order=dibuat_pada.desc`, {
-            headers: {
-              'apikey': SUPABASE_ANON_KEY,
-              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-            }
-          });
-          const data = await response.json();
-          
-          if (!data || data.length === 0) {
-            listContainer.innerHTML = '<p class="text-xs text-gray-600 p-4">Belum ada data berita di database.</p>';
-            return;
-          }
+        <!-- FORMULIR INPUT BERITA -->
+        <form id="form-berita" method="POST" class="space-y-4">
+          <input type="hidden" name="tipe_input" value="berita" />
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Judul Berita</label>
+            <input type="text" name="judul" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none" placeholder="Masukkan judul berita terhangat..." />
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Kategori Wilayah / Rubrik</label>
+            <select name="kategori" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none text-slate-300">
+              <option value="Fokus">Fokus Utama</option>
+              <option value="Politik">Politik</option>
+              <option value="Advertorial">Advertorial Daerah</option>
+              <option value="Ekonomi">Ekonomi</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Isi Konten Berita</label>
+            <textarea name="konten" rows="8" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none" placeholder="Ketik isi berita lengkap di sini..."></textarea>
+          </div>
+          <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-indigo-600/20 transition-all text-sm mt-2">
+            Terbitkan Berita Sekarang
+          </button>
+        </form>
 
-          listContainer.innerHTML = data.map(item => `
-            <div class="p-4 bg-[#111111] border border-[#222222] rounded-lg space-y-1 relative group">
-              <div class="flex justify-between items-center">
-                <span class="text-[9px] bg-zinc-800 text-gray-300 font-bold px-2 py-0.5 rounded uppercase tracking-wider">${item.kategori || 'UMUM'}</span>
-                <button 
-                  onclick="konfirmasiHapus('${item.id}', '${item.judul ? item.judul.replace(/'/g, "\\'") : 'Berita Tanpa Judul'}')" 
-                  class="text-xs text-red-500 hover:text-red-400 bg-red-950/20 hover:bg-red-950/50 border border-red-900/30 px-2 py-0.5 rounded font-bold font-mono transition-all cursor-pointer"
-                >
-                  🗑️ HAPUS
-                </button>
-              </div>
-              <h4 class="text-xs font-bold text-white line-clamp-1 pr-14">${item.judul || 'Tanpa Judul'}</h4>
-              <p class="text-[10px] text-gray-500 line-clamp-2 leading-relaxed">${item.konten || ''}</p>
-            </div>
-          `).join('');
-        } catch (error) {
-          listContainer.innerHTML = '<p class="text-xs text-red-500 p-4">Gagal menyinkronkan data.</p>';
-        }
+        <!-- FORMULIR INPUT IKLAN (Sembunyi default) -->
+        <form id="form-iklan" method="POST" class="space-y-4 hidden">
+          <input type="hidden" name="tipe_input" value="iklan" />
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Teks / Nama Iklan</label>
+            <input type="text" name="konten_teks" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none" placeholder="Contoh: Ucapan Selamat Hari Jadi Kabupaten..." />
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Link Tujuan Iklan (URL Sponsor)</label>
+            <input type="url" name="link_tujuan" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none" placeholder="https://instansidaerah.go.id" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Posisi Slot Penempatan Iklan</label>
+            <select name="posisi" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none text-slate-300">
+              <option value="detail_atas">Bagian Atas Konten Berita</option>
+              <option value="sidebar_atas">Sidebar Samping Kanan Atas</option>
+              <option value="sidebar_bawah">Sidebar Samping Kanan Bawah</option>
+            </select>
+          </div>
+          <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-emerald-600/20 transition-all text-sm mt-2">
+            Pasang Iklan Sponsor
+          </button>
+        </form>
+
+      </div>
+    </div>
+  )}
+
+  <!-- Script Ringan Client untuk Berpindah Tab Form -->
+  <script is:inline>
+    function switchTab(type) {
+      const fBerita = document.getElementById('form-berita');
+      const fIklan = document.getElementById('form-iklan');
+      const btnBerita = document.getElementById('btn-berita');
+      const btnIklan = document.getElementById('btn-iklan');
+
+      if (type === 'berita') {
+        fBerita.classList.remove('hidden');
+        fIklan.classList.add('hidden');
+        btnBerita.className = "w-full py-2 bg-indigo-600 text-white rounded-lg transition";
+        btnIklan.className = "w-full py-2 text-slate-400 hover:text-white rounded-lg transition";
+      } else {
+        fBerita.classList.add('hidden');
+        fIklan.classList.remove('hidden');
+        btnBerita.className = "w-full py-2 text-slate-400 hover:text-white rounded-lg transition";
+        btnIklan.className = "w-full py-2 bg-emerald-600 text-white rounded-lg transition";
       }
-
-      window.konfirmasiHapus = async function(idBerita, judulBerita) {
-        if (confirm(`Apakah Anda yakin ingin menghapus berita ini secara permanen?\n\nJudul: "${judulBerita}"`)) {
-          try {
-            const response = await fetch(`${BASE_URL}?id=eq.${idBerita}`, {
-              method: 'DELETE',
-              headers: {
-                'apikey': SUPABASE_ANON_KEY,
-                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-              }
-            });
-            if (!response.ok) throw new Error();
-            alert('🗑️ Berita telah sukses dihapus!');
-            muatBeritaAdmin();
-          } catch (error) {
-            alert('❌ Gagal menghapus data.');
-          }
-        }
-      };
-
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        btnSubmit.disabled = true;
-        btnSubmit.innerText = "SEDANG MENERBITKAN...";
-
-        const formData = new FormData(form);
-        const payload = {
-          judul: formData.get('judul'),
-          kategori: formData.get('kategori'),
-          penulis: formData.get('penulis'),
-          konten: formData.get('konten'),
-          url_gambar: formData.get('url_gambar') || 'https://unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=600',
-          status: 'publish',
-          dibuat_pada: new Date().toISOString()
-        };
-
-        try {
-          const response = await fetch(BASE_URL, {
-            method: 'POST',
-            headers: {
-              'apikey': SUPABASE_ANON_KEY,
-              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-          });
-          if (!response.ok) throw new Error();
-          form.reset();
-          alert('🎉 Berita berhasil diterbitkan!');
-          muatBeritaAdmin();
-        } catch (error) {
-          alert('❌ Gagal mengirim data.');
-        } finally {
-          btnSubmit.disabled = false;
-          btnSubmit.innerText = "✍️ TERBITKAN BERITA";
-        }
-      });
-
-      window.isiOtomatis = function() {
-        document.getElementById('judul').value = "Inovasi Baru AI Mengguncang Industri Teknologi Nasional";
-        document.getElementById('konten').value = "Sistem kecerdasan buatan teranyar buatan anak bangsa dilaporkan berhasil mengotomatisasi infrastruktur komputasi cloud secara cerdas.";
-        document.getElementById('url_gambar').value = "https://unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600";
-      }
-
-      muatBeritaAdmin();
-    </script>
-  </body>
+    }
+  </script>
+</body>
 </html>
