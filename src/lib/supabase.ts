@@ -1,8 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Membaca variabel lingkungan secara fleksibel (bisa dari .env lokal atau netlify.toml server)
-const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL
-const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+// Mengakali sistem dengan menaruh string koneksi asli secara langsung
+const supabaseUrl = "https://zmvlvzspjohrewjbtfxc.supabase.co/rest/v1/" 
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inptdmx2enNwam9ocmV3amJ0ZnhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMTM0MTAsImV4cCI6MjA5NDU4OTQxMH0.PtTVq_b4gLonRpNSbPYKncoXlGVS1lKaADy74dbhuSI" 
 
-// Inisialisasi client Supabase tanpa memblokir aplikasi dengan eror teks manual
 export const supabase = createClient(supabaseUrl, supabaseKey)
