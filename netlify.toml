@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build"
+  command = "npm install @astrojs/tailwind@5.1.2 @astrojs/netlify@5.5.2 && npm run build"
   publish = "dist"
 
 [build.environment]
