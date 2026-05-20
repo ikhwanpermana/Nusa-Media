@@ -11,3 +11,6 @@ jspm_packages/
 logs
 *.log
 .vercel
+
+# Folder Cadangan Astro
+cadangan-astro/
