@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "src/pages/**/*": {
+      "runtime": "nodejs22.x"
+    }
+  }
+}
