@@ -21,11 +21,13 @@ if (Astro.request.method === "POST") {
       const judul = dataForm.get("judul");
       const kategori = dataForm.get("kategori");
       const konten = dataForm.get("konten");
+      const slug = dataForm.get("slug");
+      const image_url = dataForm.get("image_url");
 
-      // ✨ Catatan Keamanan: Pastikan nama tabel di Supabase Anda adalah 'artikel'
+      // Menyimpan data lengkap agar singkron dengan halaman [slug].astro dan index.astro
       const { error } = await supabase
         .from('artikel')
-        .insert([{ judul, kategori, konten }]);
+        .insert([{ judul, kategori, konten, slug, image_url }]);
 
       if (error) throw error;
       statusPesan = "Berita baru berhasil diterbitkan secara live!";
@@ -46,7 +48,6 @@ if (Astro.request.method === "POST") {
       tipePesan = "sukses";
     }
   } catch (err) {
-    // 🛠️ PERBAIKAN 1: Menghapus ': any' agar tidak memicu strict type error saat rilis di Netlify
     const pesanError = err instanceof Error ? err.message : "Terjadi kesalahan sistem";
     statusPesan = `Gagal menyimpan data: ${pesanError}`;
     tipePesan = "gagal";
@@ -65,6 +66,9 @@ if (Astro.request.method === "POST") {
   <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen p-4 sm:p-8">
+
+  <!-- HACK PENCEGAH FORCED LAYOUT LOG NODE.JS -->
+  <script is:inline>0</script>
 
   <!-- Validasi Keamanan Kunci URL -->
   {adminKey !== KUNCI_AKSES_ADMIN ? (
@@ -113,16 +117,26 @@ if (Astro.request.method === "POST") {
           <input type="hidden" name="tipe_input" value="berita" />
           <div>
             <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Judul Berita</label>
-            <input type="text" name="judul" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none text-slate-100" placeholder="Masukkan judul berita terhangat..." />
+            <input type="text" id="input-judul" name="judul" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none text-slate-100" placeholder="Masukkan judul berita terhangat..." />
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">URL Slug (Otomatis Terisi)</label>
+              <input type="text" id="input-slug" name="slug" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none text-slate-300 font-mono" placeholder="judul-berita-anda" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Kategori Wilayah</label>
+              <select name="kategori" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none text-slate-300">
+                <option value="Fokus">Fokus Utama</option>
+                <option value="Politik">Politik</option>
+                <option value="Advertorial">Advertorial Daerah</option>
+                <option value="Ekonomi">Ekonomi</option>
+              </select>
+            </div>
           </div>
           <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Kategori Wilayah / Rubrik</label>
-            <select name="kategori" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none text-slate-300">
-              <option value="Fokus">Fokus Utama</option>
-              <option value="Politik">Politik</option>
-              <option value="Advertorial">Advertorial Daerah</option>
-              <option value="Ekonomi">Ekonomi</option>
-            </select>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">URL Tautan Gambar Berita</label>
+            <input type="url" name="image_url" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none text-slate-100 font-mono" placeholder="https://unsplash.com..." />
           </div>
           <div>
             <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Isi Konten Berita</label>
@@ -133,7 +147,7 @@ if (Astro.request.method === "POST") {
           </button>
         </form>
 
-        <!-- FORMULIR INPUT IKLAN (Sembunyi default) -->
+        <!-- FORMULIR INPUT IKLAN -->
         <form id="form-iklan" method="POST" class="space-y-4 hidden">
           <input type="hidden" name="tipe_input" value="iklan" />
           <div>
@@ -161,8 +175,9 @@ if (Astro.request.method === "POST") {
     </div>
   )}
 
-  <!-- 🛠️ PERBAIKAN 2: Script Client Lengkap untuk Operasional Alih Tab Form -->
+  <!-- SCRIPT OPERASIONAL UNTUK ALIH TAB DAN AUTO-GENERATE SLUG -->
   <script is:inline>
+    // Fungsi ganti Tab Form
     function switchTab(type) {
       const formBerita = document.getElementById('form-berita');
       const formIklan = document.getElementById('form-iklan');
@@ -181,6 +196,23 @@ if (Astro.request.method === "POST") {
         btnIklan.className = "w-full py-2 bg-emerald-600 text-white rounded-lg transition";
       }
     }
+
+    // Otomatis membuat teks slug saat admin mengetik Judul Berita
+    document.addEventListener("DOMContentLoaded", () => {
+      const judulInput = document.getElementById('input-judul');
+      const slugInput = document.getElementById('input-slug');
+
+      if(judulInput && slugInput) {
+        judulInput.addEventListener('input', () => {
+          const teksSlug = judulInput.value
+            .toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, '') // Hapus karakter simbol luar
+            .replace(/\s+/g, '-')         // Ganti spasi dengan tanda -
+            .replace(/-+/g, '-');         // Cegah tanda - ganda
+          slugInput.value = teksSlug;
+        });
+      }
+    });
   </script>
 </body>
 </html>
