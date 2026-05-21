@@ -24,10 +24,10 @@ try {
   postingan = dataSupabase;
   sumberData = "Supabase Database (Utama)";
 
-} catch (mainError) {
+} catch (mainError: any) {
   // 2. STRATEGI CADANGAN: Jika Supabase Gagal/Kosong, Ambil dari GitHub JSON
   try {
-    // 🛠️ PERBAIKAN: Menggunakan domain raw.githubusercontent.com dan penulisan variable ${} yang benar
+    // 🛠️ PERBAIKAN UTAMA: Menggunakan domain mentah raw.githubusercontent.com dan format `${}` yang benar
     const githubResponse = await fetch(
       `https://githubusercontent.com{GITHUB_USERNAME}/${REPO_NAME}/main/${FILE_PATH}`,
       { headers: { 'Accept': 'application/vnd.github.v3.raw' } }
@@ -38,10 +38,10 @@ try {
     }
 
     const dataJson = await githubResponse.json();
-    postingan = dataJson.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    postingan = dataJson.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     sumberData = "GitHub Repository (Cadangan)";
     
-  } catch (fallbackError) {
+  } catch (fallbackError: any) {
     errorSistem = `Kedua sumber gagal. Supabase: ${mainError.message} | GitHub: ${fallbackError.message}`;
   }
 }
@@ -126,13 +126,13 @@ const semuaBeritaSisa = postingan && postingan.length > 1 ? postingan.slice(1) :
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        <!-- KOLOM KIRI & TENGAH: Berita Utama & Aliran Semua Berita -->
+        <!-- KOLOM KIRI & TENGAH -->
         <div class="lg:col-span-2 space-y-6">
           <div class="border-b-2 border-slate-800 pb-1">
             <h2 class="bg-slate-800 text-white px-3 py-1 text-xs font-bold uppercase tracking-wider inline-block">Berita Teratas</h2>
           </div>
 
-          <!-- Headline Utama Berita Paling Baru -->
+          <!-- Headline Utama -->
           {beritaUtama ? (
             <article class="bg-white rounded border border-gray-200 shadow-sm overflow-hidden group mb-6">
               <div class="h-64 sm:h-80 bg-slate-800 flex items-center justify-center relative overflow-hidden">
@@ -145,7 +145,7 @@ const semuaBeritaSisa = postingan && postingan.length > 1 ? postingan.slice(1) :
               <div class="p-6">
                 <div class="text-xs text-gray-500 mb-2">⏱️ {beritaUtama.created_at ? new Date(beritaUtama.created_at).toLocaleDateString('id-ID') : 'Baru Saja'} • Oleh Redaksi</div>
                 <h3 class="text-2xl sm:text-3xl font-bold text-gray-900 group-hover:text-red-600 transition mb-3 leading-tight">
-                  <a href={`/berita/${beritaUtama.id}`}>{beritaUtama.judul}</a>
+                  <a href={`/${beritaUtama.slug || beritaUtama.id}`}>{beritaUtama.judul}</a>
                 </h3>
                 <p class="text-gray-600 text-sm leading-relaxed line-clamp-3">
                   {beritaUtama.konten}
@@ -188,7 +188,7 @@ const semuaBeritaSisa = postingan && postingan.length > 1 ? postingan.slice(1) :
                     <div>
                       <span class="text-[10px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded uppercase">{berita.kategori || 'Info'}</span>
                       <h4 class="font-bold text-gray-900 group-hover:text-red-600 transition text-base mt-2 line-clamp-2">
-                        <a href={`/berita/${berita.id}`}>{berita.judul}</a>
+                        <a href={`/${berita.slug || berita.id}`}>{berita.judul}</a>
                       </h4>
                       <p class="text-gray-500 text-xs mt-1 line-clamp-2">{berita.konten}</p>
                     </div>
@@ -205,7 +205,7 @@ const semuaBeritaSisa = postingan && postingan.length > 1 ? postingan.slice(1) :
 
         </div>
 
-        <!-- KOLOM KANAN: Sidebar Info & Iklan Atas -->
+        <!-- KOLOM KANAN: Sidebar -->
         <div class="space-y-6">
           <div class="border-b-2 border-slate-800 pb-1">
             <h2 class="bg-slate-800 text-white px-3 py-1 text-xs font-bold uppercase tracking-wider inline-block">Sponsor</h2>
@@ -227,12 +227,9 @@ const semuaBeritaSisa = postingan && postingan.length > 1 ? postingan.slice(1) :
       </div>
     </main>
 
-    <footer class="bg-slate-900 text-gray-400 text-xs py-8 mt-12 border-t-4 border-slate-950">
-      <div class="max-w-6xl mx-auto px-4 text-center space-y-2">
-        <p class="font-bold text-white text-sm">NUSA MEDIA ONLINE</p>
-        <p>&copy; {new Date().getFullYear()} - Hak Cipta Dilindungi.</p>
-      </div>
+    <footer class="bg-slate-900 text-gray-400 text-xs py-6 mt-12 text-center">
+      <p class="font-bold text-white mb-1">NUSA MEDIA ONLINE</p>
+      <p>&copy; {new Date().getFullYear()} Hak Cipta Dilindungi.</p>
     </footer>
-
   </body>
 </html>
