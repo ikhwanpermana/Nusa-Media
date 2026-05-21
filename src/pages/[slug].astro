@@ -1,34 +1,37 @@
 ---
-// ✨ PERBAIKAN 1: Wajib tambahkan ini karena output project Anda di Netlify adalah Mode Server (SSR)
+// 1. Wajib aktifkan prerender agar halaman statis cepat diakses pembaca
 export const prerender = true;
 
-// 1. Fungsi Wajib Astro Statis: Daftarkan semua slug berita yang ada di Supabase
+// 2. Daftarkan semua parameter slug yang tersedia di database Supabase saat build
 export async function getStaticPaths() {
   const SUPABASE_PROJECT_ID = "zmvlvzspjohrewjbtfxc";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inptdmx2enNwam9ocmV3amJ0ZnhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMTM0MTAsImV4cCI6MjA5NDU4OTQxMH0.PtTVq_b4gLonRpNSbPYKncoXlGVS1lKaADy74dbhuSI";
   
   try {
-    // 🛠️ CATATAN: Pastikan nama tabel di Supabase Anda adalah 'artikel' atau 'berita'. Di sini disesuaikan dengan kode Anda yaitu 'berita'
-    const response = await fetch(`https://${SUPABASE_PROJECT_ID}.supabase.co/rest/v1/berita?select=id`, {
+    // Menarik kolom 'slug' dari tabel artikel Anda
+    const response = await fetch(`https://${SUPABASE_PROJECT_ID}.supabase.co/rest/v1/artikel?select=slug`, {
       headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
     });
-    const daftarBerita = await response.json();
+    const daftarArtikel = await response.json();
     
-    if (!Array.isArray(daftarBerita)) {
-      console.error("Data dari Supabase bukan Array:", daftarBerita);
+    if (!Array.isArray(daftarArtikel)) {
+      console.error("Gagal memuat daftar slug dari Supabase:", daftarArtikel);
       return [];
     }
 
-    return daftarBerita.map((berita) => ({
-      params: { slug: berita.id.toString() },
-    }));
+    // Filter data agar slug yang kosong atau null tidak menyebabkan error build
+    return daftarArtikel
+      .filter((artikel) => artikel.slug)
+      .map((artikel) => ({
+        params: { slug: artikel.slug.toString() },
+      }));
   } catch (error) {
-    console.error("Gagal membuat rute artikel:", error);
+    console.error("Gagal membuat rute statis slug:", error);
     return [];
   }
 }
 
-// 2. Ambil parameter slug dari URL
+// 3. Tangkap variabel slug dari URL halaman aktif
 const { slug } = Astro.params;
 ---
 
@@ -47,15 +50,18 @@ const { slug } = Astro.params;
   </head>
   <body class="bg-gray-100 text-gray-900 antialiased min-h-screen">
     
+    <!-- Tombol Navigasi Kembali -->
     <div class="max-w-3xl mx-auto px-4 pt-10">
       <a href="/" class="text-xs font-bold text-red-600 hover:text-red-700 transition flex items-center gap-1">
         ← Kembali ke Beranda
       </a>
     </div>
 
+    <!-- Wadah Konten Utama Berita -->
     <main class="max-w-3xl mx-auto px-4 py-6">
-      <!-- Wadah Konten Utama -->
       <article id="kontenArtikel" class="bg-white rounded-lg border border-gray-200 p-6 sm:p-8 shadow-sm space-y-6">
+        
+        <!-- Animasi Skeleton Pemuatan Awal (Akan hilang jika data sukses di-fetch) -->
         <div class="space-y-4 animate-pulse">
           <div class="h-4 bg-gray-200 rounded w-1/4"></div>
           <div class="h-8 bg-gray-200 rounded w-3/4"></div>
@@ -64,13 +70,13 @@ const { slug } = Astro.params;
           <div class="space-y-2">
             <div class="h-4 bg-gray-200 rounded w-full"></div>
             <div class="h-4 bg-gray-200 rounded w-full"></div>
-            <div class="h-4 bg-gray-200 rounded w-5/6"></div>
           </div>
         </div>
+
       </article>
     </main>
 
-    <!-- KONEKSI CLIENT-SIDE KE SUPABASE -->
+    <!-- KONEKSI CLIENT-SIDE LIVE KE SUPABASE BERDASARKAN SLUG -->
     <script is:inline define:vars={{ slug }}>
       const container = document.getElementById('kontenArtikel');
       
@@ -79,11 +85,14 @@ const { slug } = Astro.params;
 
       async function ambilDetailBerita() {
         try {
-          const response = await fetch(`https://${SUPABASE_PROJECT_ID}.supabase.co/rest/v1/berita?id=eq.${slug}&select=*`, {
+          // 🛠️ MENCARI DATA BERDASARKAN KOLOM SLUG DI DATABASE
+          const response = await fetch(`https://${SUPABASE_PROJECT_ID}.supabase.co/rest/v1/artikel?slug=eq.${slug}&select=*`, {
             headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
           });
           const data = await response.json();
-          const berita = data[0];
+          
+          // Mengambil objek pertama hasil penyaringan array database
+          const berita = data && data.length > 0 ? data[0] : null;
 
           if (!berita) {
             container.innerHTML = `
@@ -95,14 +104,15 @@ const { slug } = Astro.params;
             return;
           }
 
-          // 🛠️ PERBAIKAN 2: Fallback Properti Objek agar Cocok dengan Nama Kolom Database Anda
+          // Atur data teks & gambar cadangan jika properti kolom bernilai kosong
           const judulArtikel = berita.judul || 'Tanpa Judul';
           const kategoriArtikel = berita.kategori || 'UMUM';
           const penulisArtikel = berita.penulis || 'Redaksi';
           const kontenArtikel = berita.konten || 'Tidak ada isi konten.';
-          const gambarArtikel = berita.url_gambar || berita.image_url || "https://unsplash.com";
+          const gambarArtikel = berita.image_url || berita.url_gambar || "https://unsplash.com";
           const tanggalArtikel = berita.created_at ? new Date(berita.created_at).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'Baru saja';
 
+          // Inject html data berita asli menggantikan element skeleton loading
           container.innerHTML = `
             <div class="space-y-4">
               <span class="bg-red-600 text-white text-[10px] font-bold px-2.5 py-1 rounded uppercase tracking-wider inline-block">
@@ -114,7 +124,7 @@ const { slug } = Astro.params;
                 <span>📅 ${tanggalArtikel}</span>
               </div>
               <div class="overflow-hidden rounded-xl bg-slate-800">
-                <img src="${gambarArtikel}" alt="${judulArtikel}" class="w-full h-auto max-h-96 object-cover mx-auto shadow-xs" />
+                <img src="${gambarArtikel}" alt="${judulArtikel}" class="w-full h-auto max-h-96 object-cover mx-auto" />
               </div>
               <p class="text-gray-800 text-base leading-relaxed whitespace-pre-line pt-4 font-normal">${kontenArtikel}</p>
             </div>
@@ -122,12 +132,13 @@ const { slug } = Astro.params;
         } catch (error) {
           container.innerHTML = `
             <div class="text-center py-12">
-              <p class="text-red-500 font-medium">Gagal memuat artikel secara live. Silakan segarkan halaman.</p>
+              <p class="text-red-500 font-medium">Gagal memuat artikel secara live. Silakan periksa koneksi Anda.</p>
             </div>
           `;
         }
       }
 
+      // Jalankan fungsi fetch otomatis saat browser memuat halaman
       ambilDetailBerita();
     </script>
   </body>

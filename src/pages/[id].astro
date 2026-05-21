@@ -1,7 +1,7 @@
 ---
 import { supabase } from '../lib/supabase';
 
-// Menangkap kunci rahasia admin dari URL (Misalnya: ://nusamedia.com)
+// Menangkap kunci rahasia admin dari URL (Sesuai nama file [id].astro)
 const { id: adminKey } = Astro.params;
 
 // Tentukan Kunci Rahasia Anda di sini agar tidak sembarang orang bisa input data
@@ -22,6 +22,7 @@ if (Astro.request.method === "POST") {
       const kategori = dataForm.get("kategori");
       const konten = dataForm.get("konten");
 
+      // ✨ Catatan Keamanan: Pastikan nama tabel di Supabase Anda adalah 'artikel'
       const { error } = await supabase
         .from('artikel')
         .insert([{ judul, kategori, konten }]);
@@ -44,8 +45,10 @@ if (Astro.request.method === "POST") {
       statusPesan = "Iklan komersial baru berhasil dipasang!";
       tipePesan = "sukses";
     }
-  } catch (err: any) {
-    statusPesan = `Gagal menyimpan data: ${err.message}`;
+  } catch (err) {
+    // 🛠️ PERBAIKAN 1: Menghapus ': any' agar tidak memicu strict type error saat rilis di Netlify
+    const pesanError = err instanceof Error ? err.message : "Terjadi kesalahan sistem";
+    statusPesan = `Gagal menyimpan data: ${pesanError}`;
     tipePesan = "gagal";
   }
 }
@@ -57,7 +60,8 @@ if (Astro.request.method === "POST") {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sistem Input Nusa-Media</title>
   <link rel="preconnect" href="https://googleapis.com">
-  <link href="https://googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://tailwindcss.com"></script>
   <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen p-4 sm:p-8">
@@ -92,7 +96,7 @@ if (Astro.request.method === "POST") {
       )}
 
       <!-- KARTU FORMULIR -->
-      <div class="bg-slate-800 border border-slate-700/60 rounded-2xl p-6 shadow-xl" x-data="{ tab: 'berita' }">
+      <div class="bg-slate-800 border border-slate-700/60 rounded-2xl p-6 shadow-xl">
         
         <!-- Pemilih Tab Input -->
         <div class="flex bg-slate-900 p-1.5 rounded-xl gap-2 mb-6 text-sm font-bold">
@@ -109,7 +113,7 @@ if (Astro.request.method === "POST") {
           <input type="hidden" name="tipe_input" value="berita" />
           <div>
             <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Judul Berita</label>
-            <input type="text" name="judul" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none" placeholder="Masukkan judul berita terhangat..." />
+            <input type="text" name="judul" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none text-slate-100" placeholder="Masukkan judul berita terhangat..." />
           </div>
           <div>
             <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Kategori Wilayah / Rubrik</label>
@@ -122,7 +126,7 @@ if (Astro.request.method === "POST") {
           </div>
           <div>
             <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Isi Konten Berita</label>
-            <textarea name="konten" rows="8" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none" placeholder="Ketik isi berita lengkap di sini..."></textarea>
+            <textarea name="konten" rows="8" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none text-slate-100" placeholder="Ketik isi berita lengkap di sini..."></textarea>
           </div>
           <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-indigo-600/20 transition-all text-sm mt-2">
             Terbitkan Berita Sekarang
@@ -134,11 +138,11 @@ if (Astro.request.method === "POST") {
           <input type="hidden" name="tipe_input" value="iklan" />
           <div>
             <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Teks / Nama Iklan</label>
-            <input type="text" name="konten_teks" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none" placeholder="Contoh: Ucapan Selamat Hari Jadi Kabupaten..." />
+            <input type="text" name="konten_teks" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none text-slate-100" placeholder="Contoh: Ucapan Selamat Hari Jadi Kabupaten..." />
           </div>
           <div>
             <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Link Tujuan Iklan (URL Sponsor)</label>
-            <input type="url" name="link_tujuan" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none" placeholder="https://instansidaerah.go.id" />
+            <input type="url" name="link_tujuan" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none text-slate-100" placeholder="https://instansidaerah.go.id" />
           </div>
           <div>
             <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Posisi Slot Penempatan Iklan</label>
@@ -157,22 +161,22 @@ if (Astro.request.method === "POST") {
     </div>
   )}
 
-  <!-- Script Ringan Client untuk Berpindah Tab Form -->
+  <!-- 🛠️ PERBAIKAN 2: Script Client Lengkap untuk Operasional Alih Tab Form -->
   <script is:inline>
     function switchTab(type) {
-      const fBerita = document.getElementById('form-berita');
-      const fIklan = document.getElementById('form-iklan');
+      const formBerita = document.getElementById('form-berita');
+      const formIklan = document.getElementById('form-iklan');
       const btnBerita = document.getElementById('btn-berita');
       const btnIklan = document.getElementById('btn-iklan');
-
+      
       if (type === 'berita') {
-        fBerita.classList.remove('hidden');
-        fIklan.classList.add('hidden');
+        formBerita.classList.remove('hidden');
+        formIklan.classList.add('hidden');
         btnBerita.className = "w-full py-2 bg-indigo-600 text-white rounded-lg transition";
         btnIklan.className = "w-full py-2 text-slate-400 hover:text-white rounded-lg transition";
       } else {
-        fBerita.classList.add('hidden');
-        fIklan.classList.remove('hidden');
+        formBerita.classList.add('hidden');
+        formIklan.classList.remove('hidden');
         btnBerita.className = "w-full py-2 text-slate-400 hover:text-white rounded-lg transition";
         btnIklan.className = "w-full py-2 bg-emerald-600 text-white rounded-lg transition";
       }
