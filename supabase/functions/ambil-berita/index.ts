@@ -7,20 +7,28 @@ console.info("Robot NewsAPI Nusa Media dengan Jalur Proksi dimulai");
 export default {
   fetch: withSupabase({ auth: ["secret"] }, async (req, ctx) => {
     try {
-      // 1. Ambil API Key NewsAPI Anda dari rahasia cloud Supabase
+      // 1. Ambil API Key dari rahasia cloud Supabase
       const NEWS_API_KEY = Deno.env.get('NEWS_API_KEY') ?? '';
       const supabase = ctx.supabase;
 
-      // Alamat asli NewsAPI yang ingin kita tuju
+      if (!NEWS_API_KEY) {
+        throw new Error("Kunci rahasia NEWS_API_KEY belum diatur di dashboard Supabase!");
+      }
+
+      // Alamat asli NewsAPI lengkap dengan kategori berita bisnis/tren Indonesia
       const urlAsli = `https://newsapi.org{NEWS_API_KEY}`;
 
-      // 2. Tembak melalui proksi "allorigins" untuk mengelabui deteksi cloud NewsAPI
-      const responProxy = await fetch(
-        `https://allorigins.win{encodeURIComponent(urlAsli)}`
-      );
+      // 2. Tembak melalui proksi allorigins dengan format parameter yang benar (?url=)
+      const urlProxy = `https://allorigins.win{encodeURIComponent(urlAsli)}`;
+      const responProxy = await fetch(urlProxy);
+      
+      if (!responProxy.ok) {
+        throw new Error(`Gagal menghubungi server proksi: ${responProxy.statusText}`);
+      }
+
       const dataProxy = await responProxy.json();
       
-      // Mengubah string teks hasil proksi kembali menjadi format JSON data berita
+      // Mengubah string teks hasil proksi kembali menjadi format JSON data berita asli
       const dataNews = JSON.parse(dataProxy.contents);
 
       if (!dataNews || dataNews.status === "error") {
@@ -41,6 +49,7 @@ export default {
         if (!artikel.title || !artikel.description) continue;
         if (setJudulAda.has(artikel.title)) continue; 
 
+        // Pembuatan slug otomatis ramah SEO mesin pencari Google
         const slug = artikel.title
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, '-')
@@ -53,7 +62,7 @@ export default {
           ringkasan: artikel.description,
           sumber: artikel.source.name || "Nusa Media Regional",
           url_sumber: artikel.url,
-          gambar_url: artikel.urlToImage || "https://unsplash.com",
+          gambar_url: artikel.urlToImage || "https://unsplash.com", // Gambar cadangan elegan jika kosong
           id_video_youtube: "dQw4w9WgXcQ", 
           status: "Terbit", 
           is_utama: false
