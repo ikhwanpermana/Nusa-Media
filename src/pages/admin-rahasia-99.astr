@@ -1,0 +1,117 @@
+<!-- PASTE KODE INTEGRASI SUPABASE INI DI BAGIAN PALING BAWAH FILE ADMIN-RAHASIA-99.ASTRO -->
+<script>
+  import { supabase } from '../lib/supabase';
+
+  // ============================================================
+  // LOGIKA 1: OTOMATIS MEMBUAT SLUG SAAT JUDUL DIKETIK
+  // ============================================================
+  const inputJudul = document.getElementById('judul') as HTMLInputElement;
+  const inputSlug = document.getElementById('slug') as HTMLInputElement;
+
+  inputJudul?.addEventListener('input', () => {
+    if (inputSlug) {
+      // Mengubah huruf kecil, mengganti spasi jadi tanda strip, dan menghapus simbol aneh
+      inputSlug.value = inputJudul.value
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '') // Hapus karakter non-alfanumerik
+        .replace(/\s+/g, '-')         // Ganti spasi dengan strip
+        .replace(/-+/g, '-')          // Hapus strip ganda berlebih
+        .trim();
+    }
+  });
+
+
+  // ============================================================
+  // LOGIKA 2: KIRIM FORM INPUT BERITA BARU KE SUPABASE
+  // ============================================================
+  const formBerita = document.querySelector('form:nth-of-type(1)'); // Form pertama (Berita)
+  
+  formBerita?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const btnSubmitBerita = formBerita.querySelector('button[type="submit"]') as HTMLButtonElement;
+    const teksAsli = btnSubmitBerita.innerText;
+    
+    btnSubmitBerita.disabled = true;
+    btnSubmitBerita.innerText = "Sedang Menerbitkan... ⏳";
+
+    // Mengambil nilai variabel dari form
+    const judul = inputJudul.value;
+    const slug = inputSlug.value;
+    const ringkasan = (document.getElementById('ringkasan') as HTMLInputElement).value;
+    const isi_konten = (document.getElementById('isi_konten') as HTMLTextAreaElement).value;
+    const kategori = (document.getElementById('kategori') as HTMLSelectElement).value;
+    const gambar_url = (document.getElementById('gambar_url') as HTMLInputElement).value;
+    const penulis = (document.getElementById('penulis') as HTMLInputElement).value || "Redaksi Nusa Media";
+
+    // Masukkan data ke tabel 'berita' Supabase
+    const { error } = await supabase
+      .from('berita')
+      .insert([
+        { 
+          judul, 
+          slug, 
+          ringkasan, 
+          isi_konten, 
+          kategori, 
+          gambar_url, 
+          penulis,
+          created_at: new Date() 
+        }
+      ]);
+
+    if (error) {
+      alert("Gagal menerbitkan berita: " + error.message);
+    } else {
+      alert("🎉 Berita Berhasil Diterbitkan & URL Slug Terbentuk!");
+      (formBerita as HTMLFormElement).reset(); // Reset form setelah sukses
+    }
+
+    btnSubmitBerita.disabled = false;
+    btnSubmitBerita.innerText = teksAsli;
+  });
+
+
+  // ============================================================
+  // LOGIKA 3: KIRIM FORM PASANG IKLAN KE SUPABASE
+  // ============================================================
+  const formIklan = document.querySelector('form:nth-of-type(2)'); // Form kedua (Iklan)
+
+  formIklan?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const btnSubmitIklan = formIklan.querySelector('button[type="submit"]') as HTMLButtonElement;
+    const teksAsliIklan = btnSubmitIklan.innerText;
+    
+    btnSubmitIklan.disabled = true;
+    btnSubmitIklan.innerText = "Memasang Iklan... ⏳";
+
+    const konten_teks = (document.getElementById('konten_teks') as HTMLInputElement).value;
+    const link_tujuan = (document.getElementById('link_tujuan') as HTMLInputElement).value;
+    const posisi = (document.getElementById('posisi') as HTMLSelectElement).value;
+    const status = (document.getElementById('status') as HTMLSelectElement).value;
+
+    // Masukkan data ke tabel 'iklan' Supabase
+    const { error } = await supabase
+      .from('iklan')
+      .insert([
+        { 
+          konten_teks, 
+          link_tujuan, 
+          posisi, 
+          status,
+          created_at: new Date() 
+        }
+      ]);
+
+    if (error) {
+      alert("Gagal memasang iklan: " + error.message);
+    } else {
+      alert("🎉 Iklan Komersial Berhasil Dipasang!");
+      (formIklan as HTMLFormElement).reset(); // Reset form iklan
+    }
+
+    btnSubmitIklan.disabled = false;
+    btnSubmitIklan.innerText = teksAsliIklan;
+  });
+</script>
