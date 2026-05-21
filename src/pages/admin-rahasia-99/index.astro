@@ -1,11 +1,6 @@
 ---
-// src/pages/admin-rahasia-99.astro
-// Memaksa Astro merakit halaman kontrol ini menjadi file HTML statis utuh di Vercel
-export const prerender = true;
-
-export function getStaticPaths() {
-  return [{ params: {} }];
-}
+// src/pages/admin-rahasia-99/index.astro
+export const prerender = true; // WAJIB DI MODE STATIS: Agar lolos build tanpa kendala adapter
 ---
 <html lang="id">
   <head>
@@ -115,9 +110,9 @@ export function getStaticPaths() {
 
     </div>
 
-    <!-- LOGIKA SINKRONISASI BACKEND MURNI CLIENT-SIDE -->
+    <!-- LOGIKA SINKRONISASI BROWSER (CLIENT-SIDE) -->
     <script>
-      import { supabase } from '../lib/supabase';
+      import { supabase } from '../../lib/supabase'; // Menyesuaikan path impor karena naik 1 folder (../../)
 
       const inputJudul = document.getElementById('judul') as HTMLInputElement;
       const inputSlug = document.getElementById('slug') as HTMLInputElement;
