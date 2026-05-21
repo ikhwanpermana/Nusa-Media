@@ -2,9 +2,9 @@
 import { supabase } from '../lib/supabase';
 
 // ⚙️ KONFIGURASI GITHUB CADANGAN (FALLBACK)
-const GITHUB_USERNAME = "ikhwanpermana"; // 👈 Ganti dengan username GitHub Anda
-const REPO_NAME = "gh repo clone ikhwanpermana/Nusa-Media";       // 👈 Ganti dengan nama repositori proyek Anda
-const FILE_PATH = "data/berita.json";            // 👈 Jalur file berita JSON di GitHub
+const GITHUB_USERNAME = "ikhwanpermana"; 
+const REPO_NAME = "Nusa-Media";          
+const FILE_PATH = "data/berita.json";    
 
 let postingan = [];
 let sumberData = "Supabase Database";
@@ -27,6 +27,7 @@ try {
 } catch (mainError) {
   // 2. STRATEGI CADANGAN: Jika Supabase Gagal/Kosong, Ambil dari GitHub JSON
   try {
+    // 🛠️ PERBAIKAN: Menggunakan domain raw.githubusercontent.com dan penulisan variable ${} yang benar
     const githubResponse = await fetch(
       `https://githubusercontent.com{GITHUB_USERNAME}/${REPO_NAME}/main/${FILE_PATH}`,
       { headers: { 'Accept': 'application/vnd.github.v3.raw' } }
@@ -45,7 +46,7 @@ try {
   }
 }
 
-// 3. AMBIL DATA IKLAN (Tetap via Supabase dengan pengaman jika gagal)
+// 3. AMBIL DATA IKLAN
 let iklanSidebarAtas = null;
 let iklanTengah = null;
 
@@ -55,10 +56,9 @@ try {
   iklanSidebarAtas = adSidebar;
   iklanTengah = adTengah;
 } catch (e) {
-  // Biarkan null jika database iklan supasbase offline
+  // Offline fallback aman
 }
 
-// Memisahkan Berita Utama (Teratas) dan Berita Sisa
 const beritaUtama = postingan && postingan.length > 0 ? postingan[0] : null;
 const semuaBeritaSisa = postingan && postingan.length > 1 ? postingan.slice(1) : [];
 ---
@@ -71,7 +71,7 @@ const semuaBeritaSisa = postingan && postingan.length > 1 ? postingan.slice(1) :
     <script src="https://tailwindcss.com"></script>
     <link rel="preconnect" href="https://googleapis.com">
     <link rel="preconnect" href="https://gstatic.com" crossorigin>
-    <link href="https://googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>
       body { font-family: 'Roboto', sans-serif; }
     </style>
@@ -169,92 +169,70 @@ const semuaBeritaSisa = postingan && postingan.length > 1 ? postingan.slice(1) :
                 <span class="text-xs bg-emerald-600 text-white font-bold px-3 py-1.5 rounded whitespace-nowrap">Kunjungi Situs ↗</span>
               </a>
             ) : (
-              <div class="w-full bg-emerald-50 border border-emerald-200 rounded p-4 text-center text-xs text-emerald-700 font-semibold">
-                SPACE IKLAN KEMITRAAN / ADVERTORIAL DAERAH
+              <div class="w-full bg-slate-50 border border-dashed border-gray-300 p-4 text-center text-gray-400 text-xs rounded">
+                Space Iklan Tengah Tersedia
               </div>
             )}
           </div>
 
-          <!-- DAFTAR ALIRAN SEMUA BERITA SISA -->
-          <div class="border-b border-gray-200 pb-1 mt-6">
-            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Indeks Arsip Berita Terbit</h3>
-          </div>
-          
-          <div class="grid gap-4 sm:grid-cols-2">
+          <!-- Aliran Sisa Berita Lainnya -->
+          <div class="space-y-4 pt-4">
+            <div class="border-b border-gray-200 pb-1">
+              <h3 class="text-gray-700 text-sm font-bold uppercase tracking-wider">Berita Nusantara Lainnya</h3>
+            </div>
+            
             {semuaBeritaSisa.length > 0 ? (
-              semuaBeritaSisa.map((item) => (
-                <div class="bg-white p-4 border border-gray-200 rounded shadow-sm flex flex-col justify-between group">
-                  <div>
-                    <span class="text-[10px] uppercase font-bold text-red-600 tracking-wider block mb-1">{item.kategori || 'Berita'}</span>
-                    <h4 class="font-bold text-sm text-gray-900 group-hover:text-red-600 line-clamp-2 mb-2">
-                      <a href={`/berita/${item.id}`}>{item.judul}</a>
-                    </h4>
-                    <p class="text-gray-500 text-xs line-clamp-2 mt-1">{item.konten}</p>
-                  </div>
-                  <span class="text-[10px] text-gray-400 block mt-3">⏱️ {item.created_at ? new Date(item.created_at).toLocaleDateString('id-ID') : 'Baru saja'}</span>
-                </div>
-              ))
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {semuaBeritaSisa.map((berita) => (
+                  <article class="bg-white border border-gray-200 rounded shadow-sm overflow-hidden flex flex-col justify-between p-4 hover:shadow-md transition group">
+                    <div>
+                      <span class="text-[10px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded uppercase">{berita.kategori || 'Info'}</span>
+                      <h4 class="font-bold text-gray-900 group-hover:text-red-600 transition text-base mt-2 line-clamp-2">
+                        <a href={`/berita/${berita.id}`}>{berita.judul}</a>
+                      </h4>
+                      <p class="text-gray-500 text-xs mt-1 line-clamp-2">{berita.konten}</p>
+                    </div>
+                    <div class="text-[10px] text-gray-400 mt-4">
+                      ⏱️ {berita.created_at ? new Date(berita.created_at).toLocaleDateString('id-ID') : 'Baru'}
+                    </div>
+                  </article>
+                ))}
+              </div>
             ) : (
-              <p class="text-xs text-gray-400 col-span-2 py-4 text-center">Belum ada daftar arsip berita tambahan di database.</p>
+              <p class="text-gray-500 text-xs italic">Tidak ada berita tambahan.</p>
             )}
           </div>
+
         </div>
 
-        <!-- KOLOM KANAN: Sidebar & Slot Iklan -->
+        <!-- KOLOM KANAN: Sidebar Info & Iklan Atas -->
         <div class="space-y-6">
-          <div class="border-b-2 border-red-600 pb-1">
-            <h2 class="bg-red-600 text-white px-3 py-1 text-xs font-bold uppercase tracking-wider inline-block">Info Kemitraan</h2>
+          <div class="border-b-2 border-slate-800 pb-1">
+            <h2 class="bg-slate-800 text-white px-3 py-1 text-xs font-bold uppercase tracking-wider inline-block">Sponsor</h2>
           </div>
 
-          <!-- Slot Iklan Sidebar Atas -->
-          <div class="bg-white p-4 border border-gray-200 rounded shadow-sm">
-            {iklanSidebarAtas ? (
-              <div class="space-y-2">
-                <span class="bg-amber-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">Sponsor Utama</span>
-                <p class="text-sm font-semibold text-gray-800">{iklanSidebarAtas.konten_teks}</p>
-                <a href={iklanSidebarAtas.link_tujuan} target="_blank" class="block text-center text-xs bg-slate-900 text-white py-2 rounded font-medium hover:bg-red-600 transition">
-                  Cek Selengkapnya ↗
-                </a>
-              </div>
-            ) : (
-              <div class="border-2 border-dashed border-gray-200 text-center p-6 text-xs text-gray-400 rounded">
-                Slot Iklan Kanan Atas Tersedia
-              </div>
-            )}
-          </div>
-
-          <!-- Info Redaksi Tambahan -->
-          <div class="bg-slate-900 text-white p-4 rounded shadow-sm">
-            <h3 class="font-bold text-sm text-red-500 mb-1">Hubungi Redaksi</h3>
-            <p class="text-xs text-gray-300 leading-relaxed">
-              Anda bisa memperbarui berita langsung dari dasbor **Supabase** (Real-time otomatis) atau mengubah file rahasia <code class="bg-slate-800 text-yellow-400 px-1 rounded">data/berita.json</code> di **GitHub** lewat VS Code lokal.
-            </p>
-            <div class="mt-4 pt-2 border-t border-slate-800 text-[10px] text-gray-500 font-mono flex items-center justify-between">
-              <span>REDUNDANSI SISTEM</span>
-              <span class="text-green-400 font-bold">● AKTIF</span>
+          {iklanSidebarAtas ? (
+            <div class="bg-white border border-gray-200 rounded shadow-sm p-4 text-center">
+              <span class="text-[10px] uppercase font-bold text-gray-400 block mb-2">Advertisement</span>
+              <p class="text-sm font-bold text-slate-800">{iklanSidebarAtas.konten_teks}</p>
+              <a href={iklanSidebarAtas.link_tujuan} target="_blank" class="mt-3 inline-block w-full bg-red-600 text-white text-xs font-bold py-2 rounded hover:bg-red-700 transition">Info Selengkapnya</a>
             </div>
-          </div>
+          ) : (
+            <div class="bg-white border border-dashed border-gray-300 p-8 text-center text-gray-400 text-xs rounded">
+              Space Iklan Sidebar Atas 300x250
+            </div>
+          )}
         </div>
 
       </div>
     </main>
 
-    <!-- Footer Sistem -->
-    <footer class="bg-slate-950 text-gray-500 py-6 mt-12 text-center text-xs border-t border-gray-800">
-      <p>© 2026 Nusa Media Online. Multi-storage Engine Cloud.</p>
+    <footer class="bg-slate-900 text-gray-400 text-xs py-8 mt-12 border-t-4 border-slate-950">
+      <div class="max-w-6xl mx-auto px-4 text-center space-y-2">
+        <p class="font-bold text-white text-sm">NUSA MEDIA ONLINE</p>
+        <p>&copy; {new Date().getFullYear()} - Hak Cipta Dilindungi.</p>
+      </div>
     </footer>
 
-    <!-- KLIEN SUBSCRIPTION: Hanya berjalan jika sumber data berasal dari Supabase -->
-    {sumberData.includes("Supabase") && (
-      <script>
-        import { supabase } from '../lib/supabase';
-        supabase
-          .channel('schema-db-changes')
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'artikel' }, () => {
-              window.location.reload();
-          })
-          .subscribe();
-      </script>
-    )}
   </body>
 </html>

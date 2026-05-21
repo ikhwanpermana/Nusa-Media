@@ -1,0 +1,10 @@
+[
+  {
+    "id": "gh-1",
+    "judul": "Ini Berita Cadangan dari GitHub JSON",
+    "konten": "Isi berita ini otomatis muncul hanya ketika database utama Supabase sedang offline atau mengalami gangguan koneksi.",
+    "kategori": "Nasional",
+    "image_url": "https://unsplash.com",
+    "created_at": "2026-05-21T10:00:00Z"
+  }
+]
