@@ -1,11 +1,29 @@
 ---
 import { supabase } from '../../lib/supabase';
 
-export const prerender = false;
+// Mengaktifkan mode statis sepenuhnya untuk rute ini
+export const prerender = true;
+
+// 1. WAJIB DI MODE STATIS: Daftarkan semua ID berita dari Supabase saat proses build
+export async function getStaticPaths() {
+  const { data: semuaBerita, error } = await supabase
+    .from('berita')
+    .select('id');
+
+  if (error || !semuaBerita) {
+    console.error("Gagal mengambil daftar ID untuk Static Paths:", error);
+    return [];
+  }
+
+  // Mengembalikan array objek params untuk setiap ID berita
+  return semuaBerita.map((berita) => ({
+    params: { id: berita.id.toString() },
+  }));
+}
 
 const { id } = Astro.params;
 
-// Ambil data detail satu berita berdasarkan ID
+// 2. Ambil data detail berita spesifik berdasarkan ID
 const { data: berita, error } = await supabase
   .from('berita')
   .select('*')
@@ -22,10 +40,9 @@ if (error || !berita) {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{berita.judul} | Nusa-Media</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📰</text></svg>">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://googleapis.com">
+    <link rel="preconnect" href="https://gstatic.com" crossorigin>
+    <link href="https://googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>body { font-family: 'Roboto', sans-serif; }</style>
   </head>
   <body class="bg-gray-100 text-gray-900 min-h-screen">
