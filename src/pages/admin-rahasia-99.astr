@@ -1,7 +1,7 @@
 ---
 // src/pages/admin-rahasia-99.astro
-import { supabase } from '../lib/supabase';
-export const prerender = false;
+// WAJIB DI MODE STATIS: Memastikan Astro merakit file ini menjadi berkas HTML statis murni
+export const prerender = true;
 ---
 <html lang="id">
   <head>
@@ -111,7 +111,7 @@ export const prerender = false;
 
     </div>
 
-    <!-- LOGIKA SINKRONISASI BACKEND -->
+    <!-- LOGIKA SINKRONISASI BACKEND MURNI CLIENT-SIDE -->
     <script>
       import { supabase } from '../lib/supabase';
 
@@ -134,6 +134,8 @@ export const prerender = false;
       const formBerita = document.getElementById('form-berita');
       formBerita?.addEventListener('submit', async (e) => {
         e.preventDefault();
+        if (!inputJudul || !inputSlug) return;
+
         const btn = formBerita.querySelector('button[type="submit"]') as HTMLButtonElement;
         btn.disabled = true; btn.innerText = "Mengunggah data... ⏳";
 
@@ -148,8 +150,12 @@ export const prerender = false;
           created_at: new Date()
         }]);
 
-        if (error) { alert("Gagal mengirim: " + error.message); } 
-        else { alert("🎉 Berita Berhasil Ditambahkan!"); (formBerita as HTMLFormElement).reset(); }
+        if (error) { 
+          alert("Gagal mengirim: " + error.message); 
+        } else { 
+          alert("🎉 Berita Berhasil Ditambahkan ke Supabase!\n\nCatatan: Karena web menggunakan mode statis, silakan lakukan Redeploy di Vercel agar berita baru muncul di halaman utama."); 
+          (formBerita as HTMLFormElement).reset(); 
+        }
         btn.disabled = false; btn.innerText = "Terbitkan Berita Sekarang 🚀";
       });
 
@@ -168,8 +174,12 @@ export const prerender = false;
           created_at: new Date()
         }]);
 
-        if (error) { alert("Gagal memasang iklan: " + error.message); } 
-        else { alert("🎉 Iklan Berhasil Dipasang!"); (formIklan as HTMLFormElement).reset(); }
+        if (error) { 
+          alert("Gagal memasang iklan: " + error.message); 
+        } else { 
+          alert("🎉 Iklan Berhasil Dipasang ke Supabase!\n\nLakukan Redeploy di Vercel agar iklan terbaru segera ter-render di website."); 
+          (formIklan as HTMLFormElement).reset(); 
+        }
         btn.disabled = false; btn.innerText = "Pasang Iklan Komersial Sekarang 💸";
       });
     </script>
