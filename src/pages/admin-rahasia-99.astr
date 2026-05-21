@@ -1,7 +1,11 @@
 ---
 // src/pages/admin-rahasia-99.astro
-// WAJIB DI MODE STATIS: Memastikan Astro merakit file ini menjadi berkas HTML statis murni
+// Memaksa Astro merakit halaman kontrol ini menjadi file HTML statis utuh di Vercel
 export const prerender = true;
+
+export function getStaticPaths() {
+  return [{ params: {} }];
+}
 ---
 <html lang="id">
   <head>
@@ -118,7 +122,6 @@ export const prerender = true;
       const inputJudul = document.getElementById('judul') as HTMLInputElement;
       const inputSlug = document.getElementById('slug') as HTMLInputElement;
 
-      // Pembuatan otomatis URL slug ramah SEO saat mengetik judul
       inputJudul?.addEventListener('input', () => {
         if (inputSlug) {
           inputSlug.value = inputJudul.value
@@ -130,12 +133,10 @@ export const prerender = true;
         }
       });
 
-      // Aksi pengiriman form berita
       const formBerita = document.getElementById('form-berita');
       formBerita?.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (!inputJudul || !inputSlug) return;
-
         const btn = formBerita.querySelector('button[type="submit"]') as HTMLButtonElement;
         btn.disabled = true; btn.innerText = "Mengunggah data... ⏳";
 
@@ -150,16 +151,11 @@ export const prerender = true;
           created_at: new Date()
         }]);
 
-        if (error) { 
-          alert("Gagal mengirim: " + error.message); 
-        } else { 
-          alert("🎉 Berita Berhasil Ditambahkan ke Supabase!\n\nCatatan: Karena web menggunakan mode statis, silakan lakukan Redeploy di Vercel agar berita baru muncul di halaman utama."); 
-          (formBerita as HTMLFormElement).reset(); 
-        }
+        if (error) { alert("Gagal mengirim: " + error.message); } 
+        else { alert("🎉 Berita Berhasil Ditambahkan!"); (formBerita as HTMLFormElement).reset(); }
         btn.disabled = false; btn.innerText = "Terbitkan Berita Sekarang 🚀";
       });
 
-      // Aksi pengiriman form iklan
       const formIklan = document.getElementById('form-iklan');
       formIklan?.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -174,12 +170,8 @@ export const prerender = true;
           created_at: new Date()
         }]);
 
-        if (error) { 
-          alert("Gagal memasang iklan: " + error.message); 
-        } else { 
-          alert("🎉 Iklan Berhasil Dipasang ke Supabase!\n\nLakukan Redeploy di Vercel agar iklan terbaru segera ter-render di website."); 
-          (formIklan as HTMLFormElement).reset(); 
-        }
+        if (error) { alert("Gagal memasang iklan: " + error.message); } 
+        else { alert("🎉 Iklan Berhasil Dipasang!"); (formIklan as HTMLFormElement).reset(); }
         btn.disabled = false; btn.innerText = "Pasang Iklan Komersial Sekarang 💸";
       });
     </script>
