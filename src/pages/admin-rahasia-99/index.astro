@@ -1,6 +1,6 @@
 ---
 // src/pages/admin-rahasia-99/index.astro
-export const prerender = true; // WAJIB DI MODE STATIS: Agar lolos build tanpa kendala adapter
+export const prerender = false; // DINAMIS: Menggunakan server-side rendering agar tidak 404 di Vercel akibat Supabase
 ---
 <html lang="id">
   <head>
@@ -112,8 +112,9 @@ export const prerender = true; // WAJIB DI MODE STATIS: Agar lolos build tanpa k
 
     <!-- LOGIKA SINKRONISASI BROWSER (CLIENT-SIDE) -->
     <script>
-      import { supabase } from '../../lib/supabase'; // Menyesuaikan path impor karena naik 1 folder (../../)
+      import { supabase } from '../../lib/supabase';
 
+      // 1. GENERATOR SLUG OTOMATIS
       const inputJudul = document.getElementById('judul') as HTMLInputElement;
       const inputSlug = document.getElementById('slug') as HTMLInputElement;
 
@@ -128,46 +129,83 @@ export const prerender = true; // WAJIB DI MODE STATIS: Agar lolos build tanpa k
         }
       });
 
-      const formBerita = document.getElementById('form-berita');
+      // 2. SUBMIT FORM BERITA KE SUPABASE
+      const formBerita = document.getElementById('form-berita') as HTMLFormElement;
       formBerita?.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (!inputJudul || !inputSlug) return;
+        
         const btn = formBerita.querySelector('button[type="submit"]') as HTMLButtonElement;
-        btn.disabled = true; btn.innerText = "Mengunggah data... ⏳";
+        const textAwal = btn.innerText;
+        btn.disabled = true; 
+        btn.innerText = "Mengunggah berita... ⏳";
 
-        const { error } = await supabase.from('berita').insert([{
-          judul: inputJudul.value,
-          slug: inputSlug.value,
-          ringkasan: (document.getElementById('ringkasan') as HTMLInputElement).value,
-          isi_konten: (document.getElementById('isi_konten') as HTMLTextAreaElement).value,
-          kategori: (document.getElementById('kategori') as HTMLSelectElement).value,
-          gambar_url: (document.getElementById('gambar_url') as HTMLInputElement).value,
-          penulis: (document.getElementById('penulis') as HTMLInputElement).value || "Redaksi",
-          created_at: new Date()
-        }]);
+        const kategori = (document.getElementById('kategori') as HTMLSelectElement).value;
+        const penulis = (document.getElementById('penulis') as HTMLInputElement).value;
+        const gambar_url = (document.getElementById('gambar_url') as HTMLInputElement).value;
+        const ringkasan = (document.getElementById('ringkasan') as HTMLInputElement).value;
+        const isi_konten = (document.getElementById('isi_konten') as HTMLTextAreaElement).value;
 
-        if (error) { alert("Gagal mengirim: " + error.message); } 
-        else { alert("🎉 Berita Berhasil Ditambahkan!"); (formBerita as HTMLFormElement).reset(); }
-        btn.disabled = false; btn.innerText = "Terbitkan Berita Sekarang 🚀";
+        const { error } = await supabase
+          .from('berita')
+          .insert([
+            { 
+              judul: inputJudul.value, 
+              slug: inputSlug.value, 
+              kategori, 
+              penulis, 
+              gambar_url, 
+              ringkasan, 
+              isi_konten 
+            }
+          ]);
+
+        if (error) {
+          alert('Gagal menerbitkan berita: ' + error.message);
+        } else {
+          alert('Berita berhasil diterbitkan! 🚀');
+          formBerita.reset();
+        }
+
+        btn.disabled = false;
+        btn.innerText = textAwal;
       });
 
-      const formIklan = document.getElementById('form-iklan');
+      // 3. SUBMIT FORM IKLAN KE SUPABASE
+      const formIklan = document.getElementById('form-iklan') as HTMLFormElement;
       formIklan?.addEventListener('submit', async (e) => {
         e.preventDefault();
+        
         const btn = formIklan.querySelector('button[type="submit"]') as HTMLButtonElement;
-        btn.disabled = true; btn.innerText = "Memproses iklan... ⏳";
+        const textAwal = btn.innerText;
+        btn.disabled = true; 
+        btn.innerText = "Memasang iklan... ⏳";
 
-        const { error } = await supabase.from('iklan').insert([{
-          konten_teks: (document.getElementById('konten_teks') as HTMLInputElement).value,
-          link_tujuan: (document.getElementById('link_tujuan') as HTMLInputElement).value,
-          posisi: (document.getElementById('posisi') as HTMLSelectElement).value,
-          status: (document.getElementById('status') as HTMLSelectElement).value,
-          created_at: new Date()
-        }]);
+        const konten_teks = (document.getElementById('konten_teks') as HTMLInputElement).value;
+        const link_tujuan = (document.getElementById('link_tujuan') as HTMLInputElement).value;
+        const posisi = (document.getElementById('posisi') as HTMLSelectElement).value;
+        const status = (document.getElementById('status') as HTMLSelectElement).value;
 
-        if (error) { alert("Gagal memasang iklan: " + error.message); } 
-        else { alert("🎉 Iklan Berhasil Dipasang!"); (formIklan as HTMLFormElement).reset(); }
-        btn.disabled = false; btn.innerText = "Pasang Iklan Komersial Sekarang 💸";
+        const { error } = await supabase
+          .from('iklan')
+          .insert([
+            { 
+              konten_teks, 
+              link_tujuan, 
+              posisi, 
+              status 
+            }
+          ]);
+
+        if (error) {
+          alert('Gagal memasang iklan: ' + error.message);
+        } else {
+          alert('Iklan berhasil terpasang! 💸');
+          formIklan.reset();
+        }
+
+        btn.disabled = false;
+        btn.innerText = textAwal;
       });
     </script>
   </body>
