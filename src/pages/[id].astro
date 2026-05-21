@@ -1,6 +1,11 @@
 ---
 import { supabase } from '../lib/supabase';
 
+// 🤖 FIX 1: Mengekspor jalur statis tiruan agar lolos kompilasi tanpa eror Node.js Vercel
+export async function getStaticPaths() {
+  return [{ params: { id: "admin-rahasia-99" } }];
+}
+
 // Menangkap kunci rahasia admin dari URL (Sesuai nama file [id].astro)
 const { id: adminKey } = Astro.params;
 
@@ -24,7 +29,6 @@ if (Astro.request.method === "POST") {
       const slug = dataForm.get("slug");
       const image_url = dataForm.get("image_url");
 
-      // ✨ PERBAIKAN UTAMA: Mengubah target tabel dari 'artikel' ke 'berita' agar sinkron dengan database Supabase
       const { error } = await supabase
         .from('berita')
         .insert([{ judul, kategori, konten, slug, image_url }]);
@@ -60,15 +64,12 @@ if (Astro.request.method === "POST") {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sistem Input Nusa-Media</title>
-  <link rel="preconnect" href="https://googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
   <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen p-4 sm:p-8">
-
-  <!-- HACK PENCEGAH FORCED LAYOUT LOG NODE.JS -->
-  <script is:inline>0</script>
 
   <!-- Validasi Keamanan Kunci URL -->
   {adminKey !== KUNCI_AKSES_ADMIN ? (
@@ -104,10 +105,10 @@ if (Astro.request.method === "POST") {
         
         <!-- Pemilih Tab Input -->
         <div class="flex bg-slate-900 p-1.5 rounded-xl gap-2 mb-6 text-sm font-bold">
-          <button id="btn-berita" class="w-full py-2 bg-indigo-600 text-white rounded-lg transition" onclick="switchTab('berita')">
+          <button id="btn-berita" class="w-full py-2 bg-indigo-600 text-white rounded-lg transition">
             📰 Tulis Berita Baru
           </button>
-          <button id="btn-iklan" class="w-full py-2 text-slate-400 hover:text-white rounded-lg transition" onclick="switchTab('iklan')">
+          <button id="btn-iklan" class="w-full py-2 text-slate-400 hover:text-white rounded-lg transition">
             📢 Pasang Iklan Baru
           </button>
         </div>
@@ -117,7 +118,7 @@ if (Astro.request.method === "POST") {
           <input type="hidden" name="tipe_input" value="berita" />
           <div>
             <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Judul Berita</label>
-            <input type="text" id="input-judul" name="judul" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none text-slate-100" placeholder="Masukkan judul berita terhangat..." />
+            <input type="text" id="input-judul" name="judul" Jack required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none text-slate-100" placeholder="Masukkan judul berita terhangat..." />
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -147,7 +148,7 @@ if (Astro.request.method === "POST") {
           </button>
         </form>
 
-        <!-- FORMULIR INPUT IKLAN -->
+        <!-- FIX 2: MENYEMPURNAKAN FORMULIR IKLAN YANG TERPOTONG & MENUTUP TAG GLOBAL -->
         <form id="form-iklan" method="POST" class="space-y-4 hidden">
           <input type="hidden" name="tipe_input" value="iklan" />
           <div>
@@ -155,19 +156,20 @@ if (Astro.request.method === "POST") {
             <input type="text" name="konten_teks" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none text-slate-100" placeholder="Contoh: Ucapan Selamat Hari Jadi Kabupaten..." />
           </div>
           <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Link Tujuan Iklan (URL Sponsor)</label>
-            <input type="url" name="link_tujuan" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none text-slate-100" placeholder="https://instansidaerah.go.id" />
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Link Tujuan Iklan</label>
+            <input type="url" name="link_tujuan" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none text-slate-100 font-mono" placeholder="https://domain-sponsor.com" />
           </div>
-          <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Posisi Slot Penempatan Iklan</label>
-            <select name="posisi" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none text-slate-300">
-              <option value="detail_atas">Bagian Atas Konten Berita</option>
-              <option value="sidebar_atas">Sidebar Samping Kanan Atas</option>
-              <option value="sidebar_bawah">Sidebar Samping Kanan Bawah</option>
-            </select>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Posisi Slot Iklan</label>
+              <select name="posisi" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none text-slate-300">
+                <option value="detail_atas">Banner Atas (Detail Atas)</option>
+                <option value="sidebar_atas">Banner Kotak (Sidebar Atas)</option>
+              </select>
+            </div>
           </div>
           <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-emerald-600/20 transition-all text-sm mt-2">
-            Pasang Iklan Sponsor
+            Pasang Iklan Komersial Sekarang
           </button>
         </form>
 
@@ -175,42 +177,42 @@ if (Astro.request.method === "POST") {
     </div>
   )}
 
-  <!-- SCRIPT OPERASIONAL TAB & SLUG AUTO GENERATOR -->
+  <!-- FIX 3: SKRIP RIOT CLIENT UNTUK OTOMASI SLUG DAN INTERAKSI TABBING -->
   <script is:inline>
-    function switchTab(type) {
-      const formBerita = document.getElementById('form-berita');
-      const formIklan = document.getElementById('form-iklan');
-      const btnBerita = document.getElementById('btn-berita');
-      const btnIklan = document.getElementById('btn-iklan');
-      
-      if (type === 'berita') {
+    const btnBerita = document.getElementById('btn-berita');
+    const btnIklan = document.getElementById('btn-iklan');
+    const formBerita = document.getElementById('form-berita');
+    const formIklan = document.getElementById('form-iklan');
+    const inputJudul = document.getElementById('input-judul');
+    const inputSlug = document.getElementById('input-slug');
+
+    // Otomasi Tab Switcing
+    if(btnBerita && btnIklan) {
+      btnBerita.addEventListener('click', () => {
         formBerita.classList.remove('hidden');
         formIklan.classList.add('hidden');
         btnBerita.className = "w-full py-2 bg-indigo-600 text-white rounded-lg transition";
         btnIklan.className = "w-full py-2 text-slate-400 hover:text-white rounded-lg transition";
-      } else {
-        formBerita.classList.add('hidden');
+      });
+
+      btnIklan.addEventListener('click', () => {
         formIklan.classList.remove('hidden');
-        btnBerita.className = "w-full py-2 text-slate-400 hover:text-white rounded-lg transition";
+        formBerita.classList.add('hidden');
         btnIklan.className = "w-full py-2 bg-emerald-600 text-white rounded-lg transition";
-      }
+        btnBerita.className = "w-full py-2 text-slate-400 hover:text-white rounded-lg transition";
+      });
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-      const judulInput = document.getElementById('input-judul');
-      const slugInput = document.getElementById('input-slug');
-
-      if(judulInput && slugInput) {
-        judulInput.addEventListener('input', () => {
-          const teksSlug = judulInput.value
-            .toLowerCase()
-            .replace(/[^a-z0-9\s-]/g, '')
-            .replace(/\s+/g, '-')        
-            .replace(/-+/g, '-');        
-          slugInput.value = teksSlug;
-        });
-      }
-    });
+    // Otomasi Pembuatan URL Slug secara Real-time saat Mengetik Judul
+    if (inputJudul && inputSlug) {
+      inputJudul.addEventListener('input', () => {
+        const textSlug = inputJudul.value
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)+/g, '');
+        inputSlug.value = textSlug;
+      });
+    }
   </script>
 </body>
 </html>
