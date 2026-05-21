@@ -1,11 +1,15 @@
 <footer class="bg-slate-900 text-gray-400 text-xs py-8 mt-12 border-t-2 border-gray-800">
   <div class="max-w-6xl mx-auto px-4 text-center space-y-2">
-    <p class="font-bold text-white">© 2026 NUSA MEDIA NETWORK. Hak Cipta Dilindungi.</p>
+    <!-- FIX: Mengganti © dengan &copy; agar simbol hak cipta tidak hancur -->
+    <p class="font-bold text-white">&copy; 2026 NUSA MEDIA NETWORK. Hak Cipta Dilindungi.</p>
+    
     <div class="flex justify-center gap-4 text-gray-500 font-medium my-2">
       <a href="/privasi" class="hover:text-red-500 transition">Kebijakan Privasi</a>
-      <span>•</span>
+      <!-- FIX: Mengganti • dengan &bull; agar titik pembatas bulat sempurna di semua jenis layar -->
+      <span>&bull;</span>
       <a href="/syarat" class="hover:text-red-500 transition">Syarat & Ketentuan</a>
     </div>
+    
     <p>Infrastruktur super ringan berbasis Cloud JAMstack Serverless.</p>
   </div>
 </footer>
