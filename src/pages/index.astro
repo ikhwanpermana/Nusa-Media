@@ -10,12 +10,19 @@ let postingan = [];
 let sumberData = "Supabase Database";
 let errorSistem = null;
 
-// 1. STRATEGI UTAMA: Ambil Data dari Supabase
+// 1. STRATEGI UTAMA: Ambil Data dari Supabase dengan Batas Waktu 4 Detik
 try {
+  // Membuat pengaman pembatalan otomatis jika koneksi lambat
+  const pengontrolWaktu = new AbortController();
+  const idWaktu = setTimeout(() => pengontrolWaktu.abort(), 4000); // Batas 4 detik
+
   const { data: dataSupabase, error: errorSupabase } = await supabase
     .from('artikel')
     .select('*')
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .abortSignal(pengontrolWaktu.signal); // Terapkan sinyal pembatalan
+
+  clearTimeout(idWaktu); // Hapus pengaman jika koneksi berhasil cepat
 
   if (errorSupabase || !dataSupabase || dataSupabase.length === 0) {
     throw new Error(errorSupabase?.message || "Tabel Supabase kosong, beralih ke cadangan.");
@@ -25,13 +32,20 @@ try {
   sumberData = "Supabase Database (Utama)";
 
 } catch (mainError: any) {
-  // 2. STRATEGI CADANGAN: Jika Supabase Gagal/Kosong, Ambil dari GitHub JSON
+  // 2. STRATEGI CADANGAN: Otomatis masuk sini jika Supabase lelet/offline
   try {
-    // 🛠️ PERBAIKAN UTAMA: Menggunakan domain mentah raw.githubusercontent.com dan format `${}` yang benar
+    const pengontrolWaktuGh = new AbortController();
+    const idWaktuGh = setTimeout(() => pengontrolWaktuGh.abort(), 4000);
+
     const githubResponse = await fetch(
       `https://githubusercontent.com{GITHUB_USERNAME}/${REPO_NAME}/main/${FILE_PATH}`,
-      { headers: { 'Accept': 'application/vnd.github.v3.raw' } }
+      { 
+        headers: { 'Accept': 'application/vnd.github.v3.raw' },
+        signal: pengontrolWaktuGh.signal // Pengaman timeout GitHub
+      }
     );
+
+    clearTimeout(idWaktuGh);
 
     if (!githubResponse.ok) {
       throw new Error(`GitHub API juga gagal (Status: ${githubResponse.status})`);
@@ -42,7 +56,7 @@ try {
     sumberData = "GitHub Repository (Cadangan)";
     
   } catch (fallbackError: any) {
-    errorSistem = `Kedua sumber gagal. Supabase: ${mainError.message} | GitHub: ${fallbackError.message}`;
+    errorSistem = `Kedua sistem lambat/gagal merespons. Supabase: ${mainError.message} | GitHub: ${fallbackError.message}`;
   }
 }
 
