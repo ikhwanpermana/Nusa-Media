@@ -1,218 +1,70 @@
 ---
-import { supabase } from '../lib/supabase';
+import { supabase } from '../../lib/supabase';
 
-// 🤖 FIX 1: Mengekspor jalur statis tiruan agar lolos kompilasi tanpa eror Node.js Vercel
-export async function getStaticPaths() {
-  return [{ params: { id: "admin-rahasia-99" } }];
-}
+export const prerender = false;
 
-// Menangkap kunci rahasia admin dari URL (Sesuai nama file [id].astro)
-const { id: adminKey } = Astro.params;
+const { id } = Astro.params;
 
-// Tentukan Kunci Rahasia Anda di sini agar tidak sembarang orang bisa input data
-const KUNCI_AKSES_ADMIN = "admin-rahasia-99"; 
+// Ambil data detail satu berita berdasarkan ID
+const { data: berita, error } = await supabase
+  .from('berita')
+  .select('*')
+  .eq('id', id)
+  .maybeSingle();
 
-let statusPesan = "";
-let tipePesan = ""; // "sukses" atau "gagal"
-
-// Eksekusi jika admin menekan tombol Simpan (Metode POST)
-if (Astro.request.method === "POST") {
-  try {
-    const dataForm = await Astro.request.formData();
-    const tipeInput = dataForm.get("tipe_input"); // "berita" atau "iklan"
-
-    if (tipeInput === "berita") {
-      // 📰 LOGIKA INPUT BERITA
-      const judul = dataForm.get("judul");
-      const kategori = dataForm.get("kategori");
-      const konten = dataForm.get("konten");
-      const slug = dataForm.get("slug");
-      const image_url = dataForm.get("image_url");
-
-      const { error } = await supabase
-        .from('berita')
-        .insert([{ judul, kategori, konten, slug, image_url }]);
-
-      if (error) throw error;
-      statusPesan = "Berita baru berhasil diterbitkan secara live!";
-      tipePesan = "sukses";
-
-    } else if (tipeInput === "iklan") {
-      // 📢 LOGIKA INPUT IKLAN
-      const kontenTeks = dataForm.get("konten_teks");
-      const linkTujuan = dataForm.get("link_tujuan");
-      const posisi = dataForm.get("posisi"); // "detail_atas", "sidebar_atas"
-
-      const { error } = await supabase
-        .from('iklan')
-        .insert([{ konten_teks: kontenTeks, link_tujuan: linkTujuan, posisi, status: 'aktif' }]);
-
-      if (error) throw error;
-      statusPesan = "Iklan komersial baru berhasil dipasang!";
-      tipePesan = "sukses";
-    }
-  } catch (err) {
-    const pesanError = err instanceof Error ? err.message : "Terjadi kesalahan sistem";
-    statusPesan = `Gagal menyimpan data: ${pesanError}`;
-    tipePesan = "gagal";
-  }
+if (error || !berita) {
+  return Astro.redirect('/404');
 }
 ---
 
 <html lang="id">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sistem Input Nusa-Media</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
-</head>
-<body class="bg-slate-900 text-slate-100 min-h-screen p-4 sm:p-8">
-
-  <!-- Validasi Keamanan Kunci URL -->
-  {adminKey !== KUNCI_AKSES_ADMIN ? (
-    <div class="max-w-md mx-auto text-center bg-slate-800 border border-red-500/30 p-8 rounded-2xl shadow-xl mt-12">
-      <span class="text-4xl">🚫</span>
-      <h2 class="text-xl font-bold text-red-400 mt-4">Akses Ditolak</h2>
-      <p class="text-slate-400 text-sm mt-2">Kunci ID URL admin yang Anda masukkan tidak cocok atau salah.</p>
-      <a href="/" class="inline-block mt-6 text-xs bg-slate-700 px-4 py-2 rounded-xl text-white">Kembali ke Home</a>
-    </div>
-  ) : (
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{berita.judul} | Nusa-Media</title>
+    <link rel="preconnect" href="https://googleapis.com">
+    <link rel="preconnect" href="https://gstatic.com" crossorigin>
+    <link href="https://googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Roboto', sans-serif; }</style>
+  </head>
+  <body class="bg-gray-100 text-gray-900 min-h-screen">
     
-    // TAMPILAN DASHBOARD INPUT UTAMA
-    <div class="max-w-2xl mx-auto">
-      <div class="flex items-center justify-between mb-8">
-        <div>
-          <h1 class="text-2xl font-bold tracking-tight">Nusa-Media Control Center</h1>
-          <p class="text-xs text-slate-400 mt-1">Mode penginputan manual berita dan slot iklan sponsor daerah</p>
-        </div>
-        <a href="/" class="text-xs bg-slate-800 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700">Lihat Web Live ↗</a>
-      </div>
-
-      <!-- Notifikasi Status Pengiriman Data -->
-      {statusPesan && (
-        <div class={`p-4 rounded-xl text-sm font-semibold mb-6 border ${
-          tipePesan === "sukses" ? "bg-emerald-950/50 border-emerald-500/30 text-emerald-400" : "bg-rose-950/50 border-rose-500/30 text-rose-400"
-        }`}>
-          {tipePesan === "sukses" ? "✅" : "⚠️"} {statusPesan}
-        </div>
-      )}
-
-      <!-- KARTU FORMULIR -->
-      <div class="bg-slate-800 border border-slate-700/60 rounded-2xl p-6 shadow-xl">
-        
-        <!-- Pemilih Tab Input -->
-        <div class="flex bg-slate-900 p-1.5 rounded-xl gap-2 mb-6 text-sm font-bold">
-          <button id="btn-berita" class="w-full py-2 bg-indigo-600 text-white rounded-lg transition">
-            📰 Tulis Berita Baru
-          </button>
-          <button id="btn-iklan" class="w-full py-2 text-slate-400 hover:text-white rounded-lg transition">
-            📢 Pasang Iklan Baru
-          </button>
+    <main class="max-w-3xl mx-auto px-4 py-8">
+      <a href="/" class="text-sm font-bold text-red-600 hover:underline inline-block mb-6">← Kembali ke Beranda</a>
+      
+      <article class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden p-6 md:p-8">
+        <div class="mb-4">
+          <span class="bg-red-600 text-white text-[10px] font-black uppercase px-2.5 py-1 rounded">
+            {berita.kategori || 'Fokus'}
+          </span>
+          <span class="text-xs text-gray-400 ml-3">
+            {berita.created_at ? new Date(berita.created_at).toLocaleDateString('id-ID', { dateStyle: 'long' }) : ''}
+          </span>
         </div>
 
-        <!-- FORMULIR INPUT BERITA -->
-        <form id="form-berita" method="POST" class="space-y-4">
-          <input type="hidden" name="tipe_input" value="berita" />
-          <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Judul Berita</label>
-            <input type="text" id="input-judul" name="judul" Jack required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none text-slate-100" placeholder="Masukkan judul berita terhangat..." />
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">URL Slug (Otomatis Terisi)</label>
-              <input type="text" id="input-slug" name="slug" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none text-slate-300 font-mono" placeholder="judul-berita-anda" />
-            </div>
-            <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Kategori Wilayah</label>
-              <select name="kategori" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none text-slate-300">
-                <option value="Fokus">Fokus Utama</option>
-                <option value="Politik">Politik</option>
-                <option value="Advertorial">Advertorial Daerah</option>
-                <option value="Ekonomi">Ekonomi</option>
-              </select>
-            </div>
-          </div>
-          <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">URL Tautan Gambar Berita</label>
-            <input type="url" name="image_url" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none text-slate-100 font-mono" placeholder="https://unsplash.com..." />
-          </div>
-          <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Isi Konten Berita</label>
-            <textarea name="konten" rows="8" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none text-slate-100" placeholder="Ketik isi berita lengkap di sini..."></textarea>
-          </div>
-          <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-indigo-600/20 transition-all text-sm mt-2">
-            Terbitkan Berita Sekarang
-          </button>
-        </form>
+        <h1 class="text-2xl md:text-4xl font-black text-slate-900 leading-tight mb-4">
+          {berita.judul}
+        </h1>
 
-        <!-- FIX 2: MENYEMPURNAKAN FORMULIR IKLAN YANG TERPOTONG & MENUTUP TAG GLOBAL -->
-        <form id="form-iklan" method="POST" class="space-y-4 hidden">
-          <input type="hidden" name="tipe_input" value="iklan" />
-          <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Teks / Nama Iklan</label>
-            <input type="text" name="konten_teks" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none text-slate-100" placeholder="Contoh: Ucapan Selamat Hari Jadi Kabupaten..." />
-          </div>
-          <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Link Tujuan Iklan</label>
-            <input type="url" name="link_tujuan" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none text-slate-100 font-mono" placeholder="https://domain-sponsor.com" />
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Posisi Slot Iklan</label>
-              <select name="posisi" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm mt-1.5 focus:border-indigo-500 focus:outline-none text-slate-300">
-                <option value="detail_atas">Banner Atas (Detail Atas)</option>
-                <option value="sidebar_atas">Banner Kotak (Sidebar Atas)</option>
-              </select>
-            </div>
-          </div>
-          <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-emerald-600/20 transition-all text-sm mt-2">
-            Pasang Iklan Komersial Sekarang
-          </button>
-        </form>
+        <div class="text-xs text-gray-500 border-b pb-4 mb-6">
+          Penulis: <span class="font-bold text-gray-700">{berita.penulis || berita.sumber || 'Redaksi Nusa Media'}</span>
+        </div>
 
-      </div>
-    </div>
-  )}
+        {/* Gambar Utama Detail */}
+        <div class="w-full h-64 md:h-[400px] bg-slate-100 rounded-lg overflow-hidden mb-6 shadow-inner">
+          <img 
+            src={berita.gambar_url || berita.image_url || "https://unsplash.com"} 
+            alt={berita.judul} 
+            class="w-full h-full object-cover"
+          />
+        </div>
 
-  <!-- FIX 3: SKRIP RIOT CLIENT UNTUK OTOMASI SLUG DAN INTERAKSI TABBING -->
-  <script is:inline>
-    const btnBerita = document.getElementById('btn-berita');
-    const btnIklan = document.getElementById('btn-iklan');
-    const formBerita = document.getElementById('form-berita');
-    const formIklan = document.getElementById('form-iklan');
-    const inputJudul = document.getElementById('input-judul');
-    const inputSlug = document.getElementById('input-slug');
-
-    // Otomasi Tab Switcing
-    if(btnBerita && btnIklan) {
-      btnBerita.addEventListener('click', () => {
-        formBerita.classList.remove('hidden');
-        formIklan.classList.add('hidden');
-        btnBerita.className = "w-full py-2 bg-indigo-600 text-white rounded-lg transition";
-        btnIklan.className = "w-full py-2 text-slate-400 hover:text-white rounded-lg transition";
-      });
-
-      btnIklan.addEventListener('click', () => {
-        formIklan.classList.remove('hidden');
-        formBerita.classList.add('hidden');
-        btnIklan.className = "w-full py-2 bg-emerald-600 text-white rounded-lg transition";
-        btnBerita.className = "w-full py-2 text-slate-400 hover:text-white rounded-lg transition";
-      });
-    }
-
-    // Otomasi Pembuatan URL Slug secara Real-time saat Mengetik Judul
-    if (inputJudul && inputSlug) {
-      inputJudul.addEventListener('input', () => {
-        const textSlug = inputJudul.value
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/(^-|-$)+/g, '');
-        inputSlug.value = textSlug;
-      });
-    }
-  </script>
-</body>
+        {/* Isi Konten Lengkap */}
+        <div class="text-gray-800 text-base md:text-lg leading-relaxed whitespace-pre-line">
+          {berita.isi_konten || berita.konten || berita.ringkasan}
+        </div>
+      </article>
+    </main>
+    
+  </body>
 </html>

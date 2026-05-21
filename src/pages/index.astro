@@ -144,43 +144,61 @@ const semuaBeritaTersedia = postingan && postingan.length > 0 ? postingan : [];
                 {semuaBeritaTersedia.map((berita) => (
                   <article class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition group">
                     <div>
-                      <div class="h-44 bg-slate-200 overflow-hidden relative">
-                        <img src={berita.gambar_url || berita.image_url || "https://unsplash.com"} alt={berita.judul} class="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+                      {/* 1. Tautan Gambar Berita */}
+                      <a href={`/berita/${berita.id}`} class="block h-44 bg-slate-200 overflow-hidden relative">
+                        <img 
+                          src={berita.gambar_url || berita.image_url || "https://unsplash.com"} 
+                          alt={berita.judul} 
+                          class="w-full h-full object-cover group-hover:scale-105 transition duration-300" 
+                        />
                         <span class="absolute top-3 left-3 bg-red-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-xs tracking-wide">
                           {berita.kategori || 'Fokus'}
                         </span>
-                      </div>
+                      </a>
+                      
                       <div class="p-4">
-                        <h3 class="font-bold text-gray-900 leading-tight group-hover:text-red-600 transition line-clamp-2">{berita.judul}</h3>
-                        <p class="text-xs text-gray-500 mt-2 line-clamp-3">{berita.ringkasan || berita.konten}</p>
+                        {/* 2. Tautan Judul Berita */}
+                        <a href={`/berita/${berita.id}`} class="block group-hover:text-red-600">
+                          <h3 class="font-bold text-gray-900 leading-tight transition line-clamp-2">{berita.judul}</h3>
+                        </a>
+                        <p class="text-xs text-gray-500 mt-2 line-clamp-3">{berita.ringkasan || berita.konten || berita.isi_konten}</p>
                       </div>
                     </div>
+                    
                     <div class="p-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center text-[11px] text-gray-400">
-                      <span>👁️ {berita.sumber || 'Nusa Media'}</span>
-                      <span>{berita.created_at ? new Date(berita.created_at).toLocaleDateString('id-ID') : 'Terbaru'}</span>
+                      <span>👁️ {berita.sumber || berita.penulis || 'Nusa Media'}</span>
+                      <div class="flex items-center gap-2">
+                        <span>{berita.created_at ? new Date(berita.created_at).toLocaleDateString('id-ID') : 'Terbaru'}</span>
+                        <a href={`/berita/${berita.id}`} class="text-red-600 font-bold hover:underline">Baca →</a>
+                      </div>
                     </div>
                   </article>
                 ))}
               </div>
             ) : (
-              <div class="text-center py-12 text-gray-400 text-sm">Belum ada kompilasi berita dinamis yang diterbitkan di database.</div>
+              <div class="text-center py-12 text-gray-400 text-sm">Belum ada kompilasi berita dinamis yang diterbitkan.</div>
             )}
           </div>
+
         </div>
 
-        <!-- KOLOM KANAN (SIDEBAR SPONSOR) -->
-        <div class="lg:col-span-1 space-y-6">
+        <!-- KOLOM KANAN (SIDEBAR WIDGET) -->
+        <div class="space-y-6">
           <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-            <h3 class="font-bold border-b border-gray-200 pb-2 mb-3 text-sm uppercase text-slate-800 tracking-wide">Sponsor Utama</h3>
+            <h3 class="font-bold text-sm border-b pb-2 mb-3 text-slate-800">INFO REDAKSI</h3>
+            <p class="text-xs text-gray-600 leading-relaxed">Nusa-Media dikelola secara hybrid menggunakan integrasi otomatis cloud data.</p>
+          </div>
+          
+          {/* Iklan Sidebar */}
+          <div>
             {iklanSidebarAtas ? (
-              <a href={iklanSidebarAtas.link_tujuan} target="_blank" class="block group">
-                <div class="bg-gray-100 p-3 rounded border text-center hover:bg-gray-50 transition">
-                  <p class="text-xs font-semibold text-gray-700">{iklanSidebarAtas.konten_teks}</p>
-                </div>
+              <a href={iklanSidebarAtas.link_tujuan} target="_blank" class="block bg-slate-900 text-white p-4 rounded-xl text-center shadow-md border-b-4 border-emerald-500 hover:opacity-95 transition">
+                <span class="text-[9px] uppercase tracking-widest text-emerald-400 font-bold">Pengumuman Resmi</span>
+                <p class="text-xs font-medium mt-1 leading-snug">{iklanSidebarAtas.konten_teks}</p>
               </a>
             ) : (
-              <div class="bg-gray-50 border border-dashed text-center p-6 text-xs text-gray-400 rounded-lg">
-                Slot Iklan Premium Sidebar Tersedia
+              <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center text-gray-400 text-xs bg-white">
+                Space Iklan Kolom Kanan Tersedia
               </div>
             )}
           </div>
@@ -188,18 +206,5 @@ const semuaBeritaTersedia = postingan && postingan.length > 0 ? postingan : [];
 
       </div>
     </main>
-
-    <!-- FOOTER AMAN ENTITAS ANTI-MOJIBAKE -->
-    <footer class="bg-slate-900 text-gray-400 text-xs py-8 mt-12 border-t-2 border-gray-800">
-      <div class="max-w-6xl mx-auto px-4 text-center space-y-2">
-        <p class="font-bold text-white">&copy; 2026 NUSA MEDIA NETWORK. Hak Cipta Dilindungi.</p>
-        <div class="flex justify-center gap-4 text-gray-500 font-medium my-2">
-          <a href="/privasi" class="hover:text-red-500 transition">Kebijakan Privasi</a>
-          <span>&bull;</span>
-          <a href="/syarat" class="hover:text-red-500 transition">Syarat & Ketentuan</a>
-        </div>
-        <p>Infrastruktur super ringan berbasis Cloud JAMstack Serverless.</p>
-      </div>
-    </footer>
   </body>
 </html>
