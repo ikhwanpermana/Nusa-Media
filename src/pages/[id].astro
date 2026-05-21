@@ -24,9 +24,9 @@ if (Astro.request.method === "POST") {
       const slug = dataForm.get("slug");
       const image_url = dataForm.get("image_url");
 
-      // Menyimpan data lengkap agar singkron dengan halaman [slug].astro dan index.astro
+      // ✨ PERBAIKAN UTAMA: Mengubah target tabel dari 'artikel' ke 'berita' agar sinkron dengan database Supabase
       const { error } = await supabase
-        .from('artikel')
+        .from('berita')
         .insert([{ judul, kategori, konten, slug, image_url }]);
 
       if (error) throw error;
@@ -62,7 +62,7 @@ if (Astro.request.method === "POST") {
   <title>Sistem Input Nusa-Media</title>
   <link rel="preconnect" href="https://googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-  <script src="https://tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen p-4 sm:p-8">
@@ -175,9 +175,8 @@ if (Astro.request.method === "POST") {
     </div>
   )}
 
-  <!-- SCRIPT OPERASIONAL UNTUK ALIH TAB DAN AUTO-GENERATE SLUG -->
+  <!-- SCRIPT OPERASIONAL TAB & SLUG AUTO GENERATOR -->
   <script is:inline>
-    // Fungsi ganti Tab Form
     function switchTab(type) {
       const formBerita = document.getElementById('form-berita');
       const formIklan = document.getElementById('form-iklan');
@@ -197,7 +196,6 @@ if (Astro.request.method === "POST") {
       }
     }
 
-    // Otomatis membuat teks slug saat admin mengetik Judul Berita
     document.addEventListener("DOMContentLoaded", () => {
       const judulInput = document.getElementById('input-judul');
       const slugInput = document.getElementById('input-slug');
@@ -206,9 +204,9 @@ if (Astro.request.method === "POST") {
         judulInput.addEventListener('input', () => {
           const teksSlug = judulInput.value
             .toLowerCase()
-            .replace(/[^a-z0-9\s-]/g, '') // Hapus karakter simbol luar
-            .replace(/\s+/g, '-')         // Ganti spasi dengan tanda -
-            .replace(/-+/g, '-');         // Cegah tanda - ganda
+            .replace(/[^a-z0-9\s-]/g, '')
+            .replace(/\s+/g, '-')        
+            .replace(/-+/g, '-');        
           slugInput.value = teksSlug;
         });
       }
