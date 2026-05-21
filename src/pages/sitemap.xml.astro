@@ -1,0 +1,49 @@
+---
+// src/pages/sitemap.xml.astro
+import { supabase } from '../lib/supabase';
+
+// 1. Setel header respons agar browser dan robot Google membacanya sebagai file XML asli
+Astro.response.headers.set('Content-Type', 'application/xml');
+
+// 2. Tarik seluruh slug berita yang ada di database Supabase
+const { data: listArtikel } = await supabase
+  .from('berita')
+  .select('slug, created_at')
+  .order('created_at', { ascending: false });
+
+const domainUtama = "https://vercel.app";
+
+// 3. Susun dokumen XML secara terstruktur untuk Googlebot
+const xmlSitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://sitemaps.org">
+  <!-- Halaman-Halaman Utama Utama -->
+  <url>
+    <loc>${domainUtama}/</loc>
+    <priority>1.0</priority>
+    <changefreq>hourly</changefreq>
+  </url>
+  <url>
+    <loc>${domainUtama}/privasi/</loc>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>${domainUtama}/syarat/</loc>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>${domainUtama}/kontak/</loc>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- Aliran Artikel Dinamis Otomatis -->
+  ${listArtikel ? listArtikel.map((art) => `
+  <url>
+    <loc>${domainUtama}/berita/${art.slug}/</loc>
+    <lastmod>${new Date(art.created_at).toISOString().split('T')[0]}</lastmod>
+    <priority>0.8</priority>
+    <changefreq>daily</changefreq>
+  </url>
+  `).join('') : ''}
+</urlset>`.trim();
+---
+<Fragment set:html={xmlSitemap} />
