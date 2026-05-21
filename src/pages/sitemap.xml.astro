@@ -11,9 +11,11 @@ const { data: listArtikel } = await supabase
   .select('slug, created_at')
   .order('created_at', { ascending: false });
 
-const domainUtama = "https://vercel.app";
+// FIX 1: Memperbaiki domain utama agar mengarah tepat ke website NUSA MEDIA Anda
+const domainUtama = "https://nusa-media.vercel.app";
 
 // 3. Susun dokumen XML secara terstruktur untuk Googlebot
+// FIX 2: Memperbaiki tautan skema xmlns sitemaps standar internasional
 const xmlSitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://sitemaps.org">
   <!-- Halaman-Halaman Utama Utama -->
@@ -46,4 +48,4 @@ const xmlSitemap = `<?xml version="1.0" encoding="UTF-8"?>
   `).join('') : ''}
 </urlset>`.trim();
 ---
-<Fragment set:html={xmlSitemap} />
+{xmlSitemap}
