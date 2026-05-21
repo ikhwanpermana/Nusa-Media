@@ -1,14 +1,15 @@
 import { defineConfig } from 'astro/config';
 import tailwind from '@astrojs/tailwind';
-import vercel from '@astrojs/vercel/serverless';
+// import vercel from '@astrojs/vercel/serverless'; // ⏸️ DI-NONAKTIFKAN SEMENTARA
 
 export default defineConfig({
-  output: 'server', // Mempertahankan server rendering untuk data dinamis Supabase
+  output: 'static', // ⚙️ Diubah ke statis agar lolos dari error Node.js Vercel
+  /* ⏸️ Menonaktifkan sementara adaptor engine serverless Vercel
   adapter: vercel({
     webAnalytics: {
-      enabled: true // Otomatis mengaktifkan analisis pengunjung gratis dari Vercel
+      enabled: true 
     }
   }),
+  */
   integrations: [tailwind()],
 });
-
