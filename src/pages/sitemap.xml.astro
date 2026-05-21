@@ -2,23 +2,25 @@
 // src/pages/sitemap.xml.astro
 import { supabase } from '../lib/supabase';
 
+// Mengaktifkan mode statis/prerender agar sitemap ikut dibuat saat proses build
+export const prerender = true;
+
 // 1. Setel header respons agar browser dan robot Google membacanya sebagai file XML asli
 Astro.response.headers.set('Content-Type', 'application/xml');
 
-// 2. Tarik seluruh slug berita yang ada di database Supabase
+// 2. Tarik seluruh ID berita yang ada di database Supabase
 const { data: listArtikel } = await supabase
   .from('berita')
-  .select('slug, created_at')
+  .select('id, created_at')
   .order('created_at', { ascending: false });
 
-// FIX 1: Memperbaiki domain utama agar mengarah tepat ke website NUSA MEDIA Anda
+// Domain utama website NUSA MEDIA Anda
 const domainUtama = "https://nusa-media.vercel.app";
 
 // 3. Susun dokumen XML secara terstruktur untuk Googlebot
-// FIX 2: Memperbaiki tautan skema xmlns sitemaps standar internasional
 const xmlSitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://sitemaps.org">
-  <!-- Halaman-Halaman Utama Utama -->
+  <!-- Halaman-Halaman Utama -->
   <url>
     <loc>${domainUtama}/</loc>
     <priority>1.0</priority>
@@ -29,23 +31,19 @@ const xmlSitemap = `<?xml version="1.0" encoding="UTF-8"?>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>${domainUtama}/syarat/</loc>
-    <priority>0.3</priority>
-  </url>
-  <url>
     <loc>${domainUtama}/kontak/</loc>
     <priority>0.5</priority>
   </url>
 
-  <!-- Aliran Artikel Dinamis Otomatis -->
+  <!-- Aliran Artikel Dinamis Otomatis (Diselaraskan menggunakan ID) -->
   ${listArtikel ? listArtikel.map((art) => `
   <url>
-    <loc>${domainUtama}/berita/${art.slug}/</loc>
+    <loc>${domainUtama}/berita/${art.id}/</loc>
     <lastmod>${new Date(art.created_at).toISOString().split('T')[0]}</lastmod>
     <priority>0.8</priority>
     <changefreq>daily</changefreq>
   </url>
-  `).join('') : ''}
+  `).join('').trim() : ''}
 </urlset>`.trim();
 ---
 {xmlSitemap}
