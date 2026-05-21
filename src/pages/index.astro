@@ -59,12 +59,12 @@ const semuaBeritaTersedia = postingan && postingan.length > 0 ? postingan : [];
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nusa-Media | Portal Berita Multi-Sistem Hybrid</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📰</text></svg>">
-    <link rel="preconnect" href="https://googleapis.com">
-    <link rel="preconnect" href="https://gstatic.com" crossorigin>
-    <link href="https://googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Roboto', sans-serif; }</style>
+    <script src="https://tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
   </head>
-  <body class="bg-gray-100 text-gray-900 min-h-screen">
+  <body class="bg-gray-100 text-gray-900 min-h-screen" style="font-family: 'Roboto', sans-serif;">
 
     <!-- Top Bar Info -->
     <div class="bg-red-700 text-white text-xs py-2">
@@ -100,6 +100,7 @@ const semuaBeritaTersedia = postingan && postingan.length > 0 ? postingan : [];
       <div class="max-w-6xl mx-auto px-4 flex items-center gap-6 overflow-x-auto text-sm font-bold h-12">
         <a href="/" class="text-red-600 border-b-2 border-red-600 py-3 px-1 whitespace-nowrap">Home</a>
         <a href="/kontak" class="text-gray-600 hover:text-red-600 py-3 px-1 whitespace-nowrap transition">Hubungi Kami</a>
+        <a href="/admin-rahasia-99" class="text-gray-400 hover:text-red-600 py-3 px-1 whitespace-nowrap transition ml-auto font-normal text-xs">Admin Panel</a>
       </div>
     </nav>
 
@@ -144,10 +145,10 @@ const semuaBeritaTersedia = postingan && postingan.length > 0 ? postingan : [];
                 {semuaBeritaTersedia.map((berita) => (
                   <article class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition group">
                     <div>
-                      {/* 1. Tautan Gambar Berita */}
+                      <!-- 1. Tautan Gambar Berita -->
                       <a href={`/berita/${berita.id}`} class="block h-44 bg-slate-200 overflow-hidden relative">
                         <img 
-                          src={berita.gambar_url || berita.image_url || "https://unsplash.com"} 
+                          src={berita.gambar_url || "https://unsplash.com"} 
                           alt={berita.judul} 
                           class="w-full h-full object-cover group-hover:scale-105 transition duration-300" 
                         />
@@ -157,48 +158,39 @@ const semuaBeritaTersedia = postingan && postingan.length > 0 ? postingan : [];
                       </a>
                       
                       <div class="p-4">
-                        {/* 2. Tautan Judul Berita */}
+                        <!-- 2. Tautan Judul Berita -->
                         <a href={`/berita/${berita.id}`} class="block group-hover:text-red-600">
                           <h3 class="font-bold text-gray-900 leading-tight transition line-clamp-2">{berita.judul}</h3>
                         </a>
-                        <p class="text-xs text-gray-500 mt-2 line-clamp-3">{berita.ringkasan || berita.konten || berita.isi_konten}</p>
+                        <p class="text-xs text-gray-500 mt-2 line-clamp-3">{berita.ringkasan || berita.isi_konten}</p>
                       </div>
                     </div>
                     
                     <div class="p-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center text-[11px] text-gray-400">
-                      <span>👁️ {berita.sumber || berita.penulis || 'Nusa Media'}</span>
-                      <div class="flex items-center gap-2">
-                        <span>{berita.created_at ? new Date(berita.created_at).toLocaleDateString('id-ID') : 'Terbaru'}</span>
-                        <a href={`/berita/${berita.id}`} class="text-red-600 font-bold hover:underline">Baca →</a>
-                      </div>
+                      <span>Penulis: {berita.penulis || 'Redaksi'}</span>
+                      <span class="text-red-600 font-bold group-hover:underline">Baca Selengkapnya →</span>
                     </div>
                   </article>
                 ))}
               </div>
             ) : (
-              <div class="text-center py-12 text-gray-400 text-sm">Belum ada kompilasi berita dinamis yang diterbitkan.</div>
+              <p class="text-sm text-gray-500 italic p-4 bg-white rounded border text-center">Belum ada arsip berita yang diterbitkan.</p>
             )}
           </div>
-
         </div>
 
-        <!-- KOLOM KANAN (SIDEBAR WIDGET) -->
+        <!-- KOLOM KANAN (SIDEBAR IKLAN & PENGUMUMAN) -->
         <div class="space-y-6">
-          <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-            <h3 class="font-bold text-sm border-b pb-2 mb-3 text-slate-800">INFO REDAKSI</h3>
-            <p class="text-xs text-gray-600 leading-relaxed">Nusa-Media dikelola secara hybrid menggunakan integrasi otomatis cloud data.</p>
-          </div>
-          
-          {/* Iklan Sidebar */}
-          <div>
+          <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider border-b pb-2 mb-3">📢 Pengumuman & Iklan Sidebar</h3>
             {iklanSidebarAtas ? (
-              <a href={iklanSidebarAtas.link_tujuan} target="_blank" class="block bg-slate-900 text-white p-4 rounded-xl text-center shadow-md border-b-4 border-emerald-500 hover:opacity-95 transition">
-                <span class="text-[9px] uppercase tracking-widest text-emerald-400 font-bold">Pengumuman Resmi</span>
-                <p class="text-xs font-medium mt-1 leading-snug">{iklanSidebarAtas.konten_teks}</p>
+              <a href={iklanSidebarAtas.link_tujuan} target="_blank" class="block bg-amber-50 border border-amber-200 p-3 rounded hover:bg-amber-100 transition">
+                <p class="text-xs font-bold text-amber-900">{iklanSidebarAtas.konten_teks}</p>
+                <span class="text-[10px] text-amber-700 underline mt-2 block">Klik Informasi Lengkap ↗</span>
               </a>
             ) : (
-              <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center text-gray-400 text-xs bg-white">
-                Space Iklan Kolom Kanan Tersedia
+              <div class="bg-gray-50 border border-dashed p-4 text-center text-xs text-gray-400 rounded">
+                Slot Iklan Pengumuman Kanan Tersedia
               </div>
             )}
           </div>
@@ -206,5 +198,9 @@ const semuaBeritaTersedia = postingan && postingan.length > 0 ? postingan : [];
 
       </div>
     </main>
+
+    <footer class="bg-slate-900 text-gray-400 text-xs text-center py-6 mt-12 border-t-2 border-gray-800">
+      <p>© {new Date().getFullYear()} Nusa-Media Online. All Rights Reserved.</p>
+    </footer>
   </body>
 </html>
