@@ -1,10 +1,20 @@
 ---
-import beritaLokal from '../../data/berita.json';
+import { supabase } from '../lib/supabase';
 
-// Mengurutkan berita terbaru berdasarkan ID terbesar secara otomatis
-const semuaBeritaTersedia = beritaLokal 
-  ? [...beritaLokal].sort((a, b) => b.id - a.id) 
-  : [];
+// Mengaktifkan mode statis (Astro akan build ulang otomatis saat webhook Supabase terpicu)
+export const prerender = true;
+
+// AMBIL DATA REAL-TIME DARI SUPABASE (Bukan file JSON lagi)
+const { data: beritaSupabase, error } = await supabase
+  .from('berita')
+  .select('*')
+  .order('created_at', { ascending: false });
+
+const semuaBeritaTersedia = beritaSupabase || [];
+
+if (error) {
+  console.error("Gagal mengambil data dari Supabase di Beranda:", error.message);
+}
 ---
 
 <html lang="id">
@@ -13,10 +23,11 @@ const semuaBeritaTersedia = beritaLokal
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nusa-Media | Portal Berita Multi-Sistem Hybrid</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📰</text></svg>">
-    <script src="https://tailwindcss.com"></script>
-    <link rel="preconnect" href="https://googleapis.com">
-    <link rel="preconnect" href="https://gstatic.com" crossorigin>
-    <link href="https://googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!-- PERBAIKAN CDN: Menggunakan cdn.tailwindcss.com yang benar -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
   </head>
   <body class="bg-gray-100 text-gray-900 min-h-screen" style="font-family: 'Roboto', sans-serif;">
 
@@ -25,7 +36,7 @@ const semuaBeritaTersedia = beritaLokal
       <div class="max-w-6xl mx-auto px-4 flex justify-between items-center">
         <div>📍 Regional Pembaruan Nusantara</div>
         <div class="flex items-center gap-4">
-          <span class="bg-white/20 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wide">Sumber: GitHub Data Engine</span>
+          <span class="bg-white/20 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wide">Sumber: Supabase Data Engine</span>
           <div class="flex items-center gap-1.5">
             <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
             <span>Total Berita: {semuaBeritaTersedia.length}</span>
@@ -39,9 +50,9 @@ const semuaBeritaTersedia = beritaLokal
       <div class="max-w-6xl mx-auto px-4 py-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
           <h1 class="text-4xl font-black tracking-tight text-white flex items-center gap-1">
-            NUSA<span class="text-red-500">MEDIA</span><span class="text-xs text-gray-400 font-normal border-l border-gray-600 pl-2">ONLINE</span>
+            <a href="/">NUSA<span class="text-red-500">MEDIA</span><span class="text-xs text-gray-400 font-normal border-l border-gray-600 pl-2">ONLINE</span></a>
           </h1>
-          <p class="text-xs text-gray-400 mt-0.5">Media Informasi Kilat • Berbasis GitHub Data Engine</p>
+          <p class="text-xs text-gray-400 mt-0.5">Media Informasi Kilat • Berbasis Supabase PostgreSQL</p>
         </div>
         <div class="w-full md:w-96 bg-red-50 border border-red-200 text-red-700 font-bold p-3 text-center text-xs rounded shadow-sm">
           Space Iklan Ucapan Selamat & Sukses Instansi / Perorangan
@@ -52,39 +63,50 @@ const semuaBeritaTersedia = beritaLokal
     <!-- Konten Utama -->
     <main class="max-w-6xl mx-auto px-4 py-6">
       <div class="space-y-4">
-        <div class="border-b-2 border-slate-800 pb-1">
+        <div class="border-b-2 border-slate-800 pb-1 flex justify-between items-center">
           <h2 class="bg-slate-800 text-white px-3 py-1 text-xs font-bold uppercase tracking-wider inline-block">Arsip Berita Nusantara</h2>
+          <a href="/admin-rahasia-99" class="text-xs text-red-600 font-bold hover:underline">Panel Kontrol Admin 🔐</a>
         </div>
         
         {semuaBeritaTersedia.length > 0 ? (
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {semuaBeritaTersedia.map((berita) => (
-              <article class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition group">
-                <div>
-                  <div class="block h-44 bg-slate-200 overflow-hidden relative">
-                    <img 
-                      src={berita.image_url && berita.image_url !== "https://unsplash.com" ? berita.image_url : "https://unsplash.com"} 
-                      alt={berita.judul} 
-                      class="w-full h-full object-cover" 
-                    />
-                    <span class="absolute top-3 left-3 bg-red-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded tracking-wide">
-                      {berita.kategori || 'Fokus'}
-                    </span>
+            {semuaBeritaTersedia.map((berita) => {
+              // Menangani dynamic routing berdasarkan ID atau Slug secara aman
+              const linkDetail = berita.slug ? `/${berita.slug}` : `/berita/${berita.id}`;
+              const gambarBerita = berita.gambar_url || berita.image_url || "https://unsplash.com";
+
+              return (
+                <article class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition group">
+                  <div>
+                    <div class="block h-44 bg-slate-200 overflow-hidden relative">
+                      <img 
+                        src={gambarBerita} 
+                        alt={berita.judul} 
+                        class="w-full h-full object-cover group-hover:scale-102 transition duration-200" 
+                      />
+                      <span class="absolute top-3 left-3 bg-red-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded tracking-wide">
+                        {berita.kategori || 'Fokus'}
+                      </span>
+                    </div>
+                    <div class="p-4">
+                      <h3 class="font-bold text-gray-900 leading-tight text-lg line-clamp-2 hover:text-red-600">
+                        <a href={linkDetail}>{berita.judul}</a>
+                      </h3>
+                      <p class="text-xs text-gray-600 mt-3 border-t pt-3 leading-relaxed text-justify line-clamp-4">
+                        {berita.ringkasan || berita.isi_konten || berita.konten}
+                      </p>
+                    </div>
                   </div>
-                  <div class="p-4">
-                    <h3 class="font-bold text-gray-900 leading-tight text-lg line-clamp-2">{berita.judul}</h3>
-                    <p class="text-xs text-gray-600 mt-3 border-t pt-3 leading-relaxed text-justify">{berita.konten}</p>
+                  <div class="p-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center text-[11px] text-gray-400">
+                    <span>Penulis: <strong class="text-gray-600">{berita.penulis || 'Redaksi'}</strong></span>
+                    <span>{berita.created_at ? new Date(berita.created_at).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'}) : ''}</span>
                   </div>
-                </div>
-                <div class="p-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center text-[11px] text-gray-400">
-                  <span>Penulis: {berita.penulis || 'Redaksi'}</span>
-                  <span>{berita.created_at ? new Date(berita.created_at).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'}) : ''}</span>
-                </div>
-              </article>
-            ))}
+                </article>
+              );
+            })}
           </div>
         ) : (
-          <p class="text-sm text-gray-500 italic text-center p-8 bg-white rounded">Belum ada arsip berita yang tersedia.</p>
+          <p class="text-sm text-gray-500 italic text-center p-8 bg-white rounded">Belum ada arsip berita yang tersedia di cloud database.</p>
         )}
       </div>
     </main>
