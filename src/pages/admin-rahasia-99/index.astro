@@ -1,130 +1,14 @@
 ---
 // src/pages/admin-rahasia-99/index.astro
-export const prerender = false; // Menggunakan mode dinamis SSR murni untuk memproses form POST
-
-import { supabase } from '../../lib/supabase';
-
-let notifikasi = '';
-let tipeNotifikasi = ''; // 'sukses' atau 'gagal'
-
-// 1. LOGIKA BACKEND: Menangkap kiriman form & aksi hapus dari sisi server
-if (Astro.request.method === 'POST') {
-  try {
-    const formData = await Astro.request.formData();
-    const tipeForm = formData.get('tipe_form');
-
-    // JALUR A: HAPUS ARTIKEL BERITA
-    if (tipeForm === 'hapus_berita') {
-      const idBerita = formData.get('id_berita');
-      const { error } = await supabase
-        .from('berita')
-        .delete()
-        .eq('id', idBerita);
-
-      if (error) throw error;
-      notifikasi = 'Artikel berita berhasil dihapus secara permanen!';
-      tipeNotifikasi = 'sukses';
-    } 
-    
-    // JALUR B: HAPUS BANNER IKLAN
-    else if (tipeForm === 'hapus_iklan') {
-      const idIklan = formData.get('id_iklan');
-      const { error } = await supabase
-        .from('iklan')
-        .delete()
-        .eq('id', idIklan);
-
-      if (error) throw error;
-      notifikasi = 'Data iklan komersial berhasil dihapus!';
-      tipeNotifikasi = 'sukses';
-    }
-
-    // JALUR C: INPUT ARTIKEL BERITA BARU
-    else if (tipeForm === 'berita') {
-      const judul = formData.get('judul');
-      const slug = formData.get('slug');
-      const kategori = formData.get('kategori');
-      const penulis = formData.get('penulis');
-      const gambar_url = formData.get('gambar_url');
-      const pdf_url = formData.get('pdf_url'); 
-      const ringkasan = formData.get('ringkasan');
-      const isi_konten = formData.get('isi_konten');
-
-      const { error } = await supabase
-        .from('berita')
-        .insert([
-          { 
-            judul, 
-            slug, 
-            kategori, 
-            penulis: penulis || 'Redaksi', 
-            gambar_url,
-            pdf_url, 
-            ringkasan, 
-            isi_konten,
-            created_at: new Date().toISOString()
-          }
-        ]);
-
-      if (error) throw error;
-      notifikasi = 'Artikel berita baru berhasil diterbitkan!';
-      tipeNotifikasi = 'sukses';
-    } 
-    
-    // JALUR D: INPUT BANNER IKLAN BARU
-    else if (tipeForm === 'iklan') {
-      const konten_teks = formData.get('konten_teks');
-      const link_tujuan = formData.get('link_tujuan');
-      const gambar_url_iklan = formData.get('gambar_url'); 
-      const pdf_url_iklan = formData.get('pdf_url');     
-      const posisi = formData.get('posisi');
-      const status = formData.get('status');
-
-      const { error } = await supabase
-        .from('iklan')
-        .insert([
-          { 
-            konten_teks, 
-            link_tujuan, 
-            gambar_url: gambar_url_iklan,
-            pdf_url: pdf_url_iklan,
-            posisi, 
-            status,
-            created_at: new Date().toISOString()
-          }
-        ]);
-
-      if (error) throw error;
-      notifikasi = 'Iklan komersial berhasil dipasang!';
-      tipeNotifikasi = 'sukses';
-    }
-  } catch (err: any) {
-    notifikasi = 'Gagal memproses data: ' + err.message;
-    tipeNotifikasi = 'gagal';
-  }
-}
-
-// 2. AMBIL DATA UNTUK TABEL MANAGEMENT
-const { data: daftarBerita } = await supabase
-  .from('berita')
-  .select('*')
-  .order('created_at', { ascending: false });
-
-const { data: daftarIklan } = await supabase
-  .from('iklan')
-  .select('*')
-  .order('created_at', { ascending: false });
+export const prerender = true; // Menggunakan sistem statis sisi klien agar bebas 404 Vercel
 ---
 <html lang="id">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Nusa-Media Control Center</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📰</text></svg>">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <title>Nusa-Media | Super Ad Center</title>
+    <script src="https://tailwindcss.com"></script>
+    <link href="https://googleapis.com" rel="stylesheet">
   </head>
   <body class="bg-gray-100 p-4 md:p-8 text-gray-900 min-h-screen" style="font-family: 'Roboto', sans-serif;">
 
@@ -133,40 +17,35 @@ const { data: daftarIklan } = await supabase
       <!-- HEADER PANEL -->
       <div class="bg-slate-900 text-white p-6 rounded-2xl shadow-sm border-b-4 border-red-600 flex justify-between items-center">
         <div>
-          <h1 class="text-2xl font-black tracking-tight"># Nusa-Media Control Center</h1>
-          <p class="text-xs text-gray-400 mt-1 uppercase tracking-wider">Sistem Input Berita, File PDF & Manajemen Iklan Dinamis</p>
+          <h1 class="text-2xl font-black tracking-tight"># Nusa-Media Ad & Content Center</h1>
+          <p class="text-xs text-gray-400 mt-1 uppercase tracking-wider">Multi-Format Ad Server (Gambar, PDF, HTML)</p>
         </div>
-        <a href="/" class="text-xs bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-2 rounded-lg transition">Lihat Beranda ↗</a>
+        <a href="/" class="text-xs bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-2 rounded-lg transition">Ke Beranda ↗</a>
       </div>
 
-      <!-- NOTIFIKASI AKTIVITAS -->
-      {notifikasi && (
-        <div class={`p-4 rounded-xl font-bold text-sm shadow-xs flex justify-between items-center ${tipeNotifikasi === 'sukses' ? 'bg-emerald-50 border border-emerald-300 text-emerald-800' : 'bg-rose-50 border border-rose-300 text-rose-800'}`}>
-          <span>{notifikasi}</span>
-          <button onclick="this.parentElement.remove()" class="text-xs font-black opacity-50 hover:opacity-100">✕</button>
-        </div>
-      )}
+      <!-- NOTIFIKASI -->
+      <div id="notif-box" class="hidden p-4 rounded-xl font-bold text-sm shadow-xs flex justify-between items-center mb-4">
+        <span id="notif-text"></span>
+      </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         
-        <!-- FORM 1: INPUT BERITA BARU -->
-        <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-200 shadow-xs">
-          <h2 class="text-lg font-black text-slate-800 mb-4 pb-2 border-b">📰 Tulis Artikel Berita Baru</h2>
-          <form method="POST" class="space-y-4">
-            <input type="hidden" name="tipe_form" value="berita" />
-            
+        <!-- FORM INPUT BERITA -->
+        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs">
+          <h2 class="text-base font-black text-slate-800 mb-4 pb-1 border-b uppercase tracking-wider">📰 Terbitkan Berita</h2>
+          <form id="form-berita" class="space-y-4">
             <div>
-              <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Judul Utama Berita</label>
-              <input type="text" id="judul" name="judul" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="Ketik judul berita terhangat..." required />
+              <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Judul Utama</label>
+              <input type="text" id="judul" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none bg-gray-50" required />
             </div>
             <div>
-              <label class="block text-xs font-bold uppercase text-gray-500 mb-1">URL Slug (Otomatis Terisi)</label>
-              <input type="text" id="slug" name="slug" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none bg-gray-100 text-gray-600" placeholder="otomatis-terbentuk-dari-judul" readonly required />
+              <label class="block text-xs font-bold text-gray-500 uppercase mb-1">URL Slug</label>
+              <input type="text" id="slug" class="w-full border rounded-lg px-3 py-2 text-sm bg-gray-100 text-gray-500 focus:outline-none" readonly required />
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-2">
               <div>
-                <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Kategori Liputan</label>
-                <select name="kategori" class="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:border-red-500">
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Kategori</label>
+                <select id="kategori" class="w-full border rounded-lg px-2 py-2 text-xs bg-gray-50">
                   <option value="Politik & Ekonomi">Politik & Ekonomi</option>
                   <option value="Teknologi Digital">Teknologi Digital</option>
                   <option value="Nusantara Global">Nusantara Global</option>
@@ -174,40 +53,112 @@ const { data: daftarIklan } = await supabase
                 </select>
               </div>
               <div>
-                <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Nama Penulis / Inisial</label>
-                <input type="text" name="penulis" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="Redaksi" />
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Penulis</label>
+                <input type="text" id="penulis" class="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50" placeholder="Redaksi" />
               </div>
-            </div>
-            
-            <!-- MULTIMEDIA BERITA -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-gray-50 p-3 rounded-xl border border-dashed border-gray-300">
-              <div>
-                <label class="block text-xs font-bold uppercase text-gray-500 mb-1">🔗 URL Gambar Berita</label>
-                <input type="url" name="gambar_url" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-red-500 bg-white" placeholder="https://unsplash.com" />
-              </div>
-              <div>
-                <label class="block text-xs font-bold uppercase text-gray-500 mb-1">📂 URL PDF Dokumen (Opsional)</label>
-                <input type="url" name="pdf_url" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-red-500 bg-white" placeholder="https://supabase.co" />
-              </div>
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Ringkasan Pendek (Snippet)</label>
-              <textarea name="ringkasan" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="Ringkasan satu kalimat..." required></textarea>
             </div>
             <div>
-              <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Isi Konten Berita Lengkap</label>
-              <textarea name="isi_konten" rows="5" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="Tulis berita lengkap..." required></textarea>
+              <label class="block text-xs font-bold text-gray-500 uppercase mb-1">🔗 URL Gambar Sampul</label>
+              <input type="url" id="gambar_url" class="w-full border rounded-lg px-3 py-2 text-xs bg-gray-50" placeholder="https://unsplash.com" required />
             </div>
-
-            <button type="submit" class="w-full bg-slate-900 hover:bg-black text-white font-bold py-2.5 rounded-xl text-sm transition">Terbitkan Artikel Sekarang 🚀</button>
+            <div>
+              <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Isi Berita Lengkap</label>
+              <textarea id="isi_konten" rows="5" class="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none" required></textarea>
+            </div>
+            <button type="submit" id="btn-berita" class="w-full bg-slate-900 hover:bg-black text-white font-bold py-2 rounded-xl text-xs transition uppercase tracking-wider">Terbitkan Berita 🚀</button>
           </form>
         </div>
 
-        <!-- FORM 2: INPUT BANNER IKLAN -->
-        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs h-fit">
-          <h2 class="text-lg font-black text-slate-800 mb-4 pb-2 border-b">💰 Slot Banner Iklan</h2>
-          <form method="POST" class="space-y-4">
-            <input type="hidden" name="tipe_form" value="iklan" />
+        <!-- FORM INPUT BANNER IKLAN (DIPERBARUI) -->
+        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs">
+          <h2 class="text-base font-black text-slate-800 mb-4 pb-1 border-b uppercase tracking-wider">💰 Pasang Slot Iklan Baru</h2>
+          <form id="form-iklan" class="space-y-4">
             <div>
-              <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Nama / Teks Iklan</label>
+              <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nama / Deskripsi Sponsor</label>
+              <input type="text" id="konten_teks" class="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50" placeholder="Contoh: Banner Utama Toko..." required />
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Format Konten</label>
+                <select id="format_iklan" class="w-full border rounded-lg px-2 py-2 text-xs bg-amber-50 font-bold text-amber-900 focus:outline-none">
+                  <option value="Gambar">🖼️ File Gambar / Foto</option>
+                  <option value="PDF">📂 Berkas PDF Tab/Iframe</option>
+                  <option value="HTML">💻 Kode HTML / AdSense</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Posisi Peletakan</label>
+                <select id="posisi" class="w-full border rounded-lg px-2 py-2 text-xs bg-gray-50">
+                  <option value="Header Utama">Atas Artikel (Header)</option>
+                  <option value="Tengah Artikel">Bawah Artikel</option>
+                  <option value="Sidebar Kanan">Atas Sidebar Kanan</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label id="label-materi" class="block text-xs font-bold text-gray-500 uppercase mb-1">🔗 URL Gambar / Foto Banner</label>
+              <textarea id="materi_iklan" rows="3" class="w-full border rounded-lg px-3 py-2 text-xs bg-gray-50 focus:outline-none" placeholder="Masukkan link tautan berkas foto Anda..." required></textarea>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Link Tujuan Klik (Hanya Untuk Format Gambar)</label>
+              <input type="url" id="link_tujuan" class="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50" placeholder="https://website-sponsor.com" />
+            </div>
+            <button type="submit" id="btn-iklan" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-xl text-xs transition uppercase tracking-wider">Pasang Iklan Komersial 💳</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- TABEL DAFTAR MANAGEMENT -->
+      <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs">
+        <h2 class="text-base font-black text-slate-800 mb-4 pb-1 border-b uppercase tracking-wider">⚙️ Manajemen Konten Cloud Terbit</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <h3 class="text-xs font-bold uppercase text-gray-400 tracking-wider mb-2">Daftar Berita Nusantara</h3>
+            <div id="tabel-berita" class="border rounded-xl p-3 bg-gray-50 space-y-2 text-xs max-h-60 overflow-y-auto">Memuat data berita...</div>
+          </div>
+          <div>
+            <h3 class="text-xs font-bold uppercase text-gray-400 tracking-wider mb-2">Daftar Slot Iklan Aktif</h3>
+            <div id="tabel-iklan" class="border rounded-xl p-3 bg-gray-50 space-y-2 text-xs max-h-60 overflow-y-auto">Memuat data iklan...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script is:inline>
+      const SUPABASE_PROJECT_ID = "zmvlvzspjohrewjbtfxc";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inptdmx2enNwam9ocmV3amJ0ZnhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMTM0MTAsImV4cCI6MjA5NDU4OTQxMH0.PtTVq_b4gLonRpNSbPYKncoXlGVS1lKaADy74dbhuSI";
+      const BASE_URL = `https://${SUPABASE_PROJECT_ID}.supabase.co/rest/v1`;
+
+      const headers = { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
+
+      function showNotif(text, type) {
+        const box = document.getElementById('notif-box');
+        box.className = `p-4 rounded-xl font-bold text-sm flex justify-between items-center mb-4 ${type === 'sukses' ? 'bg-emerald-50 border border-emerald-300 text-emerald-800' : 'bg-rose-50 border border-rose-300 text-rose-800'}`;
+        document.getElementById('notif-text').textContent = text;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      // Interaktivitas merubah placeholder input sesuai format iklan yang dipilih
+      document.getElementById('format_iklan').addEventListener('change', function() {
+        const val = this.value;
+        const label = document.getElementById('label-materi');
+        const txt = document.getElementById('materi_iklan');
+        const linkInput = document.getElementById('link_tujuan');
+
+        if (val === 'Gambar') {
+          label.textContent = "🔗 URL Gambar / Foto Banner";
+          txt.placeholder = "https://link-gambar.com";
+          linkInput.disabled = false;
+        } else if (val === 'PDF') {
+          label.textContent = "🔗 URL Berkas PDF Dokumen";
+          txt.placeholder = "https://supabase.co";
+          linkInput.disabled = true;
+          linkInput.value = '';
+        } else if (val === 'HTML') {
+          label.textContent = "💻 Input Script HTML / AdSense Kustom";
+          txt.placeholder = "<div><h2>Iklan Kustom</h2></div>";
+          linkInput.disabled = true;
+          linkInput.value = '';
+        }
+      });
+
