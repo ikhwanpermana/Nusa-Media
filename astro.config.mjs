@@ -1,8 +1,8 @@
 import { defineConfig } from 'astro/config';
 import tailwind from '@astrojs/tailwind';
-import vercel from '@astrojs/vercel'; // 👈 PERBAIKAN: Impor langsung nama paket utamanya
+import vercel from '@astrojs/vercel/serverless'; // 👈 KUNCI: Tambahkan /serverless secara eksplisit
 
-// Konfigurasi Nusa Media Modern Terpadu
+// Konfigurasi Nusa Media Terverifikasi Mode Hibrida
 export default defineConfig({
   output: 'hybrid', 
   adapter: vercel({
