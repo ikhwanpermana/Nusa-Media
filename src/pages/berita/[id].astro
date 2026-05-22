@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase';
 // Mengaktifkan mode statis sepenuhnya untuk rute ini
 export const prerender = true;
 
-// 1. WAJIB DI MODE STATIS: Daftarkan semua ID berita dari Supabase saat proses build
+// 1. Daftarkan semua ID berita dari Supabase saat proses build
 export async function getStaticPaths() {
   const { data: semuaBerita, error } = await supabase
     .from('berita')
@@ -15,7 +15,6 @@ export async function getStaticPaths() {
     return [];
   }
 
-  // Mengembalikan array objek params untuk setiap ID berita
   return semuaBerita.map((berita) => ({
     params: { id: berita.id.toString() },
   }));
@@ -33,16 +32,49 @@ const { data: berita, error } = await supabase
 if (error || !berita) {
   return Astro.redirect('/404');
 }
+
+// 3. VARIABEL SEO
+const judulSEO = `${berita.judul} | Nusa-Media`;
+const deskripsiSEO = (berita.ringkasan || berita.isi_konten || berita.konten || '').substring(0, 160).replace(/<[^>]*>/g, '') + '...';
+const gambarSEO = berita.gambar_url || berita.image_url || "https://unsplash.com";
+const urlSEO = `https://vercel.app{id}`;
+
+// 4. URL SHARE BUTTONS
+const shareWA = `https://whatsapp.com{encodeURIComponent(berita.judul + ' - ' + urlSEO)}`;
+const shareFB = `https://facebook.com{encodeURIComponent(urlSEO)}`;
 ---
 
 <html lang="id">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{berita.judul} | Nusa-Media</title>
+    
+    <!-- SEO Standar -->
+    <title>{judulSEO}</title>
+    <meta name="description" content={deskripsiSEO} />
+    <link rel="canonical" href={urlSEO} />
+    
+    <!-- Open Graph / Facebook / WhatsApp -->
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content={urlSEO} />
+    <meta property="og:title" content={judulSEO} />
+    <meta property="og:description" content={deskripsiSEO} />
+    <meta property="og:image" content={gambarSEO} />
+    <meta property="og:site_name" content="Nusa-Media" />
+    <meta property="article:published_time" content={berita.created_at} />
+    <meta property="article:author" content={berita.penulis || 'Redaksi Nusa Media'} />
+
+    <!-- Twitter / X -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={urlSEO} />
+    <meta property="twitter:title" content={judulSEO} />
+    <meta property="twitter:description" content={deskripsiSEO} />
+    <meta property="twitter:image" content={gambarSEO} />
+
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://googleapis.com">
     <link rel="preconnect" href="https://gstatic.com" crossorigin>
-    <link href="https://googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://googleapis.com/css2?family=Roboto:wght=400;500;700;900&display=swap" rel="stylesheet">
     <style>body { font-family: 'Roboto', sans-serif; }</style>
   </head>
   <body class="bg-gray-100 text-gray-900 min-h-screen">
@@ -64,22 +96,30 @@ if (error || !berita) {
           {berita.judul}
         </h1>
 
-        <div class="text-xs text-gray-500 border-b pb-4 mb-6">
-          Penulis: <span class="font-bold text-gray-700">{berita.penulis || berita.sumber || 'Redaksi Nusa Media'}</span>
+        <div class="text-xs text-gray-500 pb-4 mb-4 flex flex-wrap justify-between items-center gap-4 border-b">
+          <div>
+            Penulis: <span class="font-bold text-gray-700">{berita.penulis || berita.sumber || 'Redaksi Nusa Media'}</span>
+          </div>
+          
+          <!-- SHARE BUTTONS -->
+          <div class="flex items-center gap-2">
+            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Bagikan:</span>
+            <a href={shareWA} target="_blank" rel="noopener noreferrer" class="bg-[#25D366] text-white text-xs font-bold px-3 py-1.5 rounded-full hover:opacity-90 transition flex items-center gap-1.5 shadow-sm">
+              <svg xmlns="http://w3.org" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              WhatsApp
+            </a>
+            <a href={shareFB} target="_blank" rel="noopener noreferrer" class="bg-[#1877F2] text-white text-xs font-bold px-3 py-1.5 rounded-full hover:opacity-90 transition flex items-center gap-1.5 shadow-sm">
+              <svg xmlns="http://w3.org" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+              Facebook
+            </a>
+          </div>
         </div>
 
-        {/* Gambar Utama Detail */}
         <div class="w-full h-64 md:h-[400px] bg-slate-100 rounded-lg overflow-hidden mb-6 shadow-inner">
-          <img 
-            src={berita.gambar_url || berita.image_url || "https://unsplash.com"} 
-            alt={berita.judul} 
-            class="w-full h-full object-cover"
-          />
+          <img src={gambarSEO} alt={berita.judul} class="w-full h-full object-cover" />
         </div>
 
-        {/* Isi Konten Lengkap */}
-        <div class="text-gray-800 text-base md:text-lg leading-relaxed whitespace-pre-line">
-          {berita.isi_konten || berita.konten || berita.ringkasan}
+        <div class="text-gray-800 text-base md:text-lg leading-relaxed whitespace-pre-line" set:html={berita.isi_konten || berita.konten || berita.ringkasan}>
         </div>
       </article>
     </main>
