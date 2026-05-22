@@ -24,10 +24,10 @@ if (error) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nusa-Media | Portal Berita Multi-Sistem Hybrid</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📰</text></svg>">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://tailwindcss.com"></script>
+    <link rel="preconnect" href="https://googleapis.com">
+    <link rel="preconnect" href="https://gstatic.com" crossorigin>
+    <link href="https://googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
   </head>
   <body class="bg-gray-100 text-gray-900 min-h-screen" style="font-family: 'Roboto', sans-serif;">
 
@@ -60,23 +60,47 @@ if (error) {
       </div>
     </header>
 
+    <!-- KATEGORI MENU BAR (BARU & INTERAKTIF) -->
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-xs">
+      <div class="max-w-6xl mx-auto px-4 py-3 overflow-x-auto flex gap-2 no-scrollbar">
+        <button data-filter="semua" class="btn-filter text-xs font-black uppercase tracking-wider px-4 py-2 rounded-lg bg-red-600 text-white shadow-xs transition whitespace-nowrap">
+          🌐 Semua
+        </button>
+        <button data-filter="Politik & Ekonomi" class="btn-filter text-xs font-black uppercase tracking-wider px-4 py-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition whitespace-nowrap">
+          ⚖️ Politik & Ekonomi
+        </button>
+        <button data-filter="Teknologi Digital" class="btn-filter text-xs font-black uppercase tracking-wider px-4 py-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition whitespace-nowrap">
+          💻 Teknologi Digital
+        </button>
+        <button data-filter="Nusantara Global" class="btn-filter text-xs font-black uppercase tracking-wider px-4 py-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition whitespace-nowrap">
+          🇲🇨 Nusantara Global
+        </button>
+        <button data-filter="Olahraga & Gaya Hidup" class="btn-filter text-xs font-black uppercase tracking-wider px-4 py-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition whitespace-nowrap">
+          ⚽ Olahraga & Gaya Hidup
+        </button>
+      </div>
+    </nav>
+
     <!-- Konten Utama -->
     <main class="max-w-6xl mx-auto px-4 py-6">
       <div class="space-y-4">
         <div class="border-b-2 border-slate-800 pb-1 flex justify-between items-center">
-          <h2 class="bg-slate-800 text-white px-3 py-1 text-xs font-bold uppercase tracking-wider inline-block">Arsip Berita Nusantara</h2>
+          <h2 id="judul-arsip" class="bg-slate-800 text-white px-3 py-1 text-xs font-bold uppercase tracking-wider inline-block">Arsip Berita: Semua</h2>
           <a href="/admin-rahasia-99" class="text-xs text-red-600 font-bold hover:underline">Panel Kontrol Admin 🔐</a>
         </div>
         
         {semuaBeritaTersedia.length > 0 ? (
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div id="wadah-berita" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {semuaBeritaTersedia.map((berita) => {
-              // 🔥 PERBAIKAN: Mengarahkan rute secara tepat masuk ke subfolder /berita/ agar tidak memicu 404
               const linkDetail = berita.slug ? `/berita/${berita.slug}` : `/berita/${berita.id}`;
               const gambarBerita = berita.gambar_url || "https://unsplash.com";
+              
+              // Standardisasi teks kategori agar cocok saat difilter javascript
+              const kategoriTeks = (berita.kategori || 'Fokus').trim();
 
               return (
-                <article class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition group">
+                // Menyimpan nama kategori ke dalam atribut HTML data-category
+                <article data-category={kategoriTeks} class="kartu-berita bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition group">
                   <div>
                     <div class="block h-44 bg-slate-200 overflow-hidden relative">
                       <img 
@@ -84,8 +108,8 @@ if (error) {
                         alt={berita.judul} 
                         class="w-full h-full object-cover group-hover:scale-105 transition duration-200" 
                       />
-                      <span class="absolute top-3 left-3 bg-red-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded tracking-wide">
-                        {berita.kategori || 'Fokus'}
+                      <span class="absolute top-3 left-3 bg-red-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded tracking-wide-label">
+                        {kategoriTeks}
                       </span>
                     </div>
                     <div class="p-4">
@@ -119,5 +143,40 @@ if (error) {
       </div>
       <p>© Nusa-Media Online. All Rights Reserved.</p>
     </footer>
+
+    <!-- LOGIKA FILTER JAVASCRIPT LIVE SISI KLIEN (INSTAN & TANPA RELOAD) -->
+    <script is:inline>
+      const tombolFilter = document.querySelectorAll('.btn-filter');
+      const daftarKartuBerita = document.querySelectorAll('.kartu-berita');
+      const labelJudulArsip = document.getElementById('judul-arsip');
+
+      tombolFilter.forEach(tombol => {
+        tombol.addEventListener('click', () => {
+          const kategoriTarget = tombol.getAttribute('data-filter');
+
+          // 1. Ubah Gaya Tombol Aktif
+          tombolFilter.forEach(b => {
+            b.classList.remove('bg-red-600', 'text-white', 'shadow-xs');
+            b.classList.add('bg-gray-100', 'text-gray-600');
+          });
+          tombol.classList.remove('bg-gray-100', 'text-gray-600');
+          tombol.classList.add('bg-red-600', 'text-white', 'shadow-xs');
+
+          // 2. Ubah Judul Header Arsip
+          labelJudulArsip.textContent = `Arsip Berita: ${kategoriTarget === 'semua' ? 'Semua' : kategoriTarget}`;
+
+          // 3. Jalankan Penyaringan Kartu Berita
+          daftarKartuBerita.forEach(kartu => {
+            const kategoriKartu = kartu.getAttribute('data-category');
+            
+            if (kategoriTarget === 'semua' || kategoriKartu === kategoriTarget) {
+              kartu.style.display = 'flex'; // Tampilkan kartu
+            } else {
+              kartu.style.display = 'none'; // Sembunyikan kartu
+            }
+          });
+        });
+      });
+    </script>
   </body>
 </html>
