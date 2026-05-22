@@ -1,7 +1,8 @@
 ---
 // src/pages/index.astro
 import { supabase } from '../lib/supabase';
-import '../../styles/global.css'; //
+// 🔥 PERBAIKAN 1: Membetulkan jalur impor agar pas membaca folder styles dari halaman utama
+import '../styles/global.css'; 
 
 // Mengaktifkan mode statis (Astro akan build ulang otomatis saat webhook Supabase terpicu)
 export const prerender = true;
@@ -87,7 +88,6 @@ if (error) {
       <div class="space-y-4">
         <div class="border-b-2 border-slate-800 pb-1 flex justify-between items-center">
           <h2 id="judul-arsip" class="bg-slate-800 text-white px-3 py-1 text-xs font-bold uppercase tracking-wider inline-block">Arsip Berita: Semua</h2>
-          <!-- 🔥 DIPERBAIKI: Link Panel Kontrol Admin di sebelah kanan sudah dihapus murni -->
         </div>
         
         {semuaBeritaTersedia.length > 0 ? (
@@ -100,7 +100,7 @@ if (error) {
               return (
                 <article data-category={kategoriTeks} class="kartu-berita bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition group">
                   <div>
-                    <!-- 🔥 DIPERBAIKI: Gambar sekarang bisa diklik menuju halaman detail berita -->
+                    <!-- Gambar Bisa Diklik -->
                     <a href={linkDetail} class="block h-44 bg-slate-200 overflow-hidden relative">
                       <img 
                         src={gambarBerita} 
@@ -119,7 +119,7 @@ if (error) {
                         {berita.ringkasan || berita.isi_konten}
                       </p>
                       
-                      <!-- 🔥 BARU: Ditambahkan tombol Baca Selengkapnya di tiap kotak berita -->
+                      <!-- Tombol Baca Selengkapnya -->
                       <div class="pt-1">
                         <a href={linkDetail} class="inline-flex items-center text-xs font-black text-red-600 hover:text-red-700 hover:underline uppercase tracking-wider gap-1 group/btn">
                           Baca Selengkapnya 
@@ -142,18 +142,17 @@ if (error) {
       </div>
     </main>
 
-    <!-- FOOTER BAR -->
+    <!-- FOOTER BAR (DIPERBAIKI) -->
     <footer class="bg-slate-900 text-gray-400 text-xs py-6 mt-12 space-y-3">
       <div class="flex justify-center gap-4 text-gray-500">
         <a href="/syarat" class="hover:text-red-500 transition">Syarat & Ketentuan</a>
         <span>•</span>
-        <!-- 🔥 DIPERBAIKI: Link admin rahasia di bagian bawah sudah dibersihkan total -->
         <a href="/" class="hover:text-red-500 transition">Hubungi Kami</a>
       </div>
       <p>© Nusa-Media Online. All Rights Reserved.</p>
     </footer>
 
-    <!-- 🔥 DIPERBAIKI & DISELESAIKAN: Logika filter skrip javascript sisi klien lengkap sampai akhir -->
+    <!-- 🔥 PERBAIKAN 2: Menyisipkan kembali naskah skrip penyaring berita sisi klien yang hilang -->
     <script is:inline>
       const tombolFilter = document.querySelectorAll('.btn-filter');
       const daftarKartuBerita = document.querySelectorAll('.kartu-berita');
@@ -163,7 +162,7 @@ if (error) {
         tombol.addEventListener('click', () => {
           const kategoriTarget = tombol.getAttribute('data-filter');
 
-          // 1. Atur Efek Tombol Aktif
+          // A. Ubah Gaya Warna Aktif Tombol Kategori
           tombolFilter.forEach(b => {
             b.classList.remove('bg-red-600', 'text-white', 'shadow-xs');
             b.classList.add('bg-gray-100', 'text-gray-600');
@@ -171,12 +170,12 @@ if (error) {
           tombol.classList.remove('bg-gray-100', 'text-gray-600');
           tombol.classList.add('bg-red-600', 'text-white', 'shadow-xs');
 
-          // 2. Perbarui Teks Label Arsip Berita
+          // B. Ubah Judul Header Kelompok Arsip Liputan
           if (labelJudulArsip) {
             labelJudulArsip.textContent = `Arsip Berita: ${kategoriTarget === 'semua' ? 'Semua' : kategoriTarget}`;
           }
 
-          // 3. Jalankan Penyaringan Kartu Berita secara Live
+          // C. Saring Sembunyikan/Munculkan Kotak Kartu Berita secara Instan
           daftarKartuBerita.forEach(kartu => {
             const kategoriKartu = kartu.getAttribute('data-category');
             if (kategoriTarget === 'semua' || kategoriKartu === kategoriTarget) {
@@ -184,3 +183,9 @@ if (error) {
             } else {
               kartu.style.display = 'none';
             }
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
