@@ -1,17 +1,21 @@
 ---
 // src/pages/berita/[id].astro
 export const prerender = false; // 🚀 STRATEGI TERBAIK: Mengaktifkan SSR agar setiap berita baru langsung aktif tanpa Error 404!
-import '../../styles/global.css'; //
 
 import { supabase } from '../../lib/supabase';
+import '../../styles/global.css'; 
 
 const { id } = Astro.params;
 
-// 1. Ambil data detail berita spesifik secara real-time berdasarkan ID
+// PINTAR: Mendeteksi apakah parameter URL berupa Angka ID murni atau Teks Slug judul
+const isNumeric = /^\d+$/.test(id || '');
+const kolomQuery = isNumeric ? 'id' : 'slug';
+
+// 1. Ambil data detail berita spesifik secara real-time berdasarkan ID atau Slug
 const { data: berita, error } = await supabase
   .from('berita')
   .select('*')
-  .eq('id', id)
+  .eq(kolomQuery, id)
   .maybeSingle();
 
 // Jika berita tidak ditemukan di database Supabase, lempar ke halaman 404 resmi
@@ -24,7 +28,7 @@ const judulSEO = `${berita.judul} | Nusa-Media`;
 const deskripsiSEO = (berita.ringkasan || berita.isi_konten || '').substring(0, 160).replace(/<[^>]*>/g, '') + '...';
 const gambarSEO = berita.gambar_url || "https://unsplash.com";
 
-// 🔥 PERBAIKAN 1: Memperbaiki tanda dollar ($) dan kurung kurawal agar link URL deteksi id berfungsi asli
+// 🔥 PERBAIKAN 1: Memperbaiki tanda dollar ($) dan kurung kurawal agar link URL deteksi berfungsi asli
 const urlSEO = `https://vercel.app{id}`;
 
 // 🔥 PERBAIKAN 2: Membetulkan format interpolasi string pada tautan bagikan sosial media resmi
@@ -59,7 +63,7 @@ const shareFB = `https://facebook.com{encodeURIComponent(urlSEO)}`;
     <meta property="twitter:description" content={deskripsiSEO} />
     <meta property="twitter:image" content={gambarSEO} />
 
-    <!-- 🔥 PERBAIKAN 3: Memperbaiki tautan pra-koneksi dan impor Google Fonts agar tipografi Roboto aktif -->
+    <!-- 🔥 PERBAIKAN 3: Memperbaiki tautan pra-koneksi dan impor Google Fonts agar tipografi Roboto aktif murni -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
