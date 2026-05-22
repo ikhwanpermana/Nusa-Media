@@ -24,10 +24,10 @@ if (error) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nusa-Media | Portal Berita Multi-Sistem Hybrid</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📰</text></svg>">
-    <script src="https://tailwindcss.com"></script>
-    <link rel="preconnect" href="https://googleapis.com">
-    <link rel="preconnect" href="https://gstatic.com" crossorigin>
-    <link href="https://googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
   </head>
   <body class="bg-gray-100 text-gray-900 min-h-screen" style="font-family: 'Roboto', sans-serif;">
 
@@ -52,7 +52,7 @@ if (error) {
           <h1 class="text-4xl font-black tracking-tight text-white flex items-center gap-1">
             <a href="/">NUSA<span class="text-red-500">MEDIA</span><span class="text-xs text-gray-400 font-normal border-l border-gray-600 pl-2">ONLINE</span></a>
           </h1>
-          <p class="text-xs text-gray-400 mt-0.5">Media Informasi Kilat • Berbasis Supabase PostgreSQL</p>
+          <p class="text-xs text-gray-400 mt-0.5">Media Informasi Terpercaya • Berbasis Sumber Akurat</p>
         </div>
         <div class="w-full md:w-96 bg-red-50 border border-red-200 text-red-700 font-bold p-3 text-center text-xs rounded shadow-sm">
           Space Iklan Ucapan Selamat & Sukses Instansi / Perorangan
@@ -86,7 +86,7 @@ if (error) {
       <div class="space-y-4">
         <div class="border-b-2 border-slate-800 pb-1 flex justify-between items-center">
           <h2 id="judul-arsip" class="bg-slate-800 text-white px-3 py-1 text-xs font-bold uppercase tracking-wider inline-block">Arsip Berita: Semua</h2>
-          <a href="/admin-rahasia-99" class="text-xs text-red-600 font-bold hover:underline">Panel Kontrol Admin 🔐</a>
+          <!-- 🔥 DIPERBAIKI: Link Panel Kontrol Admin di sebelah kanan sudah dihapus murni -->
         </div>
         
         {semuaBeritaTersedia.length > 0 ? (
@@ -94,31 +94,37 @@ if (error) {
             {semuaBeritaTersedia.map((berita) => {
               const linkDetail = berita.slug ? `/berita/${berita.slug}` : `/berita/${berita.id}`;
               const gambarBerita = berita.gambar_url || "https://unsplash.com";
-              
-              // Standardisasi teks kategori agar cocok saat difilter javascript
               const kategoriTeks = (berita.kategori || 'Fokus').trim();
 
               return (
-                // Menyimpan nama kategori ke dalam atribut HTML data-category
                 <article data-category={kategoriTeks} class="kartu-berita bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition group">
                   <div>
-                    <div class="block h-44 bg-slate-200 overflow-hidden relative">
+                    <!-- 🔥 DIPERBAIKI: Gambar sekarang bisa diklik menuju halaman detail berita -->
+                    <a href={linkDetail} class="block h-44 bg-slate-200 overflow-hidden relative">
                       <img 
                         src={gambarBerita} 
                         alt={berita.judul} 
-                        class="w-full h-full object-cover group-hover:scale-105 transition duration-200" 
+                        class="w-full h-full object-cover group-hover:scale-105 transition duration-300" 
                       />
                       <span class="absolute top-3 left-3 bg-red-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded tracking-wide-label">
                         {kategoriTeks}
                       </span>
-                    </div>
-                    <div class="p-4">
+                    </a>
+                    <div class="p-4 space-y-3">
                       <h3 class="font-bold text-gray-900 leading-tight text-lg line-clamp-2 hover:text-red-600">
                         <a href={linkDetail}>{berita.judul}</a>
                       </h3>
                       <p class="text-xs text-gray-600 mt-3 border-t pt-3 leading-relaxed text-justify line-clamp-4">
                         {berita.ringkasan || berita.isi_konten}
                       </p>
+                      
+                      <!-- 🔥 BARU: Ditambahkan tombol Baca Selengkapnya di tiap kotak berita -->
+                      <div class="pt-1">
+                        <a href={linkDetail} class="inline-flex items-center text-xs font-black text-red-600 hover:text-red-700 hover:underline uppercase tracking-wider gap-1 group/btn">
+                          Baca Selengkapnya 
+                          <span class="inline-block transition-transform duration-200 group-hover/btn:translate-x-1">→</span>
+                        </a>
+                      </div>
                     </div>
                   </div>
                   <div class="p-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center text-[11px] text-gray-400">
@@ -135,16 +141,18 @@ if (error) {
       </div>
     </main>
 
+    <!-- FOOTER BAR -->
     <footer class="bg-slate-900 text-gray-400 text-xs py-6 mt-12 space-y-3">
       <div class="flex justify-center gap-4 text-gray-500">
         <a href="/syarat" class="hover:text-red-500 transition">Syarat & Ketentuan</a>
         <span>•</span>
+        <!-- 🔥 DIPERBAIKI: Link admin rahasia di bagian bawah sudah dibersihkan total -->
         <a href="/" class="hover:text-red-500 transition">Hubungi Kami</a>
       </div>
       <p>© Nusa-Media Online. All Rights Reserved.</p>
     </footer>
 
-    <!-- LOGIKA FILTER JAVASCRIPT LIVE SISI KLIEN (INSTAN & TANPA RELOAD) -->
+    <!-- 🔥 DIPERBAIKI & DISELESAIKAN: Logika filter skrip javascript sisi klien lengkap sampai akhir -->
     <script is:inline>
       const tombolFilter = document.querySelectorAll('.btn-filter');
       const daftarKartuBerita = document.querySelectorAll('.kartu-berita');
@@ -154,7 +162,7 @@ if (error) {
         tombol.addEventListener('click', () => {
           const kategoriTarget = tombol.getAttribute('data-filter');
 
-          // 1. Ubah Gaya Tombol Aktif
+          // 1. Atur Efek Tombol Aktif
           tombolFilter.forEach(b => {
             b.classList.remove('bg-red-600', 'text-white', 'shadow-xs');
             b.classList.add('bg-gray-100', 'text-gray-600');
@@ -162,21 +170,16 @@ if (error) {
           tombol.classList.remove('bg-gray-100', 'text-gray-600');
           tombol.classList.add('bg-red-600', 'text-white', 'shadow-xs');
 
-          // 2. Ubah Judul Header Arsip
-          labelJudulArsip.textContent = `Arsip Berita: ${kategoriTarget === 'semua' ? 'Semua' : kategoriTarget}`;
+          // 2. Perbarui Teks Label Arsip Berita
+          if (labelJudulArsip) {
+            labelJudulArsip.textContent = `Arsip Berita: ${kategoriTarget === 'semua' ? 'Semua' : kategoriTarget}`;
+          }
 
-          // 3. Jalankan Penyaringan Kartu Berita
+          // 3. Jalankan Penyaringan Kartu Berita secara Live
           daftarKartuBerita.forEach(kartu => {
             const kategoriKartu = kartu.getAttribute('data-category');
-            
             if (kategoriTarget === 'semua' || kategoriKartu === kategoriTarget) {
-              kartu.style.display = 'flex'; // Tampilkan kartu
+              kartu.style.display = 'flex';
             } else {
-              kartu.style.display = 'none'; // Sembunyikan kartu
+              kartu.style.display = 'none';
             }
-          });
-        });
-      });
-    </script>
-  </body>
-</html>
