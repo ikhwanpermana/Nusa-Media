@@ -1,6 +1,77 @@
 ---
 // src/pages/admin-rahasia-99/index.astro
-export const prerender = false; // DINAMIS: Menggunakan server-side rendering agar tidak 404 di Vercel akibat Supabase
+import { supabase } from '../../lib/supabase';
+
+// DINAMIS: Menggunakan server-side rendering agar tidak 404 di Vercel akibat Supabase
+export const prerender = false; 
+
+let notifikasi = '';
+let tipeNotifikasi = ''; // 'sukses' atau 'gagal'
+
+// LOGIKA BACKEND: Menangkap kiriman form dari sisi server secara aman
+if (Astro.request.method === 'POST') {
+  try {
+    const formData = await Astro.request.formData();
+    const tipeForm = formData.get('tipe_form');
+
+    // JALUR 1: INPUT ARTIKEL BERITA
+    if (tipeForm === 'berita') {
+      const judul = formData.get('judul');
+      const slug = formData.get('slug');
+      const kategori = formData.get('kategori');
+      const penulis = formData.get('penulis');
+      const gambar_url = formData.get('gambar_url');
+      const ringkasan = formData.get('ringkasan');
+      const isi_konten = formData.get('isi_konten');
+
+      const { error } = await supabase
+        .from('berita')
+        .insert([
+          { 
+            judul, 
+            slug, 
+            kategori, 
+            penulis: penulis || 'Redaksi', 
+            gambar_url, 
+            ringkasan, 
+            isi_konten,
+            created_at: new Date().toISOString()
+          }
+        ]);
+
+      if (error) throw error;
+      notifikasi = 'Artikel berita baru berhasil diterbitkan!';
+      tipeNotifikasi = 'sukses';
+    } 
+    
+    // JALUR 2: INPUT BANNER IKLAN
+    else if (tipeForm === 'iklan') {
+      const konten_teks = formData.get('konten_teks');
+      const link_tujuan = formData.get('link_tujuan');
+      const posisi = formData.get('posisi');
+      const status = formData.get('status');
+
+      const { error } = await supabase
+        .from('iklan') // Pastikan Anda memiliki tabel bernama 'iklan' di Supabase
+        .insert([
+          { 
+            konten_teks, 
+            link_tujuan, 
+            posisi, 
+            status,
+            created_at: new Date().toISOString()
+          }
+        ]);
+
+      if (error) throw error;
+      notifikasi = 'Iklan komersial berhasil dipasang!';
+      tipeNotifikasi = 'sukses';
+    }
+  } catch (err: any) {
+    notifikasi = 'Gagal menyimpan data: ' + err.message;
+    tipeNotifikasi = 'gagal';
+  }
+}
 ---
 <html lang="id">
   <head>
@@ -8,14 +79,14 @@ export const prerender = false; // DINAMIS: Menggunakan server-side rendering ag
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nusa-Media Control Center</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📰</text></svg>">
-    <script src="https://tailwindcss.com"></script>
-    <link rel="preconnect" href="https://googleapis.com">
-    <link rel="preconnect" href="https://gstatic.com" crossorigin>
-    <link href="https://googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
   </head>
   <body class="bg-gray-100 p-4 md:p-8 text-gray-900 min-h-screen" style="font-family: 'Roboto', sans-serif;">
 
-    <div class="max-w-4xl mx-auto space-y-8">
+    <div class="max-w-4xl mx-auto space-y-6">
       
       <!-- HEADER PANEL -->
       <div class="bg-slate-900 text-white p-6 rounded-2xl shadow-sm border-b-4 border-red-600 flex justify-between items-center">
@@ -26,24 +97,35 @@ export const prerender = false; // DINAMIS: Menggunakan server-side rendering ag
         <a href="/" class="text-xs bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-2 rounded-lg transition">Lihat Beranda ↗</a>
       </div>
 
+      <!-- NOTIFIKASI AKTIVITAS -->
+      {notifikasi && (
+        <div class={`p-4 rounded-xl font-bold text-sm shadow-xs flex justify-between items-center ${tipeNotifikasi === 'sukses' ? 'bg-emerald-50 border border-emerald-300 text-emerald-800' : 'bg-rose-50 border border-rose-300 text-rose-800'}`}>
+          <span>{notifikasi}</span>
+          <button onclick="this.parentElement.remove()" class="text-xs font-black opacity-50 hover:opacity-100">✕</button>
+        </div>
+      )}
+
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         <!-- FORM 1: INPUT BERITA BARU -->
         <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-200 shadow-xs">
           <h2 class="text-lg font-black text-slate-800 mb-4 pb-2 border-b">📰 Tulis Artikel Berita Baru</h2>
-          <form id="form-berita" class="space-y-4">
+          <form method="POST" class="space-y-4">
+            <input type="hidden" name="tipe_form" value="berita" />
+            
             <div>
               <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Judul Utama Berita</label>
-              <input type="text" id="judul" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="Ketik judul berita terhangat..." required />
+              <input type="text" id="judul" name="judul" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="Ketik judul berita terhangat..." required />
             </div>
             <div>
               <label class="block text-xs font-bold uppercase text-gray-500 mb-1">URL Slug (Otomatis Terisi)</label>
-              <input type="text" id="slug" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none bg-gray-100 text-gray-500" placeholder="otomatis-terbentuk-dari-judul" readonly required />
+              <!-- Name ditambahkan agar terbaca backend, value diisi oleh JavaScript di bawah -->
+              <input type="text" id="slug" name="slug" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none bg-gray-100 text-gray-600" placeholder="otomatis-terbentuk-dari-judul" readonly required />
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Kategori Liputan</label>
-                <select id="kategori" class="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:border-red-500">
+                <select name="kategori" class="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:border-red-500">
                   <option value="Politik & Ekonomi">Politik & Ekonomi</option>
                   <option value="Teknologi Digital">Teknologi Digital</option>
                   <option value="Nusantara Global">Nusantara Global</option>
@@ -52,20 +134,20 @@ export const prerender = false; // DINAMIS: Menggunakan server-side rendering ag
               </div>
               <div>
                 <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Nama Penulis / Inisial</label>
-                <input type="text" id="penulis" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="Redaksi" />
+                <input type="text" name="penulis" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="Redaksi" />
               </div>
             </div>
             <div>
               <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Tautan URL Gambar Pendukung</label>
-              <input type="url" id="gambar_url" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="https://unsplash.com..." />
+              <input type="url" name="gambar_url" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="https://unsplash.com..." />
             </div>
             <div>
               <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Ringkasan Singkat (Lead)</label>
-              <input type="text" id="ringkasan" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="Ketik 1 kalimat ringkasan utama..." required />
+              <input type="text" name="ringkasan" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="Ketik 1 kalimat ringkasan utama..." required />
             </div>
             <div>
               <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Isi Konten Berita Lengkap</label>
-              <textarea id="isi_konten" rows="8" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="Ketik isi berita lengkap di sini..." required></textarea>
+              <textarea name="isi_konten" rows="8" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="Ketik isi berita lengkap di sini..." required></textarea>
             </div>
             <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl text-sm transition shadow-xs">
               Terbitkan Berita Sekarang 🚀
@@ -76,25 +158,27 @@ export const prerender = false; // DINAMIS: Menggunakan server-side rendering ag
         <!-- FORM 2: INPUT IKLAN SPONSOR -->
         <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs h-fit">
           <h2 class="text-lg font-black text-slate-800 mb-4 pb-2 border-b">💎 Pasang Iklan Sponsor</h2>
-          <form id="form-iklan" class="space-y-4">
+          <form method="POST" class="space-y-4">
+            <input type="hidden" name="tipe_form" value="iklan" />
+
             <div>
               <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Teks / URL Foto Banner Iklan</label>
-              <input type="text" id="konten_teks" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="Ketik kalimat ucapan ATAU tautan URL gambar banner..." required />
+              <input type="text" name="konten_teks" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="Ketik kalimat ucapan ATAU tautan URL gambar banner..." required />
             </div>
             <div>
               <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Link Tujuan Iklan (URL Klik)</label>
-              <input type="url" id="link_tujuan" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="https://perusahaan.com" required />
+              <input type="url" name="link_tujuan" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="https://perusahaan.com" required />
             </div>
             <div>
               <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Posisi Penempatan Banner</label>
-              <select id="posisi" class="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:border-red-500">
+              <select name="posisi" class="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:border-red-500">
                 <option value="detail_atas">Banner Atas (Tengah)</option>
                 <option value="sidebar_atas">Kolom Pengumuman (Kanan)</option>
               </select>
             </div>
             <div>
               <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Status Penayangan</label>
-              <select id="status" class="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:border-red-500">
+              <select name="status" class="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:border-red-500">
                 <option value="aktif">Langsung Aktif & Tayang</option>
                 <option value="nonaktif">Draft (Sembunyikan)</option>
               </select>
@@ -109,102 +193,23 @@ export const prerender = false; // DINAMIS: Menggunakan server-side rendering ag
 
     </div>
 
-    <!-- LOGIKA SINKRONISASI BROWSER (CLIENT-SIDE) -->
+    <!-- LOGIKA BROWSER RINGKAN (CLIENT-SIDE) -->
     <script>
-      import { supabase } from '../../lib/supabase';
+      // Ambil elemen DOM dari peramban secara aman
+      const inputJudul = document.getElementById('judul');
+      const inputSlug = document.getElementById('slug');
 
-      // 1. GENERATOR SLUG OTOMATIS
-      const inputJudul = document.getElementById('judul') as HTMLInputElement;
-      const inputSlug = document.getElementById('slug') as HTMLInputElement;
-
-      inputJudul?.addEventListener('input', () => {
+      // Penanganan pembentukan string slug otomatis tanpa membebani server
+      inputJudul?.addEventListener('input', (e) => {
+        const target = e.target as HTMLInputElement;
         if (inputSlug) {
-          inputSlug.value = inputJudul.value
+          (inputSlug as HTMLInputElement).value = target.value
             .toLowerCase()
-            .replace(/[^a-z0-9\s-]/g, '')
-            .replace(/\s+/g, '-')
-            .replace(/-+/g, '-')
+            .replace(/[^a-z0-9\s-]/g, '') // Hapus karakter selain huruf, angka, dan spasi
+            .replace(/\s+/g, '-')        // Ganti spasi beruntun dengan satu tanda hubung (-)
+            .replace(/-+/g, '-')         // Cegah tanda hubung ganda
             .trim();
         }
-      });
-
-      // 2. SUBMIT FORM BERITA KE SUPABASE
-      const formBerita = document.getElementById('form-berita') as HTMLFormElement;
-      formBerita?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (!inputJudul || !inputSlug) return;
-        
-        const btn = formBerita.querySelector('button[type="submit"]') as HTMLButtonElement;
-        const textAwal = btn.innerText;
-        btn.disabled = true; 
-        btn.innerText = "Mengunggah berita... ⏳";
-
-        const kategori = (document.getElementById('kategori') as HTMLSelectElement).value;
-        const penulis = (document.getElementById('penulis') as HTMLInputElement).value;
-        const gambar_url = (document.getElementById('gambar_url') as HTMLInputElement).value;
-        const ringkasan = (document.getElementById('ringkasan') as HTMLInputElement).value;
-        const isi_konten = (document.getElementById('isi_konten') as HTMLTextAreaElement).value;
-
-        const { error } = await supabase
-          .from('berita')
-          .insert([
-            { 
-              judul: inputJudul.value, 
-              slug: inputSlug.value, 
-              kategori, 
-              penulis, 
-              gambar_url, 
-              ringkasan, 
-              isi_konten 
-            }
-          ]);
-
-        if (error) {
-          alert('Gagal menerbitkan berita: ' + error.message);
-        } else {
-          alert('Berita berhasil diterbitkan! 🚀');
-          formBerita.reset();
-        }
-
-        btn.disabled = false;
-        btn.innerText = textAwal;
-      });
-
-      // 3. SUBMIT FORM IKLAN KE SUPABASE
-      const formIklan = document.getElementById('form-iklan') as HTMLFormElement;
-      formIklan?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const btn = formIklan.querySelector('button[type="submit"]') as HTMLButtonElement;
-        const textAwal = btn.innerText;
-        btn.disabled = true; 
-        btn.innerText = "Memasang iklan... ⏳";
-
-        const konten_teks = (document.getElementById('konten_teks') as HTMLInputElement).value;
-        const link_tujuan = (document.getElementById('link_tujuan') as HTMLInputElement).value;
-        const posisi = (document.getElementById('posisi') as HTMLSelectElement).value;
-        const status = (document.getElementById('status') as HTMLSelectElement).value;
-
-        const { error } = await supabase
-          .from('iklan')
-          .insert([
-            { 
-              konten_teks, 
-              link_tujuan, 
-              posisi, 
-              status 
-            }
-          ]);
-
-        if (error) {
-          alert('Gagal memasang iklan: ' + error.message);
-        } else {
-          alert('Iklan berhasil terpasang! 💸');
-          formIklan.reset();
-        }
-
-        btn.disabled = false;
-        btn.innerText = textAwal;
       });
     </script>
   </body>
