@@ -121,10 +121,10 @@ const { data: daftarIklan } = await supabase
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nusa-Media Control Center</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📰</text></svg>">
-    <script src="https://tailwindcss.com"></script>
-    <link rel="preconnect" href="https://googleapis.com">
-    <link rel="preconnect" href="https://gstatic.com" crossorigin>
-    <link href="https://googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
   </head>
   <body class="bg-gray-100 p-4 md:p-8 text-gray-900 min-h-screen" style="font-family: 'Roboto', sans-serif;">
 
@@ -199,7 +199,9 @@ const { data: daftarIklan } = await supabase
               <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Isi Konten Berita Lengkap</label>
               <textarea name="isi_konten" rows="5" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="Ketik isi berita lengkap di sini..." required></textarea>
             </div>
-            <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl text-sm transition shadow-xs">
+            
+            <!-- BUTTON TERBITKAN BERITA DENGAN ALERT NOTIFIKASI -->
+            <button type="submit" onclick="alert('Berita terkirim! Website Nusa-Media sedang diperbarui otomatis di internet dalam 30 detik...')" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl text-sm transition shadow-xs">
               Terbitkan Berita Sekarang 🚀
             </button>
           </form>
@@ -208,7 +210,3 @@ const { data: daftarIklan } = await supabase
         <!-- FORM 2: INPUT IKLAN SPONSOR -->
         <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs h-fit">
           <h2 class="text-lg font-black text-slate-800 mb-4 pb-2 border-b">💎 Pasang Iklan Sponsor</h2>
-          <form method="POST" class="space-y-4">
-            <input type="hidden" name="tipe_form" value="iklan" />
-
-            <div>
