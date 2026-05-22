@@ -1,9 +1,8 @@
 ---
 // src/pages/admin-rahasia-99/index.astro
-import { supabase } from '../../lib/supabase';
+export const prerender = true; // 👈 MENGGUNAKAN MODE STATIS AGAR SINKRON DENGAN ARCHITECTURE UTAMA
 
-// DINAMIS: Menggunakan server-side rendering agar data langsung ter-update & terhapus secara real-time
-export const prerender = false; 
+import { supabase } from '../../lib/supabase';
 
 let notifikasi = '';
 let tipeNotifikasi = ''; // 'sukses' atau 'gagal'
@@ -76,8 +75,8 @@ if (Astro.request.method === 'POST') {
     else if (tipeForm === 'iklan') {
       const konten_teks = formData.get('konten_teks');
       const link_tujuan = formData.get('link_tujuan');
-      const gambar_url = formData.get('gambar_url'); // Tautan Gambar Banner Iklan
-      const pdf_url = formData.get('pdf_url');     // Tautan Lampiran PDF Kontrak/Dokumen Iklan
+      const gambar_url_iklan = formData.get('gambar_url'); 
+      const pdf_url_iklan = formData.get('pdf_url');     
       const posisi = formData.get('posisi');
       const status = formData.get('status');
 
@@ -87,8 +86,8 @@ if (Astro.request.method === 'POST') {
           { 
             konten_teks, 
             link_tujuan, 
-            gambar_url,
-            pdf_url,
+            gambar_url: gambar_url_iklan,
+            pdf_url: pdf_url_iklan,
             posisi, 
             status,
             created_at: new Date().toISOString()
@@ -213,175 +212,3 @@ const { data: daftarIklan } = await supabase
             <input type="hidden" name="tipe_form" value="iklan" />
 
             <div>
-              <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Teks Ucapan / Judul Iklan</label>
-              <input type="text" name="konten_teks" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="Ketik kalimat ucapan..." required />
-            </div>
-            <div>
-              <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Link Tujuan Iklan (URL Klik)</label>
-              <input type="url" name="link_tujuan" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="https://perusahaan.com" required />
-            </div>
-
-            <!-- MODIFIKASI MULTIMEDIA IKLAN: BANNER & PDF -->
-            <div class="bg-gray-50 p-3 rounded-xl border border-dashed border-gray-300 space-y-2">
-              <div>
-                <label class="block text-[10px] font-bold uppercase text-gray-500 mb-0.5">🔗 URL Gambar Banner Iklan</label>
-                <input type="url" name="gambar_url" class="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-red-500 bg-white" placeholder="https://link-foto-iklan.jpg" />
-              </div>
-              <div>
-                <label class="block text-[10px] font-bold uppercase text-gray-500 mb-0.5">📂 URL PDF Kontrak/Media (Opsional)</label>
-                <input type="url" name="pdf_url" class="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-red-500 bg-white" placeholder="https://link-kontrak.pdf" />
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <div>
-                <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Posisi Banner</label>
-                <select name="posisi" class="w-full border rounded-lg px-2 py-1.5 text-xs bg-gray-50 focus:outline-none focus:border-red-500">
-                  <option value="detail_atas">Banner Atas (Tengah)</option>
-                  <option value="sidebar_atas">Kolom Kanan (Sidebar)</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Status</label>
-                <select name="status" class="w-full border rounded-lg px-2 py-1.5 text-xs bg-gray-50 focus:outline-none focus:border-red-500">
-                  <option value="aktif">Langsung Tayang</option>
-                  <option value="nonaktif">Draft (Sembunyikan)</option>
-                </select>
-              </div>
-            </div>
-            
-            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm transition shadow-xs">
-              Pasang Iklan Komersial Sekarang 💸
-            </button>
-          </form>
-        </div>
-
-      </div>
-
-      <!-- TABEL MANAJEMEN ARSIP BERITA -->
-      <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs">
-        <h2 class="text-lg font-black text-slate-800 mb-4 pb-2 border-b flex justify-between items-center">
-          <span>🗂️ Tabel Manajerial Arsip Berita</span>
-          <span class="text-xs bg-slate-100 border px-2.5 py-1 rounded-full font-bold text-gray-500">Total: {daftarBerita?.length || 0}</span>
-        </h2>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse text-sm">
-            <thead>
-              <tr class="bg-gray-50 border-b text-gray-500 font-bold text-xs uppercase tracking-wider">
-                <th class="py-3 px-4">Judul & Detail Info</th>
-                <th class="py-3 px-4">Kategori</th>
-                <th class="py-3 px-4 text-center">Media Berkas</th>
-                <th class="py-3 px-4 text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y text-gray-700">
-              {daftarBerita && daftarBerita.length > 0 ? (
-                daftarBerita.map((berita) => (
-                  <tr class="hover:bg-gray-50/50 transition duration-150">
-                    <td class="py-4 px-4 max-w-xs md:max-w-md">
-                      <div class="font-bold text-slate-900 truncate">{berita.judul}</div>
-                      <div class="text-[11px] text-gray-400 mt-0.5">ID: {berita.id} | Penulis: {berita.penulis}</div>
-                    </td>
-                    <td class="py-4 px-4">
-                      <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-red-50 border border-red-200 text-red-600">
-                        {berita.kategori || 'Fokus'}
-                      </span>
-                    </td>
-                    <td class="py-4 px-4 text-center">
-                      <div class="flex justify-center gap-2">
-                        {berita.gambar_url && <span title="Ada Gambar">🖼️</span>}
-                        {berita.pdf_url && <span title="Ada PDF">📄</span>}
-                      </div>
-                    </td>
-                    <td class="py-4 px-4 text-right">
-                      <form method="POST" onsubmit="return confirm('Hapus artikel berita secara permanen?');" class="inline">
-                        <input type="hidden" name="tipe_form" value="hapus_berita" />
-                        <input type="hidden" name="id_berita" value={berita.id} />
-                        <button type="submit" class="bg-red-50 border border-red-300 hover:bg-red-600 hover:text-white text-red-600 font-bold text-xs px-3 py-1.5 rounded-lg transition duration-150">🗑️ Hapus</button>
-                      </form>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr><td colspan="4" class="py-6 text-center text-gray-400 italic">Belum ada artikel berita.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- NEW FORM TABEL: MANAJEMEN MONITORING BANNER IKLAN SPONSOR -->
-      <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs">
-        <h2 class="text-lg font-black text-slate-800 mb-4 pb-2 border-b flex justify-between items-center">
-          <span>📊 Monitoring Slot Penayangan Iklan Aktif</span>
-          <span class="text-xs bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full font-bold text-emerald-700">Total: {daftarIklan?.length || 0} Banner</span>
-        </h2>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse text-sm">
-            <thead>
-              <tr class="bg-gray-50 border-b text-gray-500 font-bold text-xs uppercase tracking-wider">
-                <th class="py-3 px-4">Teks Ucapan / Klien Sponsor</th>
-                <th class="py-3 px-4">Posisi Slot</th>
-                <th class="py-3 px-4 text-center">Berkas Iklan</th>
-                <th class="py-3 px-4 text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y text-gray-700">
-              {daftarIklan && daftarIklan.length > 0 ? (
-                daftarIklan.map((iklan) => (
-                  <tr class="hover:bg-gray-50/50 transition duration-150">
-                    <td class="py-4 px-4 max-w-xs truncate">
-                      <div class="font-bold text-slate-900">{iklan.konten_teks}</div>
-                      <a href={iklan.link_tujuan} target="_blank" class="text-[11px] text-emerald-600 hover:underline block truncate mt-0.5">{iklan.link_tujuan}</a>
-                    </td>
-                    <td class="py-4 px-4">
-                      <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 border border-slate-300 text-slate-700">
-                        {iklan.posisi === 'detail_atas' ? '🖥️ Banner Atas' : '📱 Sidebar'}
-                      </span>
-                    </td>
-                    <td class="py-4 px-4 text-center">
-                      <div class="flex justify-center gap-2">
-                        {iklan.gambar_url && <span title="Ada Banner Foto">🖼️</span>}
-                        {iklan.pdf_url && <span title="Ada Dokumen PDF">📄</span>}
-                      </div>
-                    </td>
-                    <td class="py-4 px-4 text-right">
-                      <form method="POST" onsubmit="return confirm('Apakah Anda yakin ingin mencopot dan menghapus banner iklan sponsor ini?');" class="inline">
-                        <input type="hidden" name="tipe_form" value="hapus_iklan" />
-                        <input type="hidden" name="id_iklan" value={iklan.id} />
-                        <button type="submit" class="bg-rose-50 border border-rose-300 hover:bg-rose-600 hover:text-white text-rose-600 font-bold text-xs px-3 py-1.5 rounded-lg transition duration-150">
-                          🗑️ Turunkan Iklan
-                        </button>
-                      </form>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr><td colspan="4" class="py-6 text-center text-gray-400 italic">Belum ada space iklan yang terisi.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- LOGIKA BROWSER CLIENT-SIDE -->
-    <script>
-      const inputJudul = document.getElementById('judul');
-      const inputSlug = document.getElementById('slug');
-
-      inputJudul?.addEventListener('input', (e) => {
-        const target = e.target as HTMLInputElement;
-        if (inputSlug) {
-          (inputSlug as HTMLInputElement).value = target.value
-            .toLowerCase()
-            .replace(/[^a-z0-9\s-]/g, '')
-            .replace(/\s+/g, '-')
-            .replace(/-+/g, '-')
-            .trim();
-        }
-      });
-    </script>
-  </body>
-</html>

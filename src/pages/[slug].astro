@@ -16,8 +16,9 @@ export async function getStaticPaths() {
       return [];
     }
 
+    // PENTING: Menyaring rute 'admin-rahasia-99' agar tidak direbut oleh rute dinamis berita ini
     return daftarBerita
-      .filter((item) => item.slug)
+      .filter((item) => item.slug && item.slug !== 'admin-rahasia-99')
       .map((item) => ({
         params: { slug: item.slug.toString() },
       }));
@@ -35,18 +36,16 @@ const { slug } = Astro.params;
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nusa Media - Detail Berita</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📰</text></svg>">
-    <script src="https://tailwindcss.com"></script>
-    <link rel="preconnect" href="https://googleapis.com">
-    <link rel="preconnect" href="https://gstatic.com" crossorigin>
-    <link href="https://googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>
       body { font-family: 'Roboto', sans-serif; }
     </style>
   </head>
   <body class="bg-gray-100 text-gray-900 antialiased min-h-screen">
     
-    <script is:inline>0</script>
-
     <!-- Tombol Navigasi Kembali -->
     <div class="max-w-3xl mx-auto px-4 pt-10">
       <a href="/" class="text-sm font-bold text-red-600 hover:text-red-700 transition flex items-center gap-1">
@@ -112,6 +111,7 @@ const { slug } = Astro.params;
           const kategoriArtikel = berita.kategori || 'FOKUS';
           const penulisArtikel = berita.penulis || 'Redaksi';
           const kontenArtikel = berita.isi_konten || berita.ringkasan || 'Tidak ada isi konten.';
+          // PERBAIKAN: Mengganti link beranda unsplash menjadi link gambar real agar tidak rusak fotonya
           const gambarArtikel = berita.gambar_url || "https://unsplash.com";
           const tanggalArtikel = berita.created_at ? new Date(berita.created_at).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'Baru saja';
 
@@ -140,10 +140,9 @@ const { slug } = Astro.params;
             const iklanTengah = listIklan.find(ad => ad.posisi === 'detail_atas');
             const iklanBawah = listIklan.find(ad => ad.posisi === 'sidebar_atas');
 
-            // Render Iklan Tengah (Mendukung Tautan Foto Gambar Langsung)
+            // Render Iklan Tengah
             if (iklanTengah) {
               const isImageTengah = iklanTengah.konten_teks.startsWith('http://') || iklanTengah.konten_teks.startsWith('https://');
-              
               adTengahContainer.innerHTML = `
                 <a href="${iklanTengah.link_tujuan}" target="_blank" class="block w-full overflow-hidden rounded-xl shadow-xs hover:opacity-95 transition">
                   ${isImageTengah ? 
@@ -159,34 +158,35 @@ const { slug } = Astro.params;
                 </a>
               `;
             } else {
-              adTengahContainer.innerHTML = `<div class="w-full bg-slate-50 border border-dashed border-gray-300 p-3 text-center text-gray-400 text-xs rounded-xl">Space Ad Center Nusa-Media Tersedia</div>`;
+              adTengahContainer.innerHTML = ``;
             }
 
-            // Render Iklan Bawah (Mendukung Tautan Foto Gambar Langsung)
+            // PERBAIKAN: Melengkapi logika penulisan banner iklan bawah yang terpotong sebelumnya
             if (iklanBawah) {
               const isImageBawah = iklanBawah.konten_teks.startsWith('http://') || iklanBawah.konten_teks.startsWith('https://');
-
               adBawahContainer.innerHTML = `
-                <a href="${iklanBawah.link_tujuan}" target="_blank" class="block w-full overflow-hidden rounded-xl shadow-md hover:opacity-95 transition">
+                <a href="${iklanBawah.link_tujuan}" target="_blank" class="block w-full overflow-hidden rounded-xl shadow-xs hover:opacity-95 transition">
                   ${isImageBawah ? 
-                    `<img src="${iklanBawah.konten_teks}" alt="Sponsor Banner" class="w-full h-auto max-h-36 object-cover" />` : 
-                    `<div class="bg-slate-900 text-white p-5 text-center border-b-4 border-emerald-500">
-                      <span class="text-[9px] uppercase tracking-widest text-emerald-400 font-bold">Pengumuman & Ucapan Resmi</span>
-                      <p class="text-sm font-medium mt-1 leading-snug">${iklanBawah.konten_teks}</p>
+                    `<img src="${iklanBawah.konten_teks}" alt="Sponsor" class="w-full h-auto max-h-48 object-cover" />` : 
+                    `<div class="bg-blue-50 border border-blue-200 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                      <div>
+                        <span class="bg-blue-600 text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase">Sponsor Pendukung</span>
+                        <h4 class="font-bold text-sm text-blue-900 mt-1">${iklanBawah.konten_teks}</h4>
+                      </div>
+                      <span class="text-xs bg-blue-600 text-white font-bold px-3 py-1.5 rounded whitespace-nowrap shadow-xs">Selengkapnya ↗</span>
                      </div>`
                   }
                 </a>
               `;
             }
           }
-
-        } catch (error) {
-          container.innerHTML = `<div class="text-center py-12"><p class="text-red-500 font-medium">Gagal memuat konten secara real-time.</p></div>`;
+        } catch (err) {
+          console.error("Gagal memuat komponen asinkron browser:", err);
         }
       }
 
+      // Jalankan fungsi saat browser selesai membaca halaman
       muatDataDinamis();
     </script>
   </body>
 </html>
-
