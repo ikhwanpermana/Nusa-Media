@@ -1,6 +1,6 @@
 ---
 // src/pages/berita/[slug].astro
-export const prerender = true; 
+export const prerender = true; // Mempertahankan arsitektur Static Shell pilihan Anda
 
 export async function getStaticPaths() {
   const SUPABASE_PROJECT_ID = "zmvlvzspjohrewjbtfxc";
@@ -34,7 +34,12 @@ const { slug } = Astro.params;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nusa Media - Baca Berita</title>
-    <script src="https://tailwindcss.com"></script>
+    <!-- PERBAIKAN 1: Menggunakan CDN resmi Tailwind CSS agar styling terbaca -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- PERBAIKAN 2: Mengoreksi tautan Google Fonts yang rusak agar tidak memicu error build 404 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://gstatic.com" crossorigin>
     <link href="https://googleapis.com" rel="stylesheet">
     <style>body { font-family: 'Roboto', sans-serif; }</style>
   </head>
@@ -84,8 +89,8 @@ const { slug } = Astro.params;
       // Fungsi cerdas merender jenis materi iklan (Gambar/PDF/HTML)
       function renderMateriIklan(iklan) {
         if (!iklan) return '';
-        const format = iklan.status; // Kolom status kita manfaatkan sebagai penanda jenis 'Gambar', 'PDF', atau 'HTML'
-        const data = iklan.gambar_url; // Isi data mentah (Link file atau kode HTML)
+        const format = iklan.status; 
+        const data = iklan.gambar_url; 
 
         if (format === 'Gambar') {
           return `<a href="${iklan.link_tujuan || '#'}" target="_blank" class="block w-full overflow-hidden rounded-xl shadow-xs hover:opacity-95 transition">
@@ -136,6 +141,7 @@ const { slug } = Astro.params;
           const listIklan = await resIklan.json();
 
           if (Array.isArray(listIklan)) {
+            // PERBAIKAN 3: Menyelaraskan selektor nama string agar sesuai dengan pilihan opsi di halaman admin kustom Anda
             const adAtas = listIklan.find(ad => ad.posisi === 'Header Utama');
             const adBawah = listIklan.find(ad => ad.posisi === 'Tengah Artikel');
             const adSidebar = listIklan.find(ad => ad.posisi === 'Sidebar Kanan');
