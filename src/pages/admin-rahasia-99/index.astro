@@ -1,6 +1,6 @@
 ---
 // src/pages/admin-rahasia-99/index.astro
-export const prerender = false; // 🔥 DIPERBAIKI: Mengaktifkan SSR agar Vercel bisa memproses form POST & Supabase secara dinamis
+export const prerender = false; // Menggunakan mode dinamis SSR murni untuk memproses form POST
 
 import { supabase } from '../../lib/supabase';
 
@@ -121,10 +121,10 @@ const { data: daftarIklan } = await supabase
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nusa-Media Control Center</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📰</text></svg>">
-    <script src="https://tailwindcss.com"></script>
-    <link rel="preconnect" href="https://googleapis.com">
-    <link rel="preconnect" href="https://gstatic.com" crossorigin>
-    <link href="https://googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
   </head>
   <body class="bg-gray-100 p-4 md:p-8 text-gray-900 min-h-screen" style="font-family: 'Roboto', sans-serif;">
 
@@ -193,11 +193,11 @@ const { data: daftarIklan } = await supabase
 
             <div>
               <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Ringkasan Pendek (Snippet)</label>
-              <textarea name="ringkasan" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="Ringkasan satu kalimat untuk halaman depan..." required></textarea>
+              <textarea name="ringkasan" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="Ringkasan satu kalimat..." required></textarea>
             </div>
             <div>
               <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Isi Konten Berita Lengkap</label>
-              <textarea name="isi_konten" rows="6" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="Tulis berita lengkap di sini..." required></textarea>
+              <textarea name="isi_konten" rows="5" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="Tulis berita lengkap..." required></textarea>
             </div>
 
             <button type="submit" class="w-full bg-slate-900 hover:bg-black text-white font-bold py-2.5 rounded-xl text-sm transition">Terbitkan Artikel Sekarang 🚀</button>
@@ -209,5 +209,5 @@ const { data: daftarIklan } = await supabase
           <h2 class="text-lg font-black text-slate-800 mb-4 pb-2 border-b">💰 Slot Banner Iklan</h2>
           <form method="POST" class="space-y-4">
             <input type="hidden" name="tipe_form" value="iklan" />
-
             <div>
+              <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Nama / Teks Iklan</label>
