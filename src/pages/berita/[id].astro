@@ -1,6 +1,7 @@
 ---
 // src/pages/berita/[id].astro
 export const prerender = false; // 🚀 STRATEGI TERBAIK: Mengaktifkan SSR agar setiap berita baru langsung aktif tanpa Error 404!
+import '../styles/global.css'; //
 
 import { supabase } from '../../lib/supabase';
 
