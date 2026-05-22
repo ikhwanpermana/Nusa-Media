@@ -1,18 +1,13 @@
 import { defineConfig } from 'astro/config';
 import tailwind from '@astrojs/tailwind';
-import vercel from '@astrojs/vercel/serverless';
+import cloudflare from '@astrojs/cloudflare';
 
-// Konfigurasi Terkunci Nusa Media Node 20+ Runtime
+// Konfigurasi Terkunci Nusa Media - Migrasi Cloudflare Runtime 2026
 export default defineConfig({
   output: 'hybrid', 
-  adapter: vercel({
-    webAnalytics: {
-      enabled: true 
-    },
-    // FORCE RUNTIME: Mengunci versi serverless agar tidak turun ke Node 18
-    init: {
-      runtime: 'nodejs20.x'
-    }
+  adapter: cloudflare({
+    // Menggunakan pemrosesan gambar internal Cloudflare agar tidak bentrok dengan Sharp
+    imageService: 'compile' 
   }),
   integrations: [tailwind({
     // 🔥 PERBAIKAN MUTLAK: Memberitahu Astro agar tidak menyuntikkan gaya Tailwind bawaan kosong, 
