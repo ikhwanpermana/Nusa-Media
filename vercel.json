@@ -1,6 +1,10 @@
 {
+  "crons": [],
+  "framework": "astro",
   "functions": {
-    "**/*.js": { "runtime": "nodejs20.x" },
-    "**/*.mjs": { "runtime": "nodejs20.x" }
+    "api/**/*.js": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
   }
 }
