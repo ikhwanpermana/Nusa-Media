@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "node_modules/@astrojs/vercel/dist/entry.js": {
+      "runtime": "nodejs22.x"
+    }
+  }
+}
