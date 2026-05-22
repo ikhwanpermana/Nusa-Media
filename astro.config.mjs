@@ -14,5 +14,9 @@ export default defineConfig({
       runtime: 'nodejs20.x'
     }
   }),
-  integrations: [tailwind()],
+  integrations: [tailwind({
+    // 🔥 PERBAIKAN MUTLAK: Memberitahu Astro agar tidak menyuntikkan gaya Tailwind bawaan kosong, 
+    // melainkan dipaksa menggunakan aturan dari file global.css milik Anda.
+    applyBaseStyles: false 
+  })],
 });
