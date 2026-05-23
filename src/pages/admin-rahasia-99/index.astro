@@ -3,139 +3,136 @@
 export const prerender = true; // Menggunakan sistem statis sisi klien agar bebas 404 Vercel/Cloudflare
 import '../../styles/global.css';
 ---
-<html lang="id" class="h-full bg-[#090D16]">
+<html lang="id" class="h-full bg-[#070A13]">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nusa Engine — Core Executive Dashboard</title>
-    <!-- Google Fonts: Inter untuk font UI korporat & profesional -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://googleapis.com">
+    <link rel="preconnect" href="https://gstatic.com" crossorigin>
+    <link href="https://googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
       body { font-family: 'Inter', sans-serif; }
-      /* Gaya Scrollbar Minimalis Modern */
       ::-webkit-scrollbar { width: 6px; }
-      ::-webkit-scrollbar-track { background: #0F172A; }
+      ::-webkit-scrollbar-track { background: #0B0F19; }
       ::-webkit-scrollbar-thumb { background: #1E293B; border-radius: 99px; }
       ::-webkit-scrollbar-thumb:hover { background: #334155; }
     </style>
   </head>
-  <body class="text-slate-200 min-h-screen antialiased bg-[#090D16] selection:bg-indigo-500 selection:text-white">
+  <body class="text-slate-200 min-h-screen antialiased bg-[#070A13] selection:bg-indigo-500 selection:text-white">
 
-    <!-- TOP NAVIGATION BAR (GLASSMORPHISM) -->
-    <header class="sticky top-0 z-50 w-full border-b border-slate-800/60 bg-[#0F172A]/70 backdrop-blur-xl">
+    <!-- TOP NAVIGATION BAR -->
+    <header class="sticky top-0 z-50 w-full border-b border-slate-800/80 bg-[#0B132B]/80 backdrop-blur-xl">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <div class="flex items-center space-x-3">
-          <div class="w-9 h-9 bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-xl flex items-center justify-center text-white font-extrabold text-lg shadow-md shadow-indigo-500/20">
-            N
-          </div>
+          <div class="w-9 h-9 bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-xl flex items-center justify-center text-white font-extrabold text-lg shadow-md shadow-indigo-500/20">N</div>
           <div>
             <h1 class="text-sm font-bold tracking-tight text-white flex items-center gap-2">
               Nusa Media Engine
               <span class="text-[10px] text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 font-mono font-medium">CORE V2.5</span>
             </h1>
-            <p class="text-[10px] text-slate-400 font-medium tracking-wide uppercase">Enterprise Content & Ad Distribution Server</p>
+            <p class="text-[10px] text-slate-400 font-medium uppercase tracking-wide">Enterprise Ad & Content Management</p>
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-xs">
-            <span class="w-1.5 h-1.5 mr-2 bg-emerald-400 rounded-full animate-pulse"></span> Network Active
+          <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <span class="w-1.5 h-1.5 mr-2 bg-emerald-400 rounded-full animate-pulse"></span> Network Synced
           </span>
-          <a href="/" class="inline-flex items-center justify-center px-4 py-1.5 text-xs font-bold text-slate-300 bg-slate-800/80 hover:bg-slate-700 border border-slate-700 rounded-xl transition-all duration-200 shadow-sm">
-            Live Site <span class="ml-1 text-slate-500">↗</span>
-          </a>
+          <a href="/" class="inline-flex items-center justify-center px-4 py-1.5 text-xs font-bold text-slate-300 bg-slate-800/80 hover:bg-slate-700 border border-slate-700 rounded-xl transition">Live Site ↗</a>
         </div>
       </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       
-      <!-- TOAST NOTIFIKASI MELAYANG ELEGAN -->
+      <!-- TOAST NOTIFIKASI MELAYANG -->
       <div id="notif-box" class="hidden fixed top-20 right-4 sm:right-8 z-50 max-w-md w-fit p-4 rounded-xl shadow-xl border backdrop-blur-md transition-all duration-300 transform scale-95 flex items-center space-x-3">
         <span id="notif-icon" class="text-lg"></span>
         <span id="notif-text" class="text-sm font-semibold"></span>
       </div>
 
-      <!-- TATA LETAK GRID INDUK -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        <!-- KOLOM KIRI & TENGAH: RUANG KONTROL FORM INPUT -->
-        <div class="lg:col-span-2 space-y-8">
-          
-          <!-- PANEL INPUT BERITA -->
-          <div class="bg-[#0F172A] rounded-2xl border border-slate-800/80 shadow-xl overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-800 bg-slate-900/40 flex items-center justify-between">
-              <h2 class="text-xs font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2">
-                <span class="text-indigo-400 text-base">📰</span> Publisher Studio
-              </h2>
-              <span class="text-[11px] text-slate-500 font-mono font-medium">TABLE: news_feed</span>
+      <!-- TATA LETAK 2 KOLOM FORMULIR INPUT -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- FORM BERITA -->
+        <div class="bg-[#0B132B] rounded-2xl border border-slate-800/80 shadow-xl p-6 space-y-5">
+          <h2 class="text-xs font-bold text-indigo-400 uppercase tracking-widest border-b border-slate-800 pb-3 flex items-center gap-2">📰 Publisher Studio</h2>
+          <form id="form-berita" class="space-y-4">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Judul Utama Berita</label>
+              <input type="text" id="judul" class="w-full bg-[#070A13] border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition" placeholder="Masukkan headline berita..." required />
             </div>
-            
-            <form id="form-berita" class="p-6 space-y-5">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Sistem URL Slug</label>
+              <input type="text" id="slug" class="w-full bg-[#070A13]/50 border border-slate-800 rounded-xl px-4 py-2.5 text-sm font-mono text-indigo-400/80 focus:outline-none" readonly required />
+            </div>
+            <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Judul Utama Berita</label>
-                <input type="text" id="judul" class="w-full bg-[#070D16] border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition" placeholder="Masukkan headline berita utama..." required />
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Kategori Konten</label>
+                <select id="kategori" class="w-full bg-[#070A13] border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-300 focus:outline-none focus:border-indigo-500">
+                  <option value="Politik & Ekonomi">Politik & Ekonomi</option>
+                  <option value="Teknologi Digital">Teknologi Digital</option>
+                  <option value="Nusantara Global">Nusantara Global</option>
+                  <option value="Olahraga & Gaya Hidup">Olahraga & Gaya Hidup</option>
+                </select>
               </div>
-              
               <div>
-                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Sistem URL Slug (Otomatis)</label>
-                <div class="relative flex items-center">
-                  <span class="absolute left-0 top-0 bottom-0 flex items-center pl-4 text-xs text-slate-500 font-mono bg-slate-900/60 border-r border-slate-800/80 px-3 rounded-l-xl">/berita/</span>
-                  <input type="text" id="slug" class="w-full bg-[#070D16]/50 border border-slate-800 rounded-xl pl-24 pr-4 py-2.5 text-sm font-mono text-indigo-400/80 focus:outline-none" readonly required />
-                </div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Penulis</label>
+                <input type="text" id="penulis" class="w-full bg-[#070A13] border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="Redaksi Nusa-Media" />
               </div>
-              
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div>
-                  <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Kategori Konten</label>
-                  <select id="kategori" class="w-full bg-[#070D16] border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition cursor-pointer">
-                    <option value="Politik & Ekonomi">Politik & Ekonomi</option>
-                    <option value="Teknologi Digital">Teknologi Digital</option>
-                    <option value="Nusantara Global">Nusantara Global</option>
-                    <option value="Olahraga & Gaya Hidup">Olahraga & Gaya Hidup</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Kredensial Penulis</label>
-                  <input type="text" id="penulis" class="w-full bg-[#070D16] border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition" placeholder="Redaksi Nusa-Media" />
-                </div>
-              </div>
-              
-              <div>
-                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">🔗 URL Gambar Sampul (Media Asset)</label>
-                <input type="url" id="gambar_url" class="w-full bg-[#070D16] border border-slate-800 rounded-xl px-4 py-2.5 text-xs font-mono text-slate-300 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition" placeholder="https://unsplash.com..." required />
-              </div>
-              
-              <div>
-                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Isi Berita Lengkap (Rich Body Content)</label>
-                <textarea id="isi_konten" rows="6" class="w-full bg-[#070D16] border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition placeholder-slate-600" placeholder="Tulis atau tempel artikel lengkap di sini (mendukung html tag)..." required></textarea>
-              </div>
-              
-              <div class="pt-2">
-                <button type="submit" id="btn-berita" class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold py-3 px-4 rounded-xl text-xs transition-all duration-200 shadow-lg shadow-indigo-600/10 cursor-pointer tracking-widest uppercase">
-                  Siarkan Berita Ke Cloud 🚀
-                </button>
-              </div>
-            </form>
-          </div>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">🔗 URL Gambar Asset</label>
+              <input type="url" id="gambar_url" class="w-full bg-[#070A13] border border-slate-800 rounded-xl px-4 py-2.5 text-xs font-mono text-slate-300" placeholder="https://..." required />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Isi Konten Berita</label>
+              <textarea id="isi_konten" rows="4" class="w-full bg-[#070A13] border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="Tulis isi berita..." required></textarea>
+            </div>
+            <button type="submit" id="btn-berita" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl text-xs tracking-widest uppercase cursor-pointer">Siarkan Berita 🚀</button>
+          </form>
+        </div>
 
-          <!-- PANEL INPUT BANNER IKLAN -->
-          <div class="bg-[#0F172A] rounded-2xl border border-slate-800/80 shadow-xl overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-800 bg-slate-900/40 flex items-center justify-between">
-              <h2 class="text-xs font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2">
-                <span>💰</span> Ad Monetization Console
-              </h2>
-              <span class="text-[11px] text-slate-500 font-mono font-medium">TABLE: ad_server</span>
+        <!-- FORM IKLAN -->
+        <div class="bg-[#0B132B] rounded-2xl border border-slate-800/80 shadow-xl p-6 space-y-5">
+          <h2 class="text-xs font-bold text-violet-400 uppercase tracking-widest border-b border-slate-800 pb-3 flex items-center gap-2">💰 Ad Monetization Console</h2>
+          <form id="form-iklan" class="space-y-4">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Nama Sponsor Client</label>
+              <input type="text" id="iklan-nama" class="w-full bg-[#070A13] border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-violet-500" placeholder="Contoh: Sponsor Banner Idul Fitri" required />
             </div>
-            
-            <form id="form-iklan" class="p-6 space-y-5">
+            <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Deskripsi / Nama Sponsor Client</label>
-                <input type="text" id="iklan-nama" class="w-full bg-[#070D16] border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500 transition" placeholder="Contoh: Banner Utama Idul Fitri - Telkomsel" required />
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Zona Periklanan</label>
+                <select id="iklan-zona" class="w-full bg-[#070A13] border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-300 focus:outline-none focus:border-violet-500">
+                  <option value="header_top">Sticky Header Top (728x90)</option>
+                  <option value="sidebar_right">Sidebar Right Banner (300x250)</option>
+                  <option value="sidebar_sticky">Sidebar Lower Sticky (300x600)</option>
+                  <option value="in_article">In-Article Center 1</option>
+                  <option value="in_article_2">In-Article Center 2</option>
+                  <option value="footer_banner">Footer Bottom Wide</option>
+                  <option value="popup_float">Popup Floating Ad Box</option>
+                </select>
               </div>
-              
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div>
-                  <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Penempatan Zona Iklan</label>
-                  <!-- 🔥 AKSI PENYEMPURNAAN: Menu Dropdown 7 Slot Iklan Maksimal Beranda -->
+              <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Destination URL</label>
+                <input type="url" id="iklan-link" class="w-full bg-[#070A13] border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="https://..." required />
+              </div>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">🔗 URL Gambar Kreatif Banner</label>
+              <input type="url" id="iklan-gambar" class="w-full bg-[#070A13] border border-slate-800 rounded-xl px-4 py-2.5 text-xs font-mono text-slate-300" placeholder="https://..." required />
+            </div>
+            <button type="submit" id="btn-iklan" class="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-3 rounded-xl text-xs tracking-widest uppercase cursor-pointer">Aktifkan Slot Iklan 💵</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- ── INDUSTRIAL MANAGEMENT CENTER: DAFTAR MONITORING MODERN & PROFESIONAL ── -->
+      <div class="space-y-6">
+        <!-- MONITORING LIVE BERITA MASAL -->
+        <div class="bg-[#0B132B] border border-slate-800/80 rounded-2xl shadow-xl overflow-hidden">
+          <div class="px-6 py-4 border-b border-slate-800 bg-slate-900/20 flex justify-between items-center">
+            <h3 class="text-xs font-bold uppercase tracking-widest text-slate-300 flex items-center gap-2">📁 Manajer Berita Aktif</h3>
+            <span id="count-berita" class="text-xs font-mono font-bold text-indigo-400 bg-indigo-500/10 px-3 py-1 rounded-xl border border-indigo-500/20">0 Berita</span>
+          </div>
+          <div class="overflow-x-auto w-full">
