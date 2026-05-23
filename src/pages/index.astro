@@ -1,196 +1,146 @@
 ---
 // src/pages/index.astro
-export const prerender = false; // Menerapkan SSR agar beranda selalu memuat berita & iklan real-time
+export const prerender = false;
 
 import { supabase } from '../lib/supabase'; 
 import '../styles/global.css';
 
-// 1. Tarik seluruh berita terbaru dari database Supabase
 const { data: daftarBerita, error } = await supabase
   .from('berita')
   .select('*')
   .order('created_at', { ascending: false });
 
-// 2. Tarik seluruh data iklan aktif dari database Supabase
-const { data: daftarIklan } = await supabase
-  .from('iklan')
-  .select('*');
-
 const beritaSedia = daftarBerita || [];
-const iklanSedia = daftarIklan || [];
 
-// 3. Fungsi pembantu pemetaan zona iklan aman (Bebas Crash esbuild)
-const ambilIklanZona = (zona) => {
-  if (!iklanSedia || iklanSedia.length === 0) return null;
-  return iklanSedia.find(ad => ad && ad.zona_penempatan === zona) || null;
-};
+// 🔥 PERBAIKAN SINTAKSIS: Ambil indeks ke-0 untuk berita utama, sisanya untuk list bawah
+const beritaUtama = beritaSedia.length > 0 ? beritaSedia[0] : null;
+const beritaSisa = beritaSedia.length > 1 ? beritaSedia.slice(1) : [];
 
-const iklanHeader = ambilIklanZona('header_top');
-const iklanInArticle = ambilIklanZona('in_article');
-const iklanInArticle2 = ambilIklanZona('in_article_2'); 
-const iklanSidebar = ambilIklanZona('sidebar_right');
-const iklanSidebarSticky = ambilIklanZona('sidebar_sticky'); 
-const iklanFooter = ambilIklanZona('footer_banner'); 
-const iklanPopup = ambilIklanZona('popup_float'); 
-
-const judulSEO = "Nusa Media | Portal Berita Terkini";
-const deskripsiSEO = "Platform media digital modern yang menyajikan informasi valid, cepat, dan mendalam.";
+const judulSEO = "Nusa Media | Portal Berita Terkini & Mendalam";
+const deskripsiSEO = "Platform media digital independen yang menyajikan jurnalisme investigatif, akurat, dan real-time.";
 ---
 
-<html lang="id">
+<html lang="id" class="scroll-smooth">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{judulSEO}</title>
     <meta name="description" content={deskripsiSEO} />
+    <link rel="preconnect" href="https://googleapis.com">
+    <link rel="preconnect" href="https://gstatic.com" crossorigin>
+    <link href="https://googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
   </head>
-  <body class="bg-gray-100 text-gray-900 min-h-screen antialiased pb-24">
+  <body class="bg-[#fcfcfc] text-slate-900 min-h-screen antialiased selection:bg-red-500 selection:text-white" style="font-family: 'Plus Jakarta Sans', sans-serif;">
     
-    <!-- SLOT 1: HEADER TOP AD (Banner Atas) -->
-    {iklanHeader && iklanHeader.url_banner_kreatif && (
-      <div class="bg-gray-200 border-b border-gray-300 py-3 hidden sm:block">
-        <div class="max-w-5xl mx-auto flex flex-col items-center">
-          <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">SPONSOR AD</span>
-          <a href={iklanHeader.url_tujuan || '#'} target="_blank" rel="noopener noreferrer" class="block transition hover:opacity-90">
-            <img src={iklanHeader.url_banner_kreatif} alt={iklanHeader.nama_sponsor} class="max-h-[90px] w-auto rounded border border-gray-300 shadow-xs" />
-          </a>
+    <header class="bg-white/80 backdrop-blur-md border-b border-slate-100 sticky top-0 z-50">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
+        <a href="/" class="text-2xl font-extrabold tracking-tight text-slate-900 uppercase">
+          NUSA<span class="text-red-600">.MEDIA</span>
+        </a>
+        <div class="flex items-center gap-4">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-red-600"></span>
+          </span>
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-widest hidden sm:inline">Live Updates</span>
         </div>
-      </div>
-    )}
-
-    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
-      <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
-        <h1 class="text-xl font-black tracking-tighter text-red-600 uppercase">
-          Nusa Media
-        </h1>
-        <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Live Updates</span>
       </div>
     </header>
 
-    <main class="max-w-5xl mx-auto px-4 py-8">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        <!-- KOLOM UTAMA: BERITA DAN IKLAN SELA -->
-        <div class="lg:col-span-2 space-y-6">
-          <h2 class="text-2xl font-black text-slate-900 uppercase tracking-tight">Berita Terbaru</h2>
-          
-          {error && (
-            <div class="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl mb-6 text-sm">
-              Gagal memuat data dari Supabase: {error.message}
-            </div>
-          )}
-
-          <!-- GRID LIST BERITA -->
-          <!-- Menghapus penulisan tipe data (: any, : number) pada parameter map -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {beritaSedia.map((item: any, index: number) => {
-              return (
-                <div key={item.id || index} class="flex flex-col space-y-6 md:col-span-1">
-                  <article class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col hover:shadow-md transition h-full">
-                    <div class="h-48 bg-slate-100 overflow-hidden">
-                      <img 
-                        src={item.gambar_url || "https://unsplash.com"} 
-                        alt={item.judul} 
-                        class="w-full h-full object-cover hover:scale-105 transition duration-300"
-                      />
-                    </div>
-                    
-                    <div class="p-5 flex flex-col flex-1">
-                      <div class="mb-2">
-                        <span class="bg-red-100 text-red-700 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded">
-                          {item.kategori || 'Fokus'}
-                        </span>
-                      </div>
-                      
-                      <h3 class="text-lg font-bold text-gray-900 leading-snug mb-2 line-clamp-2">
-                        {item.judul}
-                      </h3>
-                      
-                      <p class="text-sm text-gray-500 mb-4 line-clamp-3 flex-1">
-                        {(item.ringkasan || item.isi_konten || '').replace(/<[^>]*>/g, '')}
-                      </p>
-                      
-                      <a 
-                        href={`/berita/${item.slug || item.id}`} 
-                        class="text-sm font-black text-red-600 hover:text-red-700 mt-auto inline-flex items-center gap-1"
-                      >
-                        Baca Selengkapnya →
-                      </a>
-                    </div>
-                  </article>
-
-                <!-- ── 📦 SLOT 2: IN-ARTICLE SELA BERITA 1 (Tampil setelah berita kedua) ── -->
-                {index === 1 && iklanInArticle && iklanInArticle.url_banner_kreatif && (
-                  <div class="w-full bg-white border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center md:col-span-2">
-                    <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">SPONSORED CONTENT</span>
-                    <a href={iklanInArticle.url_tujuan || '#'} target="_blank" rel="noopener noreferrer" class="w-full text-center">
-                      <img src={iklanInArticle.url_banner_kreatif} alt={iklanInArticle.nama_sponsor} class="mx-auto rounded border border-gray-100 max-h-[120px] object-contain" />
-                    </a>
-                  </div>
-                )}
-
-                <!-- ── 📦 SLOT 3: IN-ARTICLE SELA BERITA 2 (Tampil setelah berita keempat) ── -->
-                {index === 3 && iklanInArticle2 && iklanInArticle2.url_banner_kreatif && (
-                  <div class="w-full bg-white border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center md:col-span-2">
-                    <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">RECOMMENDED AD</span>
-                    <a href={iklanInArticle2.url_tujuan || '#'} target="_blank" rel="noopener noreferrer" class="w-full text-center">
-                      <img src={iklanInArticle2.url_banner_kreatif} alt={iklanInArticle2.nama_sponsor} class="mx-auto rounded border border-gray-100 max-h-[120px] object-contain" />
-                    </a>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+      
+      {error && (
+        <div class="bg-red-50 border-l-4 border-red-600 text-red-900 p-4 rounded-r-xl mb-10 text-sm font-medium">
+          Gangguan Sinkronisasi Sistem: {error.message}
         </div>
+      )}
 
-        <!-- KOLOM SAMPING: SIDEBAR WIDGET & BANNER KANAN -->
-        <div class="space-y-6 lg:mt-8">
-          
-          <!-- SLOT 4: SIDEBAR BANNER CONTAINER -->
-          <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3 block border-b pb-2">PARTNER ADVERTISEMENT</h3>
-            
-            {iklanSidebar && iklanSidebar.url_banner_kreatif ? (
-              <a href={iklanSidebar.url_tujuan || '#'} target="_blank" rel="noopener noreferrer" class="block group">
-                <div class="w-full rounded-lg overflow-hidden border border-gray-100">
-                  <img src={iklanSidebar.url_banner_kreatif} alt={iklanSidebar.nama_sponsor} class="w-full h-auto object-cover group-hover:opacity-95 transition" />
-                </div>
-              </a>
-            ) : (
-              <div class="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center bg-gray-50">
-                <p class="text-xs font-medium text-gray-400">Ruang iklan sedia hubungi redaksi Nusa Media.</p>
-                <span class="text-[9px] font-mono text-gray-300 block mt-1">Format: 300x250 px</span>
-              </div>
-            )}
-          </div>
-
-          <!-- WIDGET PROFIL REDAKSI -->
-          <div class="bg-gradient-to-br from-slate-900 to-red-950 border border-slate-800 rounded-xl p-5 text-white shadow-sm">
-            <h4 class="text-sm font-black tracking-tight text-white mb-2 uppercase">Nusa Media Group</h4>
-            <p class="text-xs text-slate-300 leading-relaxed">Menyajikan jurnalisme valid dan independen langsung melalui infrastruktur awan modern global.</p>
-          </div>
-
-          <!-- SLOT 5: SIDEBAR STICKY LOWER AD -->
-          {iklanSidebarSticky && iklanSidebarSticky.url_banner_kreatif && (
-            <div class="sticky top-24 hidden lg:block">
-              <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-                <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 border-b pb-1">PREMIUM SPONSOR</h3>
-                <a href={iklanSidebarSticky.url_tujuan || '#'} target="_blank" rel="noopener noreferrer" class="block">
-                  <img src={iklanSidebarSticky.url_banner_kreatif} alt={iklanSidebarSticky.nama_sponsor} class="w-full h-auto rounded border" />
+      <!-- SECTION 1: HERO / BERITA UTAMA -->
+      {beritaUtama && (
+        <section class="mb-16">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition duration-300 p-6 sm:p-8">
+            <div class="lg:col-span-7 aspect-[16/10] bg-slate-100 rounded-xl overflow-hidden relative group">
+              <img 
+                src={beritaUtama.gambar_url || "https://unsplash.com"} 
+                alt={beritaUtama.judul} 
+                class="w-full h-full object-cover transition duration-700 group-hover:scale-102"
+              />
+            </div>
+            <div class="lg:col-span-5 flex flex-col justify-center">
+              <span class="text-xs font-extrabold uppercase tracking-widest text-red-600 mb-3 block">
+                {beritaUtama.kategori || 'Sorotan utama'}
+              </span>
+              <h2 class="text-2xl sm:text-4xl font-bold text-slate-950 leading-tight mb-4 tracking-tight hover:text-red-600 transition duration-200" style="font-family: 'Playfair Display', serif;">
+                <a href={`/berita/${beritaUtama.slug || beritaUtama.id}`}>{beritaUtama.judul}</a>
+              </h2>
+              <p class="text-slate-600 text-sm sm:text-base leading-relaxed mb-6 line-clamp-3">
+                {String(beritaUtama.ringkasan || beritaUtama.isi_konten || '').replace(/<[^>]*>/g, '')}
+              </p>
+              <div>
+                <a href={`/berita/${beritaUtama.slug || beritaUtama.id}`} class="inline-flex items-center gap-2 text-sm font-bold text-slate-900 hover:text-red-600 group transition">
+                  Analisis Selengkapnya 
+                  <span class="transform group-hover:translate-x-1 transition duration-200">→</span>
                 </a>
               </div>
             </div>
-          )}
+          </div>
+        </section>
+      )}
 
+      <!-- SECTION 2: GRID BERITA TERBARU -->
+      <section>
+        <div class="flex items-center justify-between border-b border-slate-200 pb-4 mb-8">
+          <h3 class="text-lg font-extrabold text-slate-900 uppercase tracking-wider">Arsip Laporan Terbaru</h3>
+          <div class="h-1 w-12 bg-red-600 rounded-full"></div>
         </div>
-      </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {beritaSisa.map((item) => (
+            <article class="group flex flex-col bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+              <div class="aspect-[16/10] bg-slate-50 overflow-hidden relative">
+                <img 
+                  src={item.gambar_url || "https://unsplash.com"} 
+                  alt={item.judul} 
+                  class="w-full h-full object-cover transition duration-500 group-hover:scale-105"
+                />
+              </div>
+              
+              <div class="p-6 flex flex-col flex-1">
+                <span class="text-[10px] font-black uppercase tracking-widest text-red-600 mb-2.5 block">
+                  {item.kategori || 'Fokus'}
+                </span>
+                
+                <h4 class="text-lg font-bold text-slate-950 leading-snug mb-3 line-clamp-2 group-hover:text-red-600 transition duration-200">
+                  <a href={`/berita/${item.slug || item.id}`}>{item.judul}</a>
+                </h4>
+                
+                <p class="text-sm text-slate-500 leading-relaxed mb-5 line-clamp-3 flex-1">
+                  {String(item.ringkasan || item.isi_konten || '').replace(/<[^>]*>/g, '')}
+                </p>
+                
+                <div class="pt-4 border-t border-slate-50">
+                  <a 
+                    href={`/berita/${item.slug || item.id}`} 
+                    class="text-xs font-extrabold text-slate-900 group-hover:text-red-600 inline-flex items-center gap-1 transition"
+                  >
+                    Baca Artikel <span>→</span>
+                  </a>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
     </main>
 
-    <!-- SLOT 6: FOOTER WIDE BANNER (Paling Bawah) -->
-    {iklanFooter && iklanFooter.url_banner_kreatif && (
-      <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-3 px-4 z-40 shadow-xl">
-        <div class="max-w-5xl mx-auto flex justify-between items-center">
-          <div class="flex-1 flex justify-center">
-            <div class="flex flex-col items-center">
-              <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">CONTINUOUS ADVERTISEMENT</span>
-              <a href={iklanFooter.url_tujuan || '#'} target="_blank" rel="noopener noreferrer" class="block">
+    <footer class="bg-slate-950 text-slate-400 py-12 mt-20 border-t border-slate-900">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row justify-between items-center gap-6">
+        <p class="text-xs font-semibold tracking-wider uppercase text-slate-500">© 2026 Nusa Media. Hak Cipta Dilindungi.</p>
+        <div class="flex gap-6 text-xs font-bold uppercase tracking-widest">
+          <a href="#" class="hover:text-white transition">Redaksi</a>
+          <a href="#" class="hover:text-white transition">Pedoman Media</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
