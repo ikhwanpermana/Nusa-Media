@@ -47,7 +47,7 @@ const deskripsiSEO = "Platform media digital modern yang menyajikan informasi va
     <title>{judulSEO}</title>
     <meta name="description" content={deskripsiSEO} />
   </head>
-  <body class="bg-gray-100 text-gray-900 min-h-screen antialiased pb-24">
+  <body class="bg-gray-100 text-gray-900 min-h-screen antialiased pb-24 relative">
     
     <!-- ── 📦 SLOT 1: HEADER TOP AD ── -->
     {iklanHeader && iklanHeader.url_banner_kreatif && (
@@ -85,9 +85,10 @@ const deskripsiSEO = "Platform media digital modern yang menyajikan informasi va
             </div>
           )}
 
-          <!-- GRID LIST BERITA DENGAN SINTAKS MAP MURNI STANDAR ASTRO -->
+          <!-- GRID LIST BERITA -->
+          <!-- Menghapus penulisan tipe data (: any, : number) pada parameter map -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {beritaSedia.map((item: any, index: number) => (
+            {beritaSedia.map((item, index) => (
               <div class="flex flex-col space-y-6 md:col-span-1">
                 <article class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col hover:shadow-md transition h-full">
                   <div class="h-48 bg-slate-100 overflow-hidden">
@@ -122,9 +123,9 @@ const deskripsiSEO = "Platform media digital modern yang menyajikan informasi va
                   </div>
                 </article>
 
-                <!-- ── 📦 SLOT 2: IN-ARTICLE SELA BERITA 1 ── -->
+                <!-- ── 📦 SLOT 2: IN-ARTICLE SELA BERITA 1 (Tampil setelah berita kedua) ── -->
                 {index === 1 && iklanInArticle && iklanInArticle.url_banner_kreatif && (
-                  <div class="w-full bg-white border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center md:absolute md:w-[200%] md:translate-x-0">
+                  <div class="w-full bg-white border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center md:col-span-2">
                     <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">SPONSORED CONTENT</span>
                     <a href={iklanInArticle.url_tujuan || '#'} target="_blank" rel="noopener noreferrer" class="w-full text-center">
                       <img src={iklanInArticle.url_banner_kreatif} alt={iklanInArticle.nama_sponsor} class="mx-auto rounded border border-gray-100 max-h-[120px] object-contain" />
@@ -132,9 +133,9 @@ const deskripsiSEO = "Platform media digital modern yang menyajikan informasi va
                   </div>
                 )}
 
-                <!-- ── 📦 SLOT 3: IN-ARTICLE SELA BERITA 2 ── -->
+                <!-- ── 📦 SLOT 3: IN-ARTICLE SELA BERITA 2 (Tampil setelah berita keempat) ── -->
                 {index === 3 && iklanInArticle2 && iklanInArticle2.url_banner_kreatif && (
-                  <div class="w-full bg-white border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center md:absolute md:w-[200%] md:translate-x-0">
+                  <div class="w-full bg-white border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center md:col-span-2">
                     <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">RECOMMENDED AD</span>
                     <a href={iklanInArticle2.url_tujuan || '#'} target="_blank" rel="noopener noreferrer" class="w-full text-center">
                       <img src={iklanInArticle2.url_banner_kreatif} alt={iklanInArticle2.nama_sponsor} class="mx-auto rounded border border-gray-100 max-h-[120px] object-contain" />
@@ -150,45 +151,37 @@ const deskripsiSEO = "Platform media digital modern yang menyajikan informasi va
         <div class="space-y-6 lg:mt-8">
           
           <!-- ── 📦 SLOT 4: SIDEBAR BANNER 1 ── -->
-          <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3 block border-b pb-2">PARTNER ADVERTISEMENT</h3>
-            
-            {iklanSidebar && iklanSidebar.url_banner_kreatif ? (
+          {iklanSidebar && iklanSidebar.url_banner_kreatif && (
+            <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3 block border-b pb-2">PARTNER ADVERTISEMENT</h3>
               <a href={iklanSidebar.url_tujuan || '#'} target="_blank" rel="noopener noreferrer" class="block group">
                 <div class="w-full rounded-lg overflow-hidden border border-gray-100">
                   <img src={iklanSidebar.url_banner_kreatif} alt={iklanSidebar.nama_sponsor} class="w-full h-auto object-cover group-hover:opacity-95 transition" />
                 </div>
               </a>
-            ) : (
-              <div class="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center bg-gray-50">
-                <p class="text-xs font-medium text-gray-400">Ruang iklan sedia hubungi redaksi Nusa Media.</p>
-                <span class="text-[9px] font-mono text-gray-300 block mt-1">Format: 300x250 px</span>
-              </div>
-            )}
-          </div>
-
-          <!-- INFO ATRIBUSI REDAKSI -->
-          <div class="bg-gradient-to-br from-slate-900 to-red-950 border border-slate-800 rounded-xl p-5 text-white shadow-sm">
-            <h4 class="text-sm font-black tracking-tight text-white mb-2 uppercase">Nusa Media Group</h4>
-            <p class="text-xs text-slate-300 leading-relaxed">Menyajikan jurnalisme valid dan independen langsung melalui infrastruktur awan modern global.</p>
-          </div>
-
-          <!-- ── 📦 SLOT 5: SIDEBAR BANNER 2 STICKY ── -->
-          {iklanSidebarSticky && iklanSidebarSticky.url_banner_kreatif && (
-            <div class="sticky top-24 hidden lg:block">
-              <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-                <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 border-b pb-1">PREMIUM SPONSOR</h3>
-                <a href={iklanSidebarSticky.url_tujuan || '#'} target="_blank" rel="noopener noreferrer" class="block">
-                  <img src={iklanSidebarSticky.url_banner_kreatif} alt={iklanSidebarSticky.nama_sponsor} class="w-full h-auto rounded border" />
-                </a>
-              </div>
             </div>
           )}
 
+          <!-- ── 📦 SLOT 5: SIDEBAR STICKY BANNER 2 ── -->
+          {iklanSidebarSticky && iklanSidebarSticky.url_banner_kreatif && (
+            <div class="sticky top-24 bg-white border border-gray-200 rounded-xl p-5 shadow-sm hidden lg:block">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3 block border-b pb-2">SPONSORED</h3>
+              <a href={iklanSidebarSticky.url_tujuan || '#'} target="_blank" rel="noopener noreferrer" class="block group">
+                <div class="w-full rounded-lg overflow-hidden border border-gray-100">
+                  <img src={iklanSidebarSticky.url_banner_kreatif} alt={iklanSidebarSticky.nama_sponsor} class="w-full h-auto object-cover group-hover:opacity-95 transition" />
+                </div>
+              </a>
+            </div>
+          )}
         </div>
-
       </div>
     </main>
 
-    <!-- ── 📦 SLOT 6: FOOTER WIDE BANNER ── -->
+    <!-- ── 📦 SLOT 6: FOOTER BANNER ── -->
     {iklanFooter && iklanFooter.url_banner_kreatif && (
+      <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-3 px-4 z-40 shadow-xl">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+          <div class="flex-1 flex justify-center">
+            <div class="flex flex-col items-center">
+              <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">CONTINUOUS ADVERTISEMENT</span>
+              <a href={iklanFooter.url_tujuan || '#'} target="_blank" rel="noopener noreferrer" class="block">
