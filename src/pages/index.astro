@@ -80,6 +80,8 @@ const deskripsiSEO = "Platform media digital modern yang menyajikan informasi va
             </div>
           )}
 
+          <!-- GRID LIST BERITA -->
+          <!-- Menghapus penulisan tipe data (: any, : number) pada parameter map -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             {beritaSedia.map((item: any, index: number) => {
               return (
@@ -117,28 +119,27 @@ const deskripsiSEO = "Platform media digital modern yang menyajikan informasi va
                     </div>
                   </article>
 
-                  <!-- SLOT 2: IN-ARTICLE SELA BERITA 1 (Baris Atas) -->
-                  {index === 1 && iklanInArticle && iklanInArticle.url_banner_kreatif && (
-                    <div class="w-full bg-white border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center">
-                      <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">SPONSORED CONTENT</span>
-                      <a href={iklanInArticle.url_tujuan || '#'} target="_blank" rel="noopener noreferrer" class="w-full text-center">
-                        <img src={iklanInArticle.url_banner_kreatif} alt={iklanInArticle.nama_sponsor} class="mx-auto rounded border border-gray-100 max-h-[120px] object-contain" />
-                      </a>
-                    </div>
-                  )}
+                <!-- ── 📦 SLOT 2: IN-ARTICLE SELA BERITA 1 (Tampil setelah berita kedua) ── -->
+                {index === 1 && iklanInArticle && iklanInArticle.url_banner_kreatif && (
+                  <div class="w-full bg-white border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center md:col-span-2">
+                    <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">SPONSORED CONTENT</span>
+                    <a href={iklanInArticle.url_tujuan || '#'} target="_blank" rel="noopener noreferrer" class="w-full text-center">
+                      <img src={iklanInArticle.url_banner_kreatif} alt={iklanInArticle.nama_sponsor} class="mx-auto rounded border border-gray-100 max-h-[120px] object-contain" />
+                    </a>
+                  </div>
+                )}
 
-                  <!-- SLOT 3: IN-ARTICLE SELA BERITA 2 (Baris Tengah) -->
-                  {index === 3 && iklanInArticle2 && iklanInArticle2.url_banner_kreatif && (
-                    <div class="w-full bg-white border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center">
-                      <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">RECOMMENDED AD</span>
-                      <a href={iklanInArticle2.url_tujuan || '#'} target="_blank" rel="noopener noreferrer" class="w-full text-center">
-                        <img src={iklanInArticle2.url_banner_kreatif} alt={iklanInArticle2.nama_sponsor} class="mx-auto rounded border border-gray-100 max-h-[120px] object-contain" />
-                      </a>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                <!-- ── 📦 SLOT 3: IN-ARTICLE SELA BERITA 2 (Tampil setelah berita keempat) ── -->
+                {index === 3 && iklanInArticle2 && iklanInArticle2.url_banner_kreatif && (
+                  <div class="w-full bg-white border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center md:col-span-2">
+                    <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">RECOMMENDED AD</span>
+                    <a href={iklanInArticle2.url_tujuan || '#'} target="_blank" rel="noopener noreferrer" class="w-full text-center">
+                      <img src={iklanInArticle2.url_banner_kreatif} alt={iklanInArticle2.nama_sponsor} class="mx-auto rounded border border-gray-100 max-h-[120px] object-contain" />
+                    </a>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
 
@@ -187,6 +188,9 @@ const deskripsiSEO = "Platform media digital modern yang menyajikan informasi va
 
     <!-- SLOT 6: FOOTER WIDE BANNER (Paling Bawah) -->
     {iklanFooter && iklanFooter.url_banner_kreatif && (
-      <footer class="mt-12 bg-white border-t border-gray-200 py-6">
-        <div class="max-w-5xl mx-auto px-4 flex flex-col items-center">
-          <span class="text-[8px] font-bold text-gray-400 tracking-widest mb-2">COMMERCIAL BANNER</span>
+      <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-3 px-4 z-40 shadow-xl">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+          <div class="flex-1 flex justify-center">
+            <div class="flex flex-col items-center">
+              <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">CONTINUOUS ADVERTISEMENT</span>
+              <a href={iklanFooter.url_tujuan || '#'} target="_blank" rel="noopener noreferrer" class="block">
